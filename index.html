@@ -1,191 +1,187 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Refivenine Social | The Network</title>
+    <title>EVTX | The Network</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        /* CORE DESIGN */
+        /* --- DESIGN ENGINE (CSS) --- */
         body {
             background-color: #050505; /* Deep Black */
             color: #e0e0e0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding: 0;
         }
 
         /* HEADER */
         .header {
-            background: linear-gradient(90deg, #111, #222);
+            background: rgba(20, 20, 20, 0.95);
             padding: 15px;
-            border-bottom: 2px solid #00ffcc; /* Cyan Neon */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
+            border-bottom: 2px solid #00ffcc;
+            position: sticky; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
         }
-        .logo {
-            font-weight: 900;
-            color: #fff;
-            font-size: 20px;
-            letter-spacing: 2px;
-        }
+        .logo { font-weight: 900; color: #fff; font-size: 22px; letter-spacing: 2px; }
         .logo span { color: #00ffcc; }
         
         .nav-btn {
-            background: #333;
-            color: white;
-            text-decoration: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            margin-left: 10px;
-            transition: 0.3s;
+            background: #333; color: white; text-decoration: none;
+            padding: 8px 15px; border-radius: 20px; font-size: 14px;
+            border: 1px solid #444; transition: 0.3s;
         }
-        .nav-btn:hover { background: #00ffcc; color: black; }
+        .nav-btn:hover { background: #00ffcc; color: black; border-color: #00ffcc; }
 
-        /* MAIN LAYOUT */
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 10px;
-        }
+        /* LAYOUT */
+        .container { max-width: 600px; margin: 20px auto; padding: 10px; }
 
         /* POST CREATOR */
         .create-box {
-            background: #151515;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            margin-bottom: 25px;
+            background: #151515; padding: 15px; border-radius: 12px;
+            border: 1px solid #333; margin-bottom: 25px;
         }
         textarea {
-            width: 100%;
-            background: #000;
-            border: none;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            resize: none;
-            box-sizing: border-box;
-            font-size: 16px;
-            outline: none;
+            width: 100%; background: #0a0a0a; border: none;
+            color: white; padding: 15px; border-radius: 8px;
+            resize: none; font-size: 16px; outline: none;
+            border: 1px solid #333;
         }
+        textarea:focus { border-color: #00ffcc; }
+        
+        .post-actions { margin-top: 10px; text-align: right; }
         .post-btn {
-            background: #00ffcc;
-            color: #000;
-            border: none;
-            padding: 10px 25px;
-            font-weight: bold;
-            border-radius: 20px;
-            margin-top: 10px;
-            cursor: pointer;
-            float: right;
+            background: #00ffcc; color: #000; border: none;
+            padding: 10px 25px; font-weight: bold; border-radius: 20px;
+            cursor: pointer; transition: 0.2s;
         }
+        .post-btn:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,255,204,0.4); }
 
         /* FEED STREAM */
         .post {
-            background: #151515;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #222;
+            background: #151515; border-radius: 12px; padding: 20px;
+            margin-bottom: 20px; border: 1px solid #222;
+            animation: fadeIn 0.5s ease;
         }
-        .user-header {
-            display: flex;
-            margin-bottom: 15px;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .user-header { display: flex; margin-bottom: 15px; }
         .avatar {
-            width: 45px;
-            height: 45px;
-            background: #333;
-            border-radius: 50%;
-            margin-right: 12px;
+            width: 45px; height: 45px; background: #333;
+            border-radius: 50%; margin-right: 12px;
             border: 2px solid #00ffcc;
+            background-size: cover; background-position: center;
         }
         .user-meta h4 { margin: 0; color: #fff; }
         .user-meta span { font-size: 12px; color: #777; }
 
-        .content {
-            font-size: 15px;
-            line-height: 1.5;
-            color: #ddd;
-            margin-bottom: 15px;
-        }
+        .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 15px; white-space: pre-wrap; }
 
         .actions {
-            border-top: 1px solid #333;
-            padding-top: 15px;
-            display: flex;
-            justify-content: space-between;
+            border-top: 1px solid #333; padding-top: 15px;
+            display: flex; justify-content: space-between;
         }
         .act-btn {
-            background: none;
-            border: none;
-            color: #777;
-            cursor: pointer;
-            font-size: 14px;
+            background: none; border: none; color: #777;
+            cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px;
         }
         .act-btn:hover { color: #00ffcc; }
+        .act-btn.liked { color: #ff3366; } /* Red heart when liked */
 
-        /* CLEAR FLOAT */
-        .clearfix::after { content: ""; display: table; clear: both; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="logo">REFIVE<span>NINE</span></div>
-        <div>
-            <a href="https://refivenine.github.io/" class="nav-btn">⬅ Back to Portfolio</a>
-        </div>
+        <div class="logo">EV<span>TX</span></div>
+        <a href="https://refivenine.github.io/" class="nav-btn">⬅ Back to HQ</a>
     </div>
 
     <div class="container">
         
-        <div class="create-box clearfix">
-            <textarea rows="3" placeholder="What's happening?"></textarea>
-            <button class="post-btn">Post</button>
+        <div class="create-box">
+            <textarea id="postInput" rows="3" placeholder="What is happening in your world?"></textarea>
+            <div class="post-actions">
+                <button class="post-btn" onclick="createPost()">🚀 Post Update</button>
+            </div>
         </div>
 
-        <div class="post">
-            <div class="user-header">
-                <div class="avatar"></div> <div class="user-meta">
-                    <h4>Refivenine</h4>
-                    <span>@admin • 1 min ago</span>
+        <div id="feed">
+            
+            <div class="post">
+                <div class="user-header">
+                    <div class="avatar" style="background-image: url('https://refivenine.github.io/cover2.jpg');"></div>
+                    <div class="user-meta">
+                        <h4>Refivenine</h4>
+                        <span>@admin • Just now</span>
+                    </div>
+                </div>
+                <div class="content">Welcome to EVTX Alpha v1.0. This post is hard-coded, but try writing your own above! 👇</div>
+                <div class="actions">
+                    <button class="act-btn" onclick="toggleLike(this)">❤️ <span>12</span></button>
+                    <button class="act-btn">💬 Comment</button>
+                    <button class="act-btn">🔄 Share</button>
                 </div>
             </div>
-            <div class="content">
-                Welcome to the Alpha version of my social network. Currently building this from scratch using HTML & CSS. Next step: JavaScript! 💻🔥
-            </div>
-            <div class="actions">
-                <button class="act-btn">💬 2 Comments</button>
-                <button class="act-btn">🔄 Repost</button>
-                <button class="act-btn">❤️ 15 Likes</button>
-            </div>
-        </div>
 
-        <div class="post">
-            <div class="user-header">
-                <div class="avatar" style="background: purple; border-color: purple;"></div>
-                <div class="user-meta">
-                    <h4>Sarah_Dev</h4>
-                    <span>@sarah • 2 hours ago</span>
-                </div>
-            </div>
-            <div class="content">
-                Just checked out the new VIP membership page. The glitch effects are insane! How did you do that?
-            </div>
-            <div class="actions">
-                <button class="act-btn">💬 Reply</button>
-                <button class="act-btn">🔄 Repost</button>
-                <button class="act-btn">❤️ 8 Likes</button>
-            </div>
         </div>
-
     </div>
+
+    <script>
+        function createPost() {
+            // 1. Get the text from the box
+            let input = document.getElementById("postInput");
+            let text = input.value;
+
+            // 2. Stop if it's empty
+            if (text.trim() === "") {
+                alert("Please write something first!");
+                return;
+            }
+
+            // 3. Create the HTML for the new post
+            let feed = document.getElementById("feed");
+            let newPost = document.createElement("div");
+            newPost.className = "post";
+            
+            // This inserts the HTML structure with your text
+            newPost.innerHTML = `
+                <div class="user-header">
+                    <div class="avatar" style="background-image: url('https://refivenine.github.io/cover2.jpg');"></div>
+                    <div class="user-meta">
+                        <h4>Refivenine</h4>
+                        <span>@admin • Just now</span>
+                    </div>
+                </div>
+                <div class="content">${text}</div>
+                <div class="actions">
+                    <button class="act-btn" onclick="toggleLike(this)">❤️ <span>0</span></button>
+                    <button class="act-btn">💬 Comment</button>
+                    <button class="act-btn">🔄 Share</button>
+                </div>
+            `;
+
+            // 4. Add it to the TOP of the feed
+            feed.prepend(newPost);
+
+            // 5. Clear the text box
+            input.value = "";
+        }
+
+        function toggleLike(btn) {
+            // 1. Toggle the "liked" class (makes it red)
+            btn.classList.toggle("liked");
+            
+            // 2. Find the number span
+            let span = btn.querySelector("span");
+            let count = parseInt(span.innerText);
+
+            // 3. Increase or decrease math
+            if (btn.classList.contains("liked")) {
+                span.innerText = count + 1;
+            } else {
+                span.innerText = count - 1;
+            }
+        }
+    </script>
 
 </body>
 </html>
