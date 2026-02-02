@@ -48,11 +48,26 @@
             background: #151515; padding: 15px; border-radius: 12px;
             border: 1px solid #333; margin-bottom: 25px;
         }
-        textarea {
-            width: 100%; background: #bf00ff; border: none;
-            color: white; padding: 15px; border-radius: 8px;
-            resize: none; font-size: 16px; outline: none;
-            border: 1px solid #333;
+       textarea {
+            width: 100%;
+            
+            /* DARK BACKGROUND (So you can read what you type) */
+            background: #080808; 
+            color: #ffffff;
+            
+            /* THE PURPLE BOX (This creates the "frame" effect) */
+            border: 2px solid #bf00ff; 
+            
+            /* Spacing */
+            padding: 15px;
+            border-radius: 10px;
+            resize: none;
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box; /* Keeps it inside the container */
+            
+            /* Optional: Make the text glow slightly */
+            text-shadow: 0 0 5px rgba(191, 0, 255, 0.5);
         }
         textarea:focus { border-color: #bf00ff; }
         
