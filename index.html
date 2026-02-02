@@ -98,3 +98,145 @@
 
         .actions {
             border-top: 1px solid #333; padding-top: 15px;
+            display: flex; justify-content: space-between;
+        }
+        .act-btn {
+            background: none; border: none; color: #777;
+            cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px;
+        }
+        .act-btn:hover { color: #bf00ff; }
+        
+        /* Clearfix */
+        .clearfix::after { content: ""; display: table; clear: both; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">EV<span>TX</span></div>
+        <a href="https://refivenine.github.io/" class="nav-btn">⬅ Back to HQ</a>
+    </div>
+
+    <div class="container">
+        
+        <div class="create-box clearfix">
+            <input type="text" id="usernameInput" class="name-input" placeholder="Enter your Codename..." value="Refivenine">
+            
+            <textarea id="postInput" rows="3" placeholder="What is happening?"></textarea>
+            <button class="post-btn" id="sendBtn">🚀 Post Update</button>
+        </div>
+
+        <div id="feed">
+            <div style="text-align:center; color:#555; padding: 20px;">Connecting to Satellite... 📡</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc } 
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
+          authDomain: "evtx-social.firebaseapp.com",
+          projectId: "evtx-social",
+          storageBucket: "evtx-social.firebasestorage.app",
+          messagingSenderId: "24242683037",
+          appId: "1:24242683037:web:48dcc74fe3d241cfb76874"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const postsRef = collection(db, "posts");
+
+        // --- PART A: LISTENING FOR POSTS ---
+        const q = query(postsRef, orderBy("createdAt", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const feed = document.getElementById("feed");
+            feed.innerHTML = ""; 
+
+            snapshot.forEach((doc) => {
+                const post = doc.data();
+                const postElement = document.createElement("div");
+                postElement.className = "post";
+                
+                let timeText = "Just now";
+                if(post.createdAt) timeText = new Date(post.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                // Use the Saved Username OR "Anonymous" if missing
+                const username = post.user || "Anonymous";
+                // Get first letter for avatar
+                const firstLetter = username.charAt(0).toUpperCase();
+
+                postElement.innerHTML = `
+                    <div class="user-header">
+                        <div class="avatar">
+                            ${firstLetter} </div>
+                        <div class="user-meta">
+                            <h4>${username}</h4>
+                            <span>@${username.toLowerCase().replace(/\s/g, '')} • ${timeText}</span>
+                        </div>
+                        <button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">
+                            🗑️
+                        </button>
+                    </div>
+                    <div class="content">${post.text}</div>
+                    <div class="actions">
+                        <button class="act-btn like-btn" data-id="${doc.id}">
+                            ❤️ <span>${post.likes || 0}</span>
+                        </button>
+                        <button class="act-btn">💬 Comment</button>
+                        <button class="act-btn">🔄 Share</button>
+                    </div>
+                `;
+                feed.appendChild(postElement);
+            });
+
+            // Re-attach buttons
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = btn.getAttribute('data-id');
+                    const postRef = doc(db, "posts", id);
+                    updateDoc(postRef, { likes: increment(1) });
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if(confirm("🛑 Delete this post?")) {
+                        const id = btn.getAttribute('data-id');
+                        await deleteDoc(doc(db, "posts", id));
+                    }
+                });
+            });
+        });
+
+        // --- PART B: SENDING A POST ---
+        document.getElementById("sendBtn").addEventListener("click", async () => {
+            const input = document.getElementById("postInput");
+            const nameInput = document.getElementById("usernameInput"); // Get the Name
+            
+            const text = input.value;
+            const user = nameInput.value || "Anonymous"; // Use name or "Anonymous"
+
+            if (text.trim() === "") return;
+
+            try {
+                await addDoc(postsRef, {
+                    text: text,
+                    user: user, // SAVE THE NAME TO DATABASE
+                    createdAt: serverTimestamp(),
+                    likes: 0
+                });
+                input.value = ""; 
+            } catch (e) {
+                console.error("Error posting: ", e);
+            }
+        });
+
+    </script>
+
+</body>
+</html>
