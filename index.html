@@ -6,10 +6,17 @@
     <style>
         /* --- DESIGN ENGINE (CSS) --- */
         body {
-            background-color: #050505; /* Deep Black */
-            color: #e0e0e0;
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0; padding: 0;
+           body {
+    /* This layers a dark shadow OVER the image so text pops */
+    background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://refivenine.github.io/cover2.jpg');
+    
+    background-size: cover;       /* Stretches image to fit */
+    background-position: center;  /* Centers it */
+    background-attachment: fixed; /* Keeps image still while you scroll */
+    color: #e0e0e0;
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0; padding: 0;
+}
         }
 
         /* HEADER */
@@ -50,7 +57,7 @@
         .post-actions { margin-top: 10px; text-align: right; }
         .post-btn {
             background: #bf00ff; color: #000; border: none;
-            padding: 10px 25px; font-weight: bold; border-radius: 20px;
+            padding: 10px 25px; font-weight: bold; border-radius: 25px;
             cursor: pointer; transition: 0.2s;
         }
         .post-btn:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,255,204,0.4); }
