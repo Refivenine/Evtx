@@ -132,7 +132,7 @@
         </div>
     </div>
 
-    <script type="module">
+   <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -167,27 +167,28 @@
 
                 const username = post.user || "Anonymous";
                 
-                // --- THE VIP CHECK ---
+                // --- THE SECURITY CHECK ---
                 let avatarHTML = "";
                 let badgeHTML = "";
 
-                // If it is YOU (The Admin)
-                if (username === "Refivenine") {
-                    // Show Real Photo & Gold Badge
+                // Only show Crown if the database says "isVerified: true"
+                if (post.isVerified === true) {
+                    // REAL ADMIN
                     avatarHTML = `<div class="avatar" style="background-image: url('https://refivenine.github.io/cover2.jpg'); border-color: #ffd700;"></div>`;
                     badgeHTML = ` <span style="color: #ffd700; font-size: 16px;">👑</span>`;
                 } else {
-                    // Everyone else gets the Letter Avatar
+                    // REGULAR USER (Even if named Refivenine, no crown if not verified)
                     const firstLetter = username.charAt(0).toUpperCase();
                     avatarHTML = `<div class="avatar">${firstLetter}</div>`;
                 }
-                // ---------------------
+                // --------------------------
 
                 postElement.innerHTML = `
                     <div class="user-header">
                         ${avatarHTML}
                         <div class="user-meta">
-                            <h4>${username} ${badgeHTML}</h4> <span>@${username.toLowerCase().replace(/\s/g, '')} • ${timeText}</span>
+                            <h4>${username} ${badgeHTML}</h4>
+                            <span>@${username.toLowerCase().replace(/\s/g, '')} • ${timeText}</span>
                         </div>
                         <button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">
                             🗑️
@@ -224,20 +225,37 @@
             });
         });
 
-        // --- PART B: SENDING A POST ---
+        // --- PART B: SENDING A POST (WITH PASSWORD) ---
         document.getElementById("sendBtn").addEventListener("click", async () => {
             const input = document.getElementById("postInput");
-            const nameInput = document.getElementById("usernameInput"); // Get the Name
+            const nameInput = document.getElementById("usernameInput");
             
             const text = input.value;
-            const user = nameInput.value || "Anonymous"; // Use name or "Anonymous"
+            const user = nameInput.value || "Anonymous";
+            let isVerified = false;
 
             if (text.trim() === "") return;
+
+            // --- SECURITY GUARD ---
+            if (user === "Refivenine") {
+                // Ask for password
+                let password = prompt("🔐 SECURITY CHECK: Enter Admin Password");
+                
+                // YOUR SECRET PASSWORD IS "admin123" (Change this if you want!)
+                if (password === "admin123") {
+                    isVerified = true; // GRANT THE CROWN
+                } else {
+                    alert("🚫 WRONG PASSWORD! Posting as Imposter.");
+                    return; // Stop them from posting OR let them post without crown
+                }
+            }
+            // ----------------------
 
             try {
                 await addDoc(postsRef, {
                     text: text,
-                    user: user, // SAVE THE NAME TO DATABASE
+                    user: user,
+                    isVerified: isVerified, // Save the security status
                     createdAt: serverTimestamp(),
                     likes: 0
                 });
@@ -248,6 +266,5 @@
         });
 
     </script>
-
 </body>
 </html>
