@@ -118,9 +118,9 @@
     </div>
 
     <script type="module">
-        // 1. Import the Tools
+        // 1. Import the Tools (Added 'deleteDoc' here)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment } 
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // 2. Your Configuration
@@ -139,7 +139,6 @@
         const postsRef = collection(db, "posts");
 
         // --- PART A: LISTENING FOR POSTS ---
-        // This runs instantly whenever ANYONE posts
         const q = query(postsRef, orderBy("createdAt", "desc"));
         
         onSnapshot(q, (snapshot) => {
@@ -151,7 +150,6 @@
                 const postElement = document.createElement("div");
                 postElement.className = "post";
                 
-                // Convert timestamp to readable text
                 let timeText = "Just now";
                 if(post.createdAt) timeText = new Date(post.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
@@ -162,6 +160,9 @@
                             <h4>Refivenine</h4>
                             <span>@admin • ${timeText}</span>
                         </div>
+                        <button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">
+                            🗑️
+                        </button>
                     </div>
                     <div class="content">${post.text}</div>
                     <div class="actions">
@@ -175,14 +176,24 @@
                 feed.appendChild(postElement);
             });
 
-            // Add Like Button Logic for these new posts
+            // --- ACTIVATE BUTTONS ---
+            
+            // 1. Like Logic
             document.querySelectorAll('.like-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = btn.getAttribute('data-id');
                     const postRef = doc(db, "posts", id);
-                    updateDoc(postRef, {
-                        likes: increment(1)
-                    });
+                    updateDoc(postRef, { likes: increment(1) });
+                });
+            });
+
+            // 2. DELETE Logic (The Cleaner)
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if(confirm("🛑 Are you sure you want to delete this post?")) {
+                        const id = btn.getAttribute('data-id');
+                        await deleteDoc(doc(db, "posts", id));
+                    }
                 });
             });
         });
@@ -200,7 +211,7 @@
                     createdAt: serverTimestamp(),
                     likes: 0
                 });
-                input.value = ""; // Clear box
+                input.value = ""; 
             } catch (e) {
                 console.error("Error posting: ", e);
                 alert("Error! Did you enable 'Test Mode' in Firebase Console?");
