@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Refivenine Social | The Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* CORE DESIGN */
+        body {
+            background-color: #050505; /* Deep Black */
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(90deg, #111, #222);
+            padding: 15px;
+            border-bottom: 2px solid #00ffcc; /* Cyan Neon */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
+        }
+        .logo {
+            font-weight: 900;
+            color: #fff;
+            font-size: 20px;
+            letter-spacing: 2px;
+        }
+        .logo span { color: #00ffcc; }
+        
+        .nav-btn {
+            background: #333;
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: 0.3s;
+        }
+        .nav-btn:hover { background: #00ffcc; color: black; }
+
+        /* MAIN LAYOUT */
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+        }
+
+        /* POST CREATOR */
+        .create-box {
+            background: #151515;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            margin-bottom: 25px;
+        }
+        textarea {
+            width: 100%;
+            background: #000;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            resize: none;
+            box-sizing: border-box;
+            font-size: 16px;
+            outline: none;
+        }
+        .post-btn {
+            background: #00ffcc;
+            color: #000;
+            border: none;
+            padding: 10px 25px;
+            font-weight: bold;
+            border-radius: 20px;
+            margin-top: 10px;
+            cursor: pointer;
+            float: right;
+        }
+
+        /* FEED STREAM */
+        .post {
+            background: #151515;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #222;
+        }
+        .user-header {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .avatar {
+            width: 45px;
+            height: 45px;
+            background: #333;
+            border-radius: 50%;
+            margin-right: 12px;
+            border: 2px solid #00ffcc;
+        }
+        .user-meta h4 { margin: 0; color: #fff; }
+        .user-meta span { font-size: 12px; color: #777; }
+
+        .content {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .actions {
+            border-top: 1px solid #333;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .act-btn {
+            background: none;
+            border: none;
+            color: #777;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .act-btn:hover { color: #00ffcc; }
+
+        /* CLEAR FLOAT */
+        .clearfix::after { content: ""; display: table; clear: both; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">REFIVE<span>NINE</span></div>
+        <div>
+            <a href="https://refivenine.github.io/" class="nav-btn">⬅ Back to Portfolio</a>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <div class="create-box clearfix">
+            <textarea rows="3" placeholder="What's happening?"></textarea>
+            <button class="post-btn">Post</button>
+        </div>
+
+        <div class="post">
+            <div class="user-header">
+                <div class="avatar"></div> <div class="user-meta">
+                    <h4>Refivenine</h4>
+                    <span>@admin • 1 min ago</span>
+                </div>
+            </div>
+            <div class="content">
+                Welcome to the Alpha version of my social network. Currently building this from scratch using HTML & CSS. Next step: JavaScript! 💻🔥
+            </div>
+            <div class="actions">
+                <button class="act-btn">💬 2 Comments</button>
+                <button class="act-btn">🔄 Repost</button>
+                <button class="act-btn">❤️ 15 Likes</button>
+            </div>
+        </div>
+
+        <div class="post">
+            <div class="user-header">
+                <div class="avatar" style="background: purple; border-color: purple;"></div>
+                <div class="user-meta">
+                    <h4>Sarah_Dev</h4>
+                    <span>@sarah • 2 hours ago</span>
+                </div>
+            </div>
+            <div class="content">
+                Just checked out the new VIP membership page. The glitch effects are insane! How did you do that?
+            </div>
+            <div class="actions">
+                <button class="act-btn">💬 Reply</button>
+                <button class="act-btn">🔄 Repost</button>
+                <button class="act-btn">❤️ 8 Likes</button>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
