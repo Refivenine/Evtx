@@ -48,40 +48,49 @@
             background: #151515; padding: 15px; border-radius: 12px;
             border: 1px solid #333; margin-bottom: 25px;
         }
-       textarea {
+     textarea {
             width: 100%;
-            
-            /* DARK BACKGROUND (So you can read what you type) */
+            /* DARK BACKGROUND (easier to read) */
             background: #080808; 
             color: #ffffff;
             
-            /* THE PURPLE BOX (This creates the "frame" effect) */
+            /* THE GLOWING PURPLE BORDER */
             border: 2px solid #bf00ff; 
             
-            /* Spacing */
             padding: 15px;
             border-radius: 10px;
             resize: none;
             font-size: 16px;
             outline: none;
-            box-sizing: border-box; /* Keeps it inside the container */
+            box-sizing: border-box; 
             
-            /* Optional: Make the text glow slightly */
-            text-shadow: 0 0 5px rgba(191, 0, 255, 0.5);
+            /* Slight inner shadow for depth */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        
+        /* When you click inside, the glow gets brighter */
+        textarea:focus {
+            box-shadow: 0 0 15px rgba(191, 0, 255, 0.6);
         }
         textarea:focus { border-color: #bf00ff; }
         
         .post-actions { margin-top: 10px; text-align: right; }
         .post-btn {
-            background: #bf00ff; /* MATCHING PURPLE */
-            color: #fff;         /* White text looks better on purple */
+            background: #bf00ff; /* Matching Purple */
+            color: #ffffff;      /* White text */
             border: none;
             padding: 10px 25px;
             font-weight: bold;
             border-radius: 20px;
             cursor: pointer;
             transition: 0.2s;
-            float: right;        /* Keeps it aligned */
+            float: right;        /* Keeps it aligned to the right */
+            margin-top: 10px;
+        }
+        
+        .post-btn:hover {
+            background: #d633ff; /* Lighter purple when hovering */
+            box-shadow: 0 0 15px rgba(191, 0, 255, 0.8);
         }
         .post-btn:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,255,204,0.4); }
 
