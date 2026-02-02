@@ -43,28 +43,27 @@
             border: 1px solid #333; margin-bottom: 25px;
         }
         
-        /* NEW: USERNAME INPUT */
+        /* INPUTS */
+        .input-group { margin-bottom: 10px; }
+        
         .name-input {
-            width: 100%;
-            background: #000;
-            color: #bf00ff; /* Purple Text for Name */
-            border: 1px solid #333;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-weight: bold;
-            box-sizing: border-box;
+            width: 48%; background: #000; color: #bf00ff; border: 1px solid #333;
+            padding: 10px; border-radius: 8px; font-weight: bold; box-sizing: border-box;
+            display: inline-block;
+        }
+        
+        /* NEW: LINK INPUT FOR IMAGES */
+        .link-input {
+            width: 48%; background: #000; color: #00ffcc; border: 1px solid #333;
+            padding: 10px; border-radius: 8px; font-weight: normal; box-sizing: border-box;
+            float: right;
         }
 
         textarea {
-            width: 100%;
-            background: #080808; 
-            color: #ffffff;
-            border: 2px solid #bf00ff; 
-            padding: 15px; border-radius: 10px;
-            resize: none; font-size: 16px; outline: none;
-            box-sizing: border-box; 
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            width: 100%; background: #080808; color: #ffffff;
+            border: 2px solid #bf00ff; padding: 15px; border-radius: 10px;
+            resize: none; font-size: 16px; outline: none; box-sizing: border-box; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8); margin-top: 10px;
         }
         textarea:focus { box-shadow: 0 0 15px rgba(191, 0, 255, 0.6); }
 
@@ -88,13 +87,19 @@
             width: 45px; height: 45px; background: #333;
             border-radius: 50%; margin-right: 12px;
             border: 2px solid #bf00ff;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
+            background-size: cover; background-position: center;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
         }
         .user-meta h4 { margin: 0; color: #fff; }
         .user-meta span { font-size: 12px; color: #777; }
 
         .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 15px; white-space: pre-wrap; }
+        
+        /* POST IMAGE */
+        .post-img {
+            width: 100%; border-radius: 15px; margin-top: 10px; margin-bottom: 10px;
+            border: 1px solid #333;
+        }
 
         .actions {
             border-top: 1px solid #333; padding-top: 15px;
@@ -121,10 +126,13 @@
     <div class="container">
         
         <div class="create-box clearfix">
-            <input type="text" id="usernameInput" class="name-input" placeholder="Enter your Codename..." value="Refivenine">
+            <div class="input-group">
+                <input type="text" id="usernameInput" class="name-input" placeholder="Codename..." value="Refivenine">
+                <input type="text" id="imageLinkInput" class="link-input" placeholder="Paste Image Link (Optional)...">
+            </div>
             
             <textarea id="postInput" rows="3" placeholder="What is happening?"></textarea>
-            <button class="post-btn" id="sendBtn">🚀 Post Update</button>
+            <button class="post-btn" id="sendBtn">🚀 Post</button>
         </div>
 
         <div id="feed">
@@ -132,11 +140,12 @@
         </div>
     </div>
 
-   <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // NO STORAGE NEEDED HERE!
         const firebaseConfig = {
           apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
           authDomain: "evtx-social.firebaseapp.com",
@@ -164,24 +173,24 @@
                 
                 let timeText = "Just now";
                 if(post.createdAt) timeText = new Date(post.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
                 const username = post.user || "Anonymous";
                 
-                // --- THE SECURITY CHECK ---
+                // VIP CHECK
                 let avatarHTML = "";
                 let badgeHTML = "";
-
-                // Only show Crown if the database says "isVerified: true"
                 if (post.isVerified === true) {
-                    // REAL ADMIN
                     avatarHTML = `<div class="avatar" style="background-image: url('https://refivenine.github.io/cover2.jpg'); border-color: #ffd700;"></div>`;
                     badgeHTML = ` <span style="color: #ffd700; font-size: 16px;">👑</span>`;
                 } else {
-                    // REGULAR USER (Even if named Refivenine, no crown if not verified)
                     const firstLetter = username.charAt(0).toUpperCase();
                     avatarHTML = `<div class="avatar">${firstLetter}</div>`;
                 }
-                // --------------------------
+
+                // IMAGE CHECK (Using Links!)
+                let imageHTML = "";
+                if (post.imageUrl) {
+                    imageHTML = `<img src="${post.imageUrl}" class="post-img" loading="lazy">`;
+                }
 
                 postElement.innerHTML = `
                     <div class="user-header">
@@ -190,11 +199,10 @@
                             <h4>${username} ${badgeHTML}</h4>
                             <span>@${username.toLowerCase().replace(/\s/g, '')} • ${timeText}</span>
                         </div>
-                        <button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">
-                            🗑️
-                        </button>
+                        <button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">🗑️</button>
                     </div>
                     <div class="content">${post.text}</div>
+                    ${imageHTML} 
                     <div class="actions">
                         <button class="act-btn like-btn" data-id="${doc.id}">
                             ❤️ <span>${post.likes || 0}</span>
@@ -210,61 +218,56 @@
             document.querySelectorAll('.like-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = btn.getAttribute('data-id');
-                    const postRef = doc(db, "posts", id);
-                    updateDoc(postRef, { likes: increment(1) });
+                    updateDoc(doc(db, "posts", id), { likes: increment(1) });
                 });
             });
-
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    if(confirm("🛑 Delete this post?")) {
-                        const id = btn.getAttribute('data-id');
-                        await deleteDoc(doc(db, "posts", id));
-                    }
+                    if(confirm("🛑 Delete this post?")) await deleteDoc(doc(db, "posts", id));
                 });
             });
         });
 
-        // --- PART B: SENDING A POST (WITH PASSWORD) ---
+        // --- PART B: SENDING POST + LINK ---
         document.getElementById("sendBtn").addEventListener("click", async () => {
             const input = document.getElementById("postInput");
             const nameInput = document.getElementById("usernameInput");
-            
+            const linkInput = document.getElementById("imageLinkInput"); // NEW INPUT
+
             const text = input.value;
             const user = nameInput.value || "Anonymous";
+            const imageUrl = linkInput.value; // Get the link text
             let isVerified = false;
 
-            if (text.trim() === "") return;
+            if (text.trim() === "" && imageUrl.trim() === "") return;
 
-            // --- SECURITY GUARD ---
+            // VIP SECURITY
             if (user === "Refivenine") {
-                // Ask for password
-                let password = prompt("🔐 SECURITY CHECK: Enter Admin Password");
-                
-                // YOUR SECRET PASSWORD IS "admin123" (Change this if you want!)
-                if (password === "admin123") {
-                    isVerified = true; // GRANT THE CROWN
-                } else {
-                    alert("🚫 WRONG PASSWORD! Posting as Imposter.");
-                    return; // Stop them from posting OR let them post without crown
-                }
+                let password = prompt("🔐 Enter Password to post as Admin:");
+                if (password === "admin123") isVerified = true;
+                else { alert("🚫 Wrong Password"); return; }
             }
-            // ----------------------
 
             try {
+                // SAVE DIRECTLY TO DATABASE
                 await addDoc(postsRef, {
                     text: text,
                     user: user,
-                    isVerified: isVerified, // Save the security status
+                    imageUrl: imageUrl, // Saving the TEXT link
+                    isVerified: isVerified,
                     createdAt: serverTimestamp(),
                     likes: 0
                 });
+
+                // RESET
                 input.value = ""; 
+                linkInput.value = "";
             } catch (e) {
                 console.error("Error posting: ", e);
             }
         });
 
     </script>
+
 </body>
 </html>
