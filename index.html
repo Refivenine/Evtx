@@ -165,18 +165,29 @@
                 let timeText = "Just now";
                 if(post.createdAt) timeText = new Date(post.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-                // Use the Saved Username OR "Anonymous" if missing
                 const username = post.user || "Anonymous";
-                // Get first letter for avatar
-                const firstLetter = username.charAt(0).toUpperCase();
+                
+                // --- THE VIP CHECK ---
+                let avatarHTML = "";
+                let badgeHTML = "";
+
+                // If it is YOU (The Admin)
+                if (username === "Refivenine") {
+                    // Show Real Photo & Gold Badge
+                    avatarHTML = `<div class="avatar" style="background-image: url('https://refivenine.github.io/cover2.jpg'); border-color: #ffd700;"></div>`;
+                    badgeHTML = ` <span style="color: #ffd700; font-size: 16px;">👑</span>`;
+                } else {
+                    // Everyone else gets the Letter Avatar
+                    const firstLetter = username.charAt(0).toUpperCase();
+                    avatarHTML = `<div class="avatar">${firstLetter}</div>`;
+                }
+                // ---------------------
 
                 postElement.innerHTML = `
                     <div class="user-header">
-                        <div class="avatar">
-                            ${firstLetter} </div>
+                        ${avatarHTML}
                         <div class="user-meta">
-                            <h4>${username}</h4>
-                            <span>@${username.toLowerCase().replace(/\s/g, '')} • ${timeText}</span>
+                            <h4>${username} ${badgeHTML}</h4> <span>@${username.toLowerCase().replace(/\s/g, '')} • ${timeText}</span>
                         </div>
                         <button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">
                             🗑️
@@ -192,6 +203,7 @@
                     </div>
                 `;
                 feed.appendChild(postElement);
+            });
             });
 
             // Re-attach buttons
