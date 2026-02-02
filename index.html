@@ -1,102 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | The Network</title>
+    <title>EVTX | The Live Network</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         /* --- DESIGN ENGINE (CSS) --- */
-    body {
-            /* This adds a dark shadow layer ON TOP of your image so text is easy to read */
+        body {
+            /* Your Custom Background */
             background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://refivenine.github.io/cover2.jpg');
-            
-            /* This locks the background so it stays still while you scroll */
             background-attachment: fixed;
             background-size: cover;
             background-position: center;
             
             color: #e0e0e0;
             font-family: 'Segoe UI', sans-serif;
-            margin: 0; 
-            padding: 0;
-        }
+            margin: 0; padding: 0;
         }
 
         /* HEADER */
         .header {
             background: rgba(20, 20, 20, 0.95);
             padding: 15px;
-            border-bottom: 2px solid #00ffcc;
+            border-bottom: 2px solid #bf00ff; /* Purple Border */
             position: sticky; top: 0; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
             backdrop-filter: blur(10px);
         }
         .logo { font-weight: 900; color: #fff; font-size: 22px; letter-spacing: 2px; }
-        .logo span { color: #bf00ff; }
+        .logo span { color: #bf00ff; } /* Purple Text */
         
         .nav-btn {
             background: #333; color: white; text-decoration: none;
             padding: 8px 15px; border-radius: 20px; font-size: 14px;
             border: 1px solid #444; transition: 0.3s;
         }
-        .nav-btn:hover { background: #bf00ff; color: black; border-color: #bf00ff; }
+        .nav-btn:hover { background: #bf00ff; color: white; border-color: #bf00ff; }
 
         /* LAYOUT */
         .container { max-width: 600px; margin: 20px auto; padding: 10px; }
 
-        /* POST CREATOR */
+        /* POST CREATOR - YOUR DESIGN */
         .create-box {
             background: #151515; padding: 15px; border-radius: 12px;
             border: 1px solid #333; margin-bottom: 25px;
         }
-     textarea {
+        textarea {
             width: 100%;
-            /* DARK BACKGROUND (easier to read) */
             background: #080808; 
             color: #ffffff;
-            
-            /* THE GLOWING PURPLE BORDER */
-            border: 2px solid #bf00ff; 
-            
-            padding: 15px;
-            border-radius: 10px;
-            resize: none;
-            font-size: 16px;
-            outline: none;
+            border: 2px solid #bf00ff; /* Glowing Purple Border */
+            padding: 15px; border-radius: 10px;
+            resize: none; font-size: 16px; outline: none;
             box-sizing: border-box; 
-            
-            /* Slight inner shadow for depth */
             box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
         }
-        
-        /* When you click inside, the glow gets brighter */
-        textarea:focus {
-            box-shadow: 0 0 15px rgba(191, 0, 255, 0.6);
-        }
-        textarea:focus { border-color: #bf00ff; }
-        
-        .post-actions { margin-top: 10px; text-align: right; }
+        textarea:focus { box-shadow: 0 0 15px rgba(191, 0, 255, 0.6); }
+
         .post-btn {
-            background: #bf00ff; /* Matching Purple */
-            color: #ffffff;      /* White text */
-            border: none;
-            padding: 10px 25px;
-            font-weight: bold;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: 0.2s;
-            float: right;        /* Keeps it aligned to the right */
-            margin-top: 10px;
+            background: #bf00ff; color: #fff; border: none;
+            padding: 10px 25px; font-weight: bold; border-radius: 20px;
+            cursor: pointer; transition: 0.2s; float: right; margin-top: 10px;
         }
-        
-        .post-btn:hover {
-            background: #d633ff; /* Lighter purple when hovering */
-            box-shadow: 0 0 15px rgba(191, 0, 255, 0.8);
-        }
-        .post-btn:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,255,204,0.4); }
+        .post-btn:hover { background: #d633ff; box-shadow: 0 0 15px rgba(191, 0, 255, 0.8); }
 
         /* FEED STREAM */
         .post {
-            background: #151515; border-radius: 12px; padding: 20px;
+            background: #151515; border-radius: 25px; padding: 20px; /* Rounded corners */
             margin-bottom: 20px; border: 1px solid #222;
             animation: fadeIn 0.5s ease;
         }
@@ -106,7 +75,7 @@
         .avatar {
             width: 45px; height: 45px; background: #333;
             border-radius: 50%; margin-right: 12px;
-            border: 2px solid #00ffcc;
+            border: 2px solid #bf00ff;
             background-size: cover; background-position: center;
         }
         .user-meta h4 { margin: 0; color: #fff; }
@@ -122,8 +91,10 @@
             background: none; border: none; color: #777;
             cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px;
         }
-        .act-btn:hover { color: #00ffcc; }
-        .act-btn.liked { color: #ff3366; } /* Red heart when liked */
+        .act-btn:hover { color: #bf00ff; }
+        
+        /* Clearfix */
+        .clearfix::after { content: ""; display: table; clear: both; }
 
     </style>
 </head>
@@ -136,90 +107,106 @@
 
     <div class="container">
         
-        <div class="create-box">
+        <div class="create-box clearfix">
             <textarea id="postInput" rows="3" placeholder="What is happening in your world?"></textarea>
-            <div class="post-actions">
-                <button class="post-btn" onclick="createPost()">🚀 Post Update</button>
-            </div>
+            <button class="post-btn" id="sendBtn">🚀 Post Update</button>
         </div>
 
         <div id="feed">
-            
-            <div class="post">
-                <div class="user-header">
-                    <div class="avatar" style="background-image: url('https://refivenine.github.io/cover2.jpg');"></div>
-                    <div class="user-meta">
-                        <h4>Refivenine</h4>
-                        <span>@admin • Just now</span>
-                    </div>
-                </div>
-                <div class="content">Welcome to EVTX Alpha v1.0. This post is hard-coded, but try writing your own above! 👇</div>
-                <div class="actions">
-                    <button class="act-btn" onclick="toggleLike(this)">❤️ <span>12</span></button>
-                    <button class="act-btn">💬 Comment</button>
-                    <button class="act-btn">🔄 Share</button>
-                </div>
-            </div>
-
+            <div style="text-align:center; color:#555; padding: 20px;">Connecting to Satellite... 📡</div>
         </div>
     </div>
 
-    <script>
-        function createPost() {
-            // 1. Get the text from the box
-            let input = document.getElementById("postInput");
-            let text = input.value;
+    <script type="module">
+        // 1. Import the Tools
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment } 
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-            // 2. Stop if it's empty
-            if (text.trim() === "") {
-                alert("Please write something first!");
-                return;
-            }
+        // 2. Your Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
+          authDomain: "evtx-social.firebaseapp.com",
+          projectId: "evtx-social",
+          storageBucket: "evtx-social.firebasestorage.app",
+          messagingSenderId: "24242683037",
+          appId: "1:24242683037:web:48dcc74fe3d241cfb76874"
+        };
 
-            // 3. Create the HTML for the new post
-            let feed = document.getElementById("feed");
-            let newPost = document.createElement("div");
-            newPost.className = "post";
-            
-            // This inserts the HTML structure with your text
-            newPost.innerHTML = `
-                <div class="user-header">
-                    <div class="avatar" style="background-image: url('https://refivenine.github.io/cover2.jpg');"></div>
-                    <div class="user-meta">
-                        <h4>Refivenine</h4>
-                        <span>@admin • Just now</span>
+        // 3. Start the Engine
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const postsRef = collection(db, "posts");
+
+        // --- PART A: LISTENING FOR POSTS ---
+        // This runs instantly whenever ANYONE posts
+        const q = query(postsRef, orderBy("createdAt", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const feed = document.getElementById("feed");
+            feed.innerHTML = ""; // Clear current list to rebuild
+
+            snapshot.forEach((doc) => {
+                const post = doc.data();
+                const postElement = document.createElement("div");
+                postElement.className = "post";
+                
+                // Convert timestamp to readable text
+                let timeText = "Just now";
+                if(post.createdAt) timeText = new Date(post.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                postElement.innerHTML = `
+                    <div class="user-header">
+                        <div class="avatar" style="background-image: url('https://refivenine.github.io/cover2.jpg');"></div>
+                        <div class="user-meta">
+                            <h4>Refivenine</h4>
+                            <span>@admin • ${timeText}</span>
+                        </div>
                     </div>
-                </div>
-                <div class="content">${text}</div>
-                <div class="actions">
-                    <button class="act-btn" onclick="toggleLike(this)">❤️ <span>0</span></button>
-                    <button class="act-btn">💬 Comment</button>
-                    <button class="act-btn">🔄 Share</button>
-                </div>
-            `;
+                    <div class="content">${post.text}</div>
+                    <div class="actions">
+                        <button class="act-btn like-btn" data-id="${doc.id}">
+                            ❤️ <span>${post.likes || 0}</span>
+                        </button>
+                        <button class="act-btn">💬 Comment</button>
+                        <button class="act-btn">🔄 Share</button>
+                    </div>
+                `;
+                feed.appendChild(postElement);
+            });
 
-            // 4. Add it to the TOP of the feed
-            feed.prepend(newPost);
+            // Add Like Button Logic for these new posts
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = btn.getAttribute('data-id');
+                    const postRef = doc(db, "posts", id);
+                    updateDoc(postRef, {
+                        likes: increment(1)
+                    });
+                });
+            });
+        });
 
-            // 5. Clear the text box
-            input.value = "";
-        }
+        // --- PART B: SENDING A POST ---
+        document.getElementById("sendBtn").addEventListener("click", async () => {
+            const input = document.getElementById("postInput");
+            const text = input.value;
 
-        function toggleLike(btn) {
-            // 1. Toggle the "liked" class (makes it red)
-            btn.classList.toggle("liked");
-            
-            // 2. Find the number span
-            let span = btn.querySelector("span");
-            let count = parseInt(span.innerText);
+            if (text.trim() === "") return;
 
-            // 3. Increase or decrease math
-            if (btn.classList.contains("liked")) {
-                span.innerText = count + 1;
-            } else {
-                span.innerText = count - 1;
+            try {
+                await addDoc(postsRef, {
+                    text: text,
+                    createdAt: serverTimestamp(),
+                    likes: 0
+                });
+                input.value = ""; // Clear box
+            } catch (e) {
+                console.error("Error posting: ", e);
+                alert("Error! Did you enable 'Test Mode' in Firebase Console?");
             }
-        }
+        });
+
     </script>
 
 </body>
