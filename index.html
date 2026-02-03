@@ -48,24 +48,13 @@
         
         .container { max-width: 600px; margin: 0 auto; padding: 0; }
 
-        /* NOTIFICATION STYLES */
-        .notif-item {
-            display: flex; align-items: center; background: #151515; padding: 15px;
-            border-bottom: 1px solid #222; transition: 0.2s;
-        }
+        /* NOTIFICATIONS */
+        .notif-item { display: flex; align-items: center; background: #151515; padding: 15px; border-bottom: 1px solid #222; }
         .notif-item.unread { background: #1a1a2e; border-left: 3px solid #bf00ff; }
         .notif-icon { margin-right: 15px; color: #bf00ff; font-size: 20px; }
         .notif-text { font-size: 14px; color: #ddd; flex: 1; }
         .notif-text b { color: #fff; }
-        .notif-time { font-size: 11px; color: #666; display: block; margin-top: 4px; }
-
-        /* BADGE */
-        .nav-item { position: relative; color: #555; font-size: 24px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
-        .badge {
-            position: absolute; top: -5px; right: 10px; background: #e0245e; color: #fff;
-            font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 50%;
-            border: 2px solid #000; display: none; /* Hidden by default */
-        }
+        .badge { position: absolute; top: -5px; right: 10px; background: #e0245e; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 50%; display: none; }
 
         /* FEED & COMMON */
         .create-box { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin: 15px; margin-bottom: 25px; }
@@ -112,6 +101,7 @@
 
         /* NAV */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 12px 0; z-index: 2000; }
+        .nav-item { position: relative; color: #555; font-size: 24px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
         .nav-active { color: #bf00ff; }
         .search-bar { width: 90%; margin: 15px auto; display:block; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 30px; outline: none; box-sizing: border-box; }
         .user-result { display: flex; align-items: center; background: #1a1a1a; padding: 10px; border-radius: 15px; margin: 10px 15px; cursor: pointer; }
@@ -223,12 +213,10 @@
         <div class="bottom-nav">
             <div class="nav-item nav-active" onclick="switchTab('home')"><svg class="icon" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg></div>
             <div class="nav-item" onclick="switchTab('search')"><svg class="icon" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
-            
             <div class="nav-item" onclick="switchTab('notifs')">
                 <svg class="icon" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                 <div id="notif-badge" class="badge">0</div>
             </div>
-
             <div class="nav-item" onclick="switchTab('profile')"><svg class="icon" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>
         </div>
     </div>
@@ -255,7 +243,7 @@
                 document.getElementById("auth-screen").classList.add("hidden");
                 document.getElementById("app-screen").classList.remove("hidden");
                 loadFeed();
-                listenForNotifications(); // START LISTENING FOR ALERTS
+                listenForNotifications(); // START LISTENING
                 
                 const uDoc = await getDoc(doc(db, "users", user.uid));
                 if(uDoc.exists()) {
@@ -291,8 +279,7 @@
                     
                     const il = p.likedBy && p.likedBy.includes(currentUser.uid);
                     const lc = il ? "act-btn liked" : "act-btn";
-                    const isOwner = p.uid === currentUser.uid;
-                    const canEdit = isOwner || currentUser.email === ADMIN_EMAIL;
+                    const canEdit = p.uid === currentUser.uid || currentUser.email === ADMIN_EMAIL;
                     let adminTools = canEdit ? `<div style="margin-left:auto; display:flex; gap:10px;"><button class="act-btn" onclick="openEditMode('${ds.id}','${escape(p.text)}')" style="color:#bf00ff;"><svg class="icon" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button><button class="act-btn" onclick="delPost('${ds.id}')" style="color:#cc0000;"><svg class="icon" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>` : "";
                     const clickAction = p.uid ? `onclick="openUserProfile('${p.uid}')"` : "";
 
@@ -302,101 +289,59 @@
             });
         }
 
-        // --- NOTIFICATION SYSTEM (THE NEW ENGINE) ---
+        // --- NOTIFICATION SYSTEM (FIXED: CLIENT SORTING) ---
         function listenForNotifications() {
-            const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid), orderBy("time", "desc"));
+            // FIXED: Removed orderBy() from database query to avoid Index Error.
+            const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid));
+            
             onSnapshot(q, (sn) => {
                 const list = document.getElementById("notif-list");
                 list.innerHTML = "";
+                let notifs = [];
                 let unreadCount = 0;
                 
                 sn.forEach(d => {
                     const n = d.data();
+                    n.id = d.id;
+                    notifs.push(n);
                     if(!n.read) unreadCount++;
-                    
-                    const item = document.createElement("div");
-                    item.className = `notif-item ${n.read ? '' : 'unread'}`;
-                    
-                    let icon = "🔔";
-                    if(n.type === 'like') icon = "❤️";
-                    if(n.type === 'comment') icon = "💬";
-                    if(n.type === 'share') icon = "🔄";
-
-                    item.innerHTML = `<div class="notif-icon">${icon}</div><div class="notif-text"><b>${n.sender}</b> ${n.text} <span class="notif-time">${new Date(n.time.seconds*1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
-                    list.appendChild(item);
                 });
 
-                if(sn.empty) list.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No notifications yet.</div>";
+                // SORT HERE INSTEAD OF DATABASE
+                notifs.sort((a,b) => (b.time?.seconds || 0) - (a.time?.seconds || 0));
+
+                if(notifs.length === 0) {
+                    list.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No notifications yet.</div>";
+                } else {
+                    notifs.forEach(n => {
+                        const item = document.createElement("div");
+                        item.className = `notif-item ${n.read ? '' : 'unread'}`;
+                        let icon = "🔔"; if(n.type === 'like') icon = "❤️"; if(n.type === 'comment') icon = "💬"; if(n.type === 'share') icon = "🔄";
+                        item.innerHTML = `<div class="notif-icon">${icon}</div><div class="notif-text"><b>${n.sender}</b> ${n.text} <span class="notif-time">${n.time ? new Date(n.time.seconds*1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ''}</span></div>`;
+                        list.appendChild(item);
+                    });
+                }
                 
-                // Update Badge
                 const badge = document.getElementById("notif-badge");
-                if(unreadCount > 0) { badge.style.display = "block"; badge.innerText = unreadCount; } 
-                else { badge.style.display = "none"; }
+                if(unreadCount > 0) { badge.style.display = "block"; badge.innerText = unreadCount; } else { badge.style.display = "none"; }
             });
         }
 
         async function createNotification(targetUid, type, postId) {
-            if(targetUid === currentUser.uid) return; // Don't notify yourself
-            let text = "interacted with your post.";
-            if(type === 'like') text = "liked your post.";
-            if(type === 'comment') text = "commented on your post.";
-            if(type === 'share') text = "shared your post.";
-            
-            await addDoc(collection(db, "notifications"), {
-                recipient: targetUid,
-                sender: currentUserName,
-                type: type,
-                text: text,
-                postId: postId,
-                read: false,
-                time: serverTimestamp()
-            });
+            if(!targetUid || targetUid === currentUser.uid) return; 
+            let text = "interacted."; if(type === 'like') text = "liked your post."; if(type === 'comment') text = "commented on your post."; if(type === 'share') text = "shared your post.";
+            await addDoc(collection(db, "notifications"), { recipient: targetUid, sender: currentUserName, type: type, text: text, postId: postId, read: false, time: serverTimestamp() });
         }
 
-        // --- ACTIONS (UPDATED TO TRIGGER NOTIFS) ---
-        window.likePost = async (id, ownerUid) => { 
-            const pr = doc(db, "posts", id); const ds = await getDoc(pr); 
-            if (ds.exists()) { 
-                const p = ds.data(); const uid = currentUser.uid; let lb = p.likedBy || []; let cl = p.likes || 0; 
-                if (lb.includes(uid)) { lb = lb.filter(u => u !== uid); cl--; } 
-                else { lb.push(uid); cl++; createNotification(ownerUid, 'like', id); } // NOTIFY HERE
-                await updateDoc(pr, { likedBy: lb, likes: cl }); 
-            } 
-        };
-        
-        window.sharePost = async (id, u, ownerUid) => { 
-            const t = document.getElementById("text-" + id).innerText; updateDoc(doc(db, "posts", id), {shareCount: increment(1)}); 
-            createNotification(ownerUid, 'share', id); // NOTIFY HERE
-            const sd = { title: `Post by ${u}`, text: `${u}: "${t}"`, url: window.location.href }; 
-            if (navigator.share) { try { await navigator.share(sd); } catch (e) {} } else { try { await navigator.clipboard.writeText(`${sd.text}\n${sd.url}`); alert("🔗 Copied!"); } catch (e) {} } 
-        };
-        
-        window.sendComment = async (id, ownerUid) => { 
-            const i = document.getElementById(`input-${id}`); const t = i.value.trim(); if(!t) return; 
-            await addDoc(collection(db, "posts", id, "comments"), { text: t, username: currentUserName, createdAt: serverTimestamp() }); 
-            updateDoc(doc(db, "posts", id), {commentCount: increment(1)}); 
-            createNotification(ownerUid, 'comment', id); // NOTIFY HERE
-            i.value = ""; 
-        };
+        // --- ACTIONS ---
+        window.likePost = async (id, ownerUid) => { const pr = doc(db, "posts", id); const ds = await getDoc(pr); if (ds.exists()) { const p = ds.data(); const uid = currentUser.uid; let lb = p.likedBy || []; let cl = p.likes || 0; if (lb.includes(uid)) { lb = lb.filter(u => u !== uid); cl--; } else { lb.push(uid); cl++; createNotification(ownerUid, 'like', id); } await updateDoc(pr, { likedBy: lb, likes: cl }); } };
+        window.sharePost = async (id, u, ownerUid) => { const t = document.getElementById("text-" + id).innerText; updateDoc(doc(db, "posts", id), {shareCount: increment(1)}); createNotification(ownerUid, 'share', id); const sd = { title: `Post by ${u}`, text: `${u}: "${t}"`, url: window.location.href }; if (navigator.share) { try { await navigator.share(sd); } catch (e) {} } else { try { await navigator.clipboard.writeText(`${sd.text}\n${sd.url}`); alert("🔗 Copied!"); } catch (e) {} } };
+        window.sendComment = async (id, ownerUid) => { const i = document.getElementById(`input-${id}`); const t = i.value.trim(); if(!t) return; await addDoc(collection(db, "posts", id, "comments"), { text: t, username: currentUserName, createdAt: serverTimestamp() }); updateDoc(doc(db, "posts", id), {commentCount: increment(1)}); createNotification(ownerUid, 'comment', id); i.value = ""; };
 
-        // --- TAB SWITCHER (MARKS NOTIFS READ) ---
-        window.switchTab = async (t) => { 
-            if(t!=='user-view') previousTab=t; 
-            document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); 
-            document.getElementById('tab-'+t).classList.remove('hidden'); 
-            document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active'));
-            if(t==='home') document.querySelectorAll('.nav-item')[0].classList.add('nav-active');
-            if(t==='search') document.querySelectorAll('.nav-item')[1].classList.add('nav-active');
-            if(t==='notifs') { 
-                // Mark all as read when opening tab
-                const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid), where("read", "==", false));
-                const sn = await getDocs(q);
-                sn.forEach(d => updateDoc(doc(db, "notifications", d.id), {read: true}));
-            }
-            if(t==='profile') document.querySelectorAll('.nav-item')[3].classList.add('nav-active');
-        };
-
-        // --- OTHER LOGIC (UNCHANGED) ---
+        // --- NAVIGATION ---
+        window.switchTab = async (t) => { if(t!=='user-view') previousTab=t; document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); if(t==='home') document.querySelectorAll('.nav-item')[0].classList.add('nav-active'); if(t==='search') document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); if(t==='notifs') { const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid), where("read", "==", false)); const sn = await getDocs(q); sn.forEach(d => updateDoc(doc(db, "notifications", d.id), {read: true})); document.querySelectorAll('.nav-item')[2].classList.add('nav-active'); } if(t==='profile') document.querySelectorAll('.nav-item')[3].classList.add('nav-active'); };
+        
+        // --- OTHER LOGIC ---
         window.openUserProfile = async (uid) => { window.switchTab('user-view'); const d=await getDoc(doc(db,"users",uid)); if(d.exists()){const u=d.data();document.getElementById("view-name").innerText=u.name;document.getElementById("view-nick").innerText=u.nickname;document.getElementById("view-bio").innerText=u.bio;document.getElementById("view-country").innerText=u.country;if(u.pic)document.getElementById("view-pic").style.backgroundImage=`url('${u.pic}')`;if(u.coverPic)document.getElementById("view-cover").style.backgroundImage=`url('${u.coverPic}')`;} const q=query(postsRef,orderBy("createdAt","desc")); const s=await getDocs(q); const pd=document.getElementById("user-posts-feed"); pd.innerHTML=""; s.forEach(d=>{const p=d.data();if(p.uid===uid){const e=document.createElement("div");e.className="post";e.innerHTML=`<div class="content">${p.text}</div>${p.imageUrl?`<img src="${p.imageUrl}" class="post-img">`:""}`;pd.appendChild(e)}})};
         window.goBack = () => window.switchTab('home');
         window.openEditMode = (id,t) => {currentEditPostId=id;document.getElementById('edit-overlay').classList.remove('hidden');document.getElementById('edit-text-input').value=unescape(t)};
