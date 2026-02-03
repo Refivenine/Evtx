@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | Live Network</title>
+    <title>EVTX | Social</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <link rel="manifest" href="manifest.json">
@@ -18,6 +18,7 @@
 
         /* ICONS */
         .icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .icon-filled { fill: currentColor; stroke: none; } /* For liked state */
         
         /* UTILS */
         .hidden { display: none !important; }
@@ -76,10 +77,14 @@
         }
         .act-btn { 
             background: none; color: #888; font-size: 13px; display: flex; align-items: center; gap: 6px; 
-            transition: color 0.2s; 
+            transition: 0.2s; 
         }
         .act-btn:hover { color: #bf00ff; }
         .act-btn span { font-weight: 600; }
+        
+        /* LIKED STATE */
+        .liked { color: #e0245e !important; }
+        .liked svg { fill: #e0245e; stroke: none; }
 
         /* INLINE COMMENTS */
         .comments-section {
@@ -241,12 +246,16 @@
                     const isAdmin = p.userEmail === ADMIN_EMAIL;
                     const badge = isAdmin ? `<span style="color:#ffd700; margin-left:4px;">👑</span>` : "";
                     
-                    // Avatar logic
+                    // Avatar
                     let avatarStyle = "";
                     let avatarTxt = "";
                     if(isAdmin) avatarStyle = "background-image:url('https://refivenine.github.io/Evtx/logo.png'); border-color:#ffd700;";
                     else if(p.userPic) avatarStyle = `background-image:url('${p.userPic}');`;
                     else avatarTxt = (p.username||"?").charAt(0).toUpperCase();
+
+                    // LIKE CHECK (Is currentUser in the 'likedBy' list?)
+                    const isLiked = p.likedBy && p.likedBy.includes(currentUser.uid);
+                    const likeClass = isLiked ? "act-btn liked" : "act-btn";
 
                     // ICONS
                     const heartIcon = `<svg class="icon" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>`;
@@ -267,13 +276,12 @@
                         ${p.imageUrl ? `<img src="${p.imageUrl}" class="post-img">` : ""}
                         
                         <div class="actions">
-                            <button class="act-btn" onclick="likePost('${docSnap.id}')">
+                            <button class="${likeClass}" onclick="likePost('${docSnap.id}')">
                                 ${heartIcon} <span>${p.likes||0}</span>
                             </button>
                             <button class="act-btn" onclick="toggleComments('${docSnap.id}')">
                                 ${chatIcon} <span id="c-count-${docSnap.id}">${p.commentCount||0}</span>
                             </button>
-                            
                             <button class="act-btn" onclick="sharePost('${docSnap.id}', '${p.username}')">
                                 ${shareIcon} <span id="s-count-${docSnap.id}">${p.shareCount||0}</span>
                             </button>
@@ -292,37 +300,44 @@
             });
         }
 
-        // GLOBAL ACTIONS
-        window.likePost = (id) => updateDoc(doc(db,"posts",id), {likes: increment(1)});
+        // --- NEW ONE-LIKE-PER-PERSON LOGIC ---
+        window.likePost = async (id) => {
+            const postRef = doc(db, "posts", id);
+            const docSnap = await getDoc(postRef);
+            
+            if (docSnap.exists()) {
+                const p = docSnap.data();
+                const uid = currentUser.uid;
+                let likedBy = p.likedBy || [];
+                let currentLikes = p.likes || 0;
+
+                if (likedBy.includes(uid)) {
+                    // UNLIKE: Remove user, decrease count
+                    likedBy = likedBy.filter(u => u !== uid);
+                    currentLikes--;
+                } else {
+                    // LIKE: Add user, increase count
+                    likedBy.push(uid);
+                    currentLikes++;
+                }
+
+                await updateDoc(postRef, {
+                    likedBy: likedBy,
+                    likes: currentLikes
+                });
+            }
+        };
+
         window.delPost = (id) => { if(confirm("Delete?")) deleteDoc(doc(db,"posts",id)); };
         
-        // --- SMART SHARE LOGIC ---
         window.sharePost = async (id, username) => {
-            // 1. Get Text from Screen (Safer than passing strings)
             const postText = document.getElementById("text-" + id).innerText;
-            
-            // 2. Count Share
             updateDoc(doc(db, "posts", id), {shareCount: increment(1)});
-
-            // 3. Prepare Data
-            const shareData = {
-                title: `Post by ${username}`,
-                text: `${username}: "${postText}"`,
-                url: window.location.href
-            };
-
-            // 4. Try Native Share (Mobile) OR Clipboard (Desktop)
+            const shareData = { title: `Post by ${username}`, text: `${username}: "${postText}"`, url: window.location.href };
             if (navigator.share) {
-                try { await navigator.share(shareData); } 
-                catch (err) { console.log("Share failed", err); }
+                try { await navigator.share(shareData); } catch (err) { console.log("Share failed", err); }
             } else {
-                // FALLBACK: Copy to Clipboard
-                try {
-                    await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
-                    alert("🔗 Copied to clipboard!");
-                } catch (err) {
-                    alert("Could not share.");
-                }
+                try { await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`); alert("🔗 Copied!"); } catch (e) { alert("Could not share"); }
             }
         };
 
@@ -330,7 +345,6 @@
         window.toggleComments = (id) => {
             const section = document.getElementById(`comments-${id}`);
             const isHidden = section.style.display === "none" || section.style.display === "";
-            
             if (isHidden) {
                 section.style.display = "block";
                 const list = document.getElementById(`list-${id}`);
@@ -345,20 +359,16 @@
                         list.appendChild(row);
                     });
                 });
-            } else {
-                section.style.display = "none";
-            }
+            } else { section.style.display = "none"; }
         };
 
         window.sendComment = async (id) => {
             const input = document.getElementById(`input-${id}`);
             const txt = input.value.trim();
             if(!txt) return;
-            
             let name = "User";
             const uDoc = await getDoc(doc(db, "users", currentUser.uid));
             if(uDoc.exists()) name = uDoc.data().name || currentUser.email.split('@')[0];
-
             await addDoc(collection(db, "posts", id, "comments"), { text: txt, username: name, createdAt: serverTimestamp() });
             updateDoc(doc(db, "posts", id), {commentCount: increment(1)});
             input.value = "";
@@ -370,10 +380,8 @@
             const file = document.getElementById("fileInput").files[0];
             if(!input.value && !file) return;
             document.getElementById("sendBtn").innerText = "...";
-            
             let url = null;
             if(file) url = await compressImage(file);
-            
             let name = currentUser.email.split('@')[0];
             let pic = null;
             let bio = "Member";
@@ -384,7 +392,8 @@
                 text: input.value, imageUrl: url,
                 userEmail: currentUser.email, uid: currentUser.uid,
                 username: name, userPic: pic, userBio: bio,
-                createdAt: serverTimestamp(), likes: 0, commentCount: 0, shareCount: 0
+                createdAt: serverTimestamp(), likes: 0, commentCount: 0, shareCount: 0,
+                likedBy: [] // New array to track likers
             });
             input.value = ""; document.getElementById("fileInput").value = "";
             document.getElementById("sendBtn").innerText = "Post";
