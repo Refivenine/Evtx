@@ -143,7 +143,7 @@
         </div>
     </div>
 
-    <script type="module">
+  <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -181,15 +181,17 @@
                 // VIP CHECK
                 let avatarHTML = "";
                 let badgeHTML = "";
+                
+                // --- LOGO UPDATE: Use the uploaded logo.png for Admin ---
                 if (post.isVerified === true) {
-                    avatarHTML = `<div class="avatar" style="background-image:url('logo.png'); border-color: #ffd700;"></div>`;
+                    avatarHTML = `<div class="avatar" style="background-image: url('https://refivenine.github.io/Evtx/logo.png'); border-color: #ffd700;"></div>`;
                     badgeHTML = ` <span style="color: #ffd700; font-size: 16px;">👑</span>`;
                 } else {
                     const firstLetter = username.charAt(0).toUpperCase();
                     avatarHTML = `<div class="avatar">${firstLetter}</div>`;
                 }
 
-                // IMAGE CHECK (Using Links!)
+                // IMAGE CHECK
                 let imageHTML = "";
                 if (post.imageUrl) {
                     imageHTML = `<img src="${post.imageUrl}" class="post-img" loading="lazy">`;
@@ -224,22 +226,29 @@
                     updateDoc(doc(db, "posts", id), { likes: increment(1) });
                 });
             });
+            
+            // --- FIXED DELETE LOGIC ---
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    if(confirm("🛑 Delete this post?")) await deleteDoc(doc(db, "posts", id));
+                    // This was the missing line!
+                    const id = btn.getAttribute('data-id'); 
+                    
+                    if(confirm("🛑 Delete this post?")) {
+                        await deleteDoc(doc(db, "posts", id));
+                    }
                 });
             });
         });
 
-        // --- PART B: SENDING POST + LINK ---
+        // --- PART B: SENDING POST ---
         document.getElementById("sendBtn").addEventListener("click", async () => {
             const input = document.getElementById("postInput");
             const nameInput = document.getElementById("usernameInput");
-            const linkInput = document.getElementById("imageLinkInput"); // NEW INPUT
+            const linkInput = document.getElementById("imageLinkInput");
 
             const text = input.value;
             const user = nameInput.value || "Anonymous";
-            const imageUrl = linkInput.value; // Get the link text
+            const imageUrl = linkInput.value;
             let isVerified = false;
 
             if (text.trim() === "" && imageUrl.trim() === "") return;
@@ -252,17 +261,15 @@
             }
 
             try {
-                // SAVE DIRECTLY TO DATABASE
                 await addDoc(postsRef, {
                     text: text,
                     user: user,
-                    imageUrl: imageUrl, // Saving the TEXT link
+                    imageUrl: imageUrl,
                     isVerified: isVerified,
                     createdAt: serverTimestamp(),
                     likes: 0
                 });
 
-                // RESET
                 input.value = ""; 
                 linkInput.value = "";
             } catch (e) {
