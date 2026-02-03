@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | Social</title>
+    <title>EVTX | Network</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <link rel="manifest" href="manifest.json">
@@ -41,8 +41,8 @@
         
         .container { max-width: 600px; margin: 0 auto; padding: 0; }
 
-        /* PROFILE STYLES */
-        .profile-container { background: #151515; border-radius: 0 0 20px 20px; overflow: hidden; border: 1px solid #333; border-top: none; }
+        /* PROFILE STYLES (SHARED) */
+        .profile-container { background: #151515; border-radius: 0 0 20px 20px; overflow: hidden; border: 1px solid #333; border-top: none; margin-bottom: 20px; }
         .cover-photo-container { position: relative; width: 100%; height: 180px; background: #222; background-size: cover; background-position: center; border-bottom: 3px solid #bf00ff; }
         .edit-cover-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .profile-header-overlap { position: relative; margin-bottom: 60px; }
@@ -52,14 +52,22 @@
         .form-label { color: #bf00ff; font-size: 12px; margin-top: 20px; display: block; font-weight: 700; letter-spacing: 1px; }
         .form-input { width: 100%; background: #080808; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; box-sizing: border-box; }
         textarea.form-input { resize: vertical; font-family: sans-serif; }
+        
+        /* PUBLIC PROFILE VIEW SPECIFIC */
+        .public-bio-box { text-align: center; padding: 0 20px 20px 20px; }
+        .public-name { font-size: 22px; font-weight: bold; margin: 0; color: #fff; }
+        .public-nick { color: #bf00ff; font-size: 14px; margin-bottom: 10px; display: block; }
+        .public-stats { display: flex; justify-content: center; gap: 15px; margin-top: 15px; color: #777; font-size: 13px; }
+        .stat-tag { background: #222; padding: 4px 10px; border-radius: 10px; border: 1px solid #333; }
+        .back-btn-float { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); color: #fff; padding: 8px 12px; border-radius: 20px; backdrop-filter: blur(5px); z-index: 20; }
 
         /* FEED & COMMON */
         .create-box { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin: 15px; margin-bottom: 25px; }
         textarea#postInput { width: 100%; background: #080808; color: #fff; border: 1px solid #333; padding: 15px; border-radius: 10px; resize: none; box-sizing: border-box; outline: none; }
         .post { background: #151515; border-radius: 15px; padding: 15px; margin: 15px; margin-bottom: 15px; border: 1px solid #222; }
         .user-header { display: flex; align-items: center; margin-bottom: 12px; }
-        .avatar { width: 40px; height: 40px; background: #333; border-radius: 50%; margin-right: 12px; border: 2px solid #333; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .user-meta h4 { margin: 0; color: #fff; font-size: 15px; }
+        .avatar { width: 40px; height: 40px; background: #333; border-radius: 50%; margin-right: 12px; border: 2px solid #333; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
+        .user-meta h4 { margin: 0; color: #fff; font-size: 15px; cursor: pointer; }
         .user-meta span { font-size: 12px; color: #777; }
         .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 10px; white-space: pre-wrap; }
         .post-img { width: 100%; border-radius: 12px; margin-top: 5px; border: 1px solid #333; }
@@ -70,7 +78,6 @@
         /* EDIT POST OVERLAY */
         #edit-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0,0,0,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .edit-modal { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #333; }
-        .edit-modal h3 { color: #bf00ff; margin-top: 0; }
         
         /* INLINE COMMENTS */
         .comments-section { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; animation: slideDown 0.2s ease; }
@@ -113,7 +120,7 @@
 
         <div id="edit-overlay" class="hidden">
             <div class="edit-modal">
-                <h3>✏️ Edit Post</h3>
+                <h3 style="color:#bf00ff; margin-top:0;">✏️ Edit Post</h3>
                 <textarea id="edit-text-input" class="form-input" rows="4"></textarea>
                 <div id="edit-img-preview" style="color:#bf00ff; font-size:12px; margin:10px 0;"></div>
                 <div style="display:flex; gap:10px; margin-top:10px;">
@@ -167,6 +174,32 @@
                     </div>
                 </div>
             </div>
+
+            <div id="tab-user-view" class="tab-content hidden">
+                <div class="profile-container">
+                    <div class="cover-photo-container" id="view-cover">
+                        <button onclick="goBack()" class="back-btn-float">⬅ Back</button>
+                    </div>
+                    <div class="profile-header-overlap" style="margin-bottom:50px;">
+                        <div id="view-pic" class="big-avatar"></div>
+                    </div>
+                    
+                    <div class="public-bio-box">
+                        <h2 id="view-name" class="public-name">User Name</h2>
+                        <span id="view-nick" class="public-nick">@nickname</span>
+                        <p id="view-bio" style="color:#ddd; font-size:15px; margin:15px 0;">No bio available.</p>
+                        
+                        <div class="public-stats">
+                            <span id="view-country" class="stat-tag">🏳️ Earth</span>
+                            <span id="view-dob" class="stat-tag">🎂 ???</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="padding:0 15px; color:#555; font-size:14px; border-bottom:1px solid #333; padding-bottom:10px;">USER POSTS</h3>
+                <div id="user-posts-feed"></div>
+            </div>
+
         </div>
 
         <div class="bottom-nav">
@@ -184,12 +217,13 @@
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // --- CONFIG ---
-        const ADMIN_EMAIL = "hrangategamer@gmail.com"; // UPDATE THIS!
+        const ADMIN_EMAIL = "hrangategamer@gmail.com"; // VERIFY THIS!
         
         const firebaseConfig = { apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8", authDomain: "evtx-social.firebaseapp.com", projectId: "evtx-social", storageBucket: "evtx-social.firebasestorage.app", messagingSenderId: "24242683037", appId: "1:24242683037:web:48dcc74fe3d241cfb76874" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app); const postsRef = collection(db, "posts");
         let currentUser = null;
         let currentEditPostId = null;
+        let previousTab = 'home';
 
         // --- AUTH & DATA ---
         onAuthStateChanged(auth, async (user) => {
@@ -242,11 +276,14 @@
                             <button class="act-btn" onclick="delPost('${ds.id}')" style="color:#cc0000;"><svg class="icon" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                         </div>`;
                     }
+                    
+                    // Clickable User Info (Goes to Profile View)
+                    const clickAction = p.uid ? `onclick="openUserProfile('${p.uid}')"` : "";
 
                     el.innerHTML = `
                         <div class="user-header">
-                            <div class="avatar" style="${as}">${at}</div>
-                            <div class="user-meta"><h4>${p.username} ${b}</h4><span>${p.userBio || "Member"}</span></div>
+                            <div class="avatar" style="${as}" ${clickAction}>${at}</div>
+                            <div class="user-meta" ${clickAction}><h4>${p.username} ${b}</h4><span>${p.userBio || "Member"}</span></div>
                             ${adminTools}
                         </div>
                         <div class="content" id="text-${ds.id}">${p.text}</div>
@@ -276,28 +313,86 @@
             });
         }
 
-        // --- EDIT POST LOGIC ---
-        window.openEditMode = (id, text) => {
-            currentEditPostId = id;
-            document.getElementById('edit-overlay').classList.remove('hidden');
-            document.getElementById('edit-text-input').value = unescape(text);
-            document.getElementById('edit-img-preview').innerText = "";
-        }
-        window.closeEditMode = () => {
-            document.getElementById('edit-overlay').classList.add('hidden');
-            currentEditPostId = null;
-        }
-        window.saveEditedPost = async () => {
-            if(!currentEditPostId) return;
-            const newText = document.getElementById('edit-text-input').value;
-            const file = document.getElementById('edit-file-input').files[0];
-            const updates = { text: newText };
-            if(file) updates.imageUrl = await compressImage(file);
+        // --- PUBLIC PROFILE VIEWER LOGIC ---
+        window.openUserProfile = async (targetUid) => {
+            // Save current tab to go back later
+            if(!document.getElementById('tab-user-view').classList.contains('hidden') === false) {
+                 // only save if not already viewing
+            }
+            window.switchTab('user-view');
+
+            // Clear previous data
+            document.getElementById("view-name").innerText = "Loading...";
+            document.getElementById("view-bio").innerText = "";
+            document.getElementById("view-pic").style.backgroundImage = "none";
+            document.getElementById("view-cover").style.backgroundImage = "none";
+            document.getElementById("user-posts-feed").innerHTML = "Loading posts...";
+
+            // 1. Fetch User Data
+            const docSnap = await getDoc(doc(db, "users", targetUid));
+            if(docSnap.exists()) {
+                const u = docSnap.data();
+                document.getElementById("view-name").innerText = u.name || "Unknown User";
+                document.getElementById("view-nick").innerText = u.nickname || "@user";
+                document.getElementById("view-bio").innerText = u.bio || "No bio yet.";
+                document.getElementById("view-country").innerText = "🏳️ " + (u.country || "Earth");
+                document.getElementById("view-dob").innerText = "🎂 " + (u.dob || "Hidden");
+                
+                if(u.pic) document.getElementById("view-pic").style.backgroundImage = `url('${u.pic}')`;
+                if(u.coverPic) document.getElementById("view-cover").style.backgroundImage = `url('${u.coverPic}')`;
+            }
+
+            // 2. Fetch User's Posts (Client-side filter for simplicity without index)
+            const q = query(postsRef, orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
+            const postsDiv = document.getElementById("user-posts-feed");
+            postsDiv.innerHTML = "";
             
-            await updateDoc(doc(db, "posts", currentEditPostId), updates);
-            closeEditMode();
-            alert("Post Updated!");
+            let count = 0;
+            querySnapshot.forEach((doc) => {
+                const p = doc.data();
+                if(p.uid === targetUid) {
+                    count++;
+                    const el = document.createElement("div"); el.className = "post";
+                    el.innerHTML = `<div style="font-size:12px; color:#777; margin-bottom:5px;">${new Date(p.createdAt.seconds*1000).toLocaleDateString()}</div><div class="content">${p.text}</div>${p.imageUrl ? `<img src="${p.imageUrl}" class="post-img">`:""}`;
+                    postsDiv.appendChild(el);
+                }
+            });
+            if(count === 0) postsDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No posts shared yet.</div>";
+        };
+
+        window.goBack = () => {
+            window.switchTab('home'); // Simple back to home for now
         }
+
+        // --- SEARCH LOGIC (Connects to Profile Viewer) ---
+        document.getElementById("searchInput").addEventListener("input", async (e) => {
+            const text = e.target.value.trim().toLowerCase();
+            const resultsDiv = document.getElementById("searchResults");
+            resultsDiv.innerHTML = "";
+            if(text.length < 2) return;
+
+            // Basic search via getting all users (small scale app optimization)
+            const snap = await getDocs(collection(db, "users"));
+            snap.forEach(doc => {
+                const u = doc.data();
+                if((u.name && u.name.toLowerCase().includes(text)) || (u.nickname && u.nickname.toLowerCase().includes(text))) {
+                    const div = document.createElement("div");
+                    div.className = "user-result";
+                    div.onclick = () => openUserProfile(doc.id);
+                    div.innerHTML = `
+                        <div class="avatar" style="background-image: url('${u.pic || ''}'); border-color:${u.pic ? '#bf00ff':'#333'}">${u.pic ? '' : u.name[0]}</div>
+                        <div><h4 style="margin:0; color:#fff;">${u.name}</h4><span style="font-size:12px; color:#777;">${u.nickname || ""}</span></div>
+                    `;
+                    resultsDiv.appendChild(div);
+                }
+            });
+        });
+
+        // --- EDIT POST LOGIC ---
+        window.openEditMode = (id, text) => { currentEditPostId = id; document.getElementById('edit-overlay').classList.remove('hidden'); document.getElementById('edit-text-input').value = unescape(text); document.getElementById('edit-img-preview').innerText = ""; }
+        window.closeEditMode = () => { document.getElementById('edit-overlay').classList.add('hidden'); currentEditPostId = null; }
+        window.saveEditedPost = async () => { if(!currentEditPostId) return; const newText = document.getElementById('edit-text-input').value; const file = document.getElementById('edit-file-input').files[0]; const updates = { text: newText }; if(file) updates.imageUrl = await compressImage(file); await updateDoc(doc(db, "posts", currentEditPostId), updates); closeEditMode(); alert("Post Updated!"); }
 
         // --- STANDARD ACTIONS ---
         window.likePost = async (id) => { const pr = doc(db, "posts", id); const ds = await getDoc(pr); if (ds.exists()) { const p = ds.data(); const uid = currentUser.uid; let lb = p.likedBy || []; let cl = p.likes || 0; if (lb.includes(uid)) { lb = lb.filter(u => u !== uid); cl--; } else { lb.push(uid); cl++; } await updateDoc(pr, { likedBy: lb, likes: cl }); } };
@@ -306,50 +401,12 @@
         window.toggleComments = (id) => { const s = document.getElementById(`comments-${id}`); const h = s.style.display === "none" || s.style.display === ""; if (h) { s.style.display = "block"; const l = document.getElementById(`list-${id}`); onSnapshot(collection(db, "posts", id, "comments"), (sn) => { l.innerHTML = ""; if(sn.empty) l.innerHTML = "<div style='color:#555; font-size:12px;'>No comments yet.</div>"; sn.forEach(cd => { const c = cd.data(); const r = document.createElement("div"); r.className = "single-comment"; r.innerHTML = `<span class="c-user">${c.username}:</span> ${c.text}`; l.appendChild(r); }); }); } else { s.style.display = "none"; } };
         window.sendComment = async (id) => { const i = document.getElementById(`input-${id}`); const t = i.value.trim(); if(!t) return; let n = "User"; const ud = await getDoc(doc(db, "users", currentUser.uid)); if(ud.exists()) n = ud.data().name || currentUser.email.split('@')[0]; await addDoc(collection(db, "posts", id, "comments"), { text: t, username: n, createdAt: serverTimestamp() }); updateDoc(doc(db, "posts", id), {commentCount: increment(1)}); i.value = ""; };
 
-        // --- SAVE PROFILE (SAFE) ---
-        document.getElementById("saveProfileBtn").addEventListener("click", async () => {
-            const btn = document.getElementById("saveProfileBtn"); btn.innerText = "Saving...";
-            const picFile = document.getElementById("profilePicInput").files[0];
-            const coverFile = document.getElementById("coverPicInput").files[0];
-            let picUrl = null; let coverUrl = null;
-            
-            // Aggressive compression for Cover to ensure it saves!
-            if(picFile) picUrl = await compressImage(picFile);
-            if(coverFile) coverUrl = await compressImage(coverFile, 600, 0.5); // Lower quality for cover to fit size limit
-
-            const data = { name: document.getElementById('p-name').value, nickname: document.getElementById('p-nickname').value, bio: document.getElementById('p-bio').value, dob: document.getElementById('p-dob').value, country: document.getElementById('p-country').value };
-            if(picUrl) data.pic = picUrl; if(coverUrl) data.coverPic = coverUrl;
-            
-            try {
-                await setDoc(doc(db,"users",currentUser.uid), data, {merge:true});
-                btn.innerText = "✅ Profile Updated!"; 
-            } catch(e) {
-                alert("Image too big! Try a smaller one.");
-                btn.innerText = "❌ Error";
-            }
-            setTimeout(()=>btn.innerText="💾 Save Profile Changes", 2000);
-        });
+        // --- SAVE PROFILE ---
+        document.getElementById("saveProfileBtn").addEventListener("click", async () => { const btn = document.getElementById("saveProfileBtn"); btn.innerText = "Saving..."; const picFile = document.getElementById("profilePicInput").files[0]; const coverFile = document.getElementById("coverPicInput").files[0]; let picUrl = null; let coverUrl = null; if(picFile) picUrl = await compressImage(picFile); if(coverFile) coverUrl = await compressImage(coverFile, 600, 0.5); const data = { name: document.getElementById('p-name').value, nickname: document.getElementById('p-nickname').value, bio: document.getElementById('p-bio').value, dob: document.getElementById('p-dob').value, country: document.getElementById('p-country').value }; if(picUrl) data.pic = picUrl; if(coverUrl) data.coverPic = coverUrl; try { await setDoc(doc(db,"users",currentUser.uid), data, {merge:true}); btn.innerText = "✅ Updated!"; } catch(e) { alert("Image too big!"); btn.innerText = "❌ Error"; } setTimeout(()=>btn.innerText="💾 Save Profile Changes", 2000); });
 
         // --- UTILS ---
         document.getElementById("sendBtn").addEventListener("click", async () => { const input = document.getElementById("postInput"); const file = document.getElementById("fileInput").files[0]; if(!input.value && !file) return; document.getElementById("sendBtn").innerText = "..."; let url = null; if(file) url = await compressImage(file); let name = currentUser.email.split('@')[0]; let pic = null; let bio = "Member"; const uDoc = await getDoc(doc(db, "users", currentUser.uid)); if(uDoc.exists()) { const d=uDoc.data(); name=d.name||name; pic=d.pic; bio=d.nickname||bio; } await addDoc(postsRef, { text: input.value, imageUrl: url, userEmail: currentUser.email, uid: currentUser.uid, username: name, userPic: pic, userBio: bio, createdAt: serverTimestamp(), likes: 0, likedBy: [], commentCount: 0, shareCount: 0 }); input.value = ""; document.getElementById("fileInput").value = ""; document.getElementById("sendBtn").innerText = "Post"; });
-        
-        // UPDATED COMPRESSOR: Added width and quality params
-        const compressImage = (file, maxWidth = 800, quality = 0.7) => { 
-            return new Promise((r) => { 
-                const reader = new FileReader(); reader.readAsDataURL(file); 
-                reader.onload = (e) => { 
-                    const img = new Image(); img.src = e.target.result; 
-                    img.onload = () => { 
-                        const c = document.createElement('canvas'); 
-                        const s = maxWidth/img.width; 
-                        c.width=maxWidth; c.height=img.height*s; 
-                        c.getContext('2d').drawImage(img,0,0,c.width,c.height); 
-                        r(c.toDataURL('image/jpeg', quality)); 
-                    } 
-                } 
-            }); 
-        };
-        
+        const compressImage = (file, maxWidth = 800, quality = 0.7) => { return new Promise((r) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const c = document.createElement('canvas'); const s = maxWidth/img.width; c.width=maxWidth; c.height=img.height*s; c.getContext('2d').drawImage(img,0,0,c.width,c.height); r(c.toDataURL('image/jpeg', quality)); } } }); };
         document.getElementById('profilePicInput').addEventListener('change', function(e) { if(this.files[0]) { const r = new FileReader(); r.onload = function(e) { document.getElementById('my-pic').style.backgroundImage = `url('${e.target.result}')`; }; r.readAsDataURL(this.files[0]); } });
         document.getElementById('coverPicInput').addEventListener('change', function(e) { if(this.files[0]) { const r = new FileReader(); r.onload = function(e) { document.getElementById('my-cover-pic').style.backgroundImage = `url('${e.target.result}')`; }; r.readAsDataURL(this.files[0]); } });
         window.switchTab = (t) => { document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); };
