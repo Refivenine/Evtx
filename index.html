@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | Editor</title>
+    <title>EVTX | Social</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <link rel="manifest" href="manifest.json">
@@ -231,8 +231,6 @@
                     
                     const il = p.likedBy && p.likedBy.includes(currentUser.uid);
                     const lc = il ? "act-btn liked" : "act-btn";
-
-                    // Owner or Admin can Edit/Delete
                     const isOwner = p.uid === currentUser.uid;
                     const canEdit = isOwner || currentUser.email === ADMIN_EMAIL;
                     
@@ -308,23 +306,50 @@
         window.toggleComments = (id) => { const s = document.getElementById(`comments-${id}`); const h = s.style.display === "none" || s.style.display === ""; if (h) { s.style.display = "block"; const l = document.getElementById(`list-${id}`); onSnapshot(collection(db, "posts", id, "comments"), (sn) => { l.innerHTML = ""; if(sn.empty) l.innerHTML = "<div style='color:#555; font-size:12px;'>No comments yet.</div>"; sn.forEach(cd => { const c = cd.data(); const r = document.createElement("div"); r.className = "single-comment"; r.innerHTML = `<span class="c-user">${c.username}:</span> ${c.text}`; l.appendChild(r); }); }); } else { s.style.display = "none"; } };
         window.sendComment = async (id) => { const i = document.getElementById(`input-${id}`); const t = i.value.trim(); if(!t) return; let n = "User"; const ud = await getDoc(doc(db, "users", currentUser.uid)); if(ud.exists()) n = ud.data().name || currentUser.email.split('@')[0]; await addDoc(collection(db, "posts", id, "comments"), { text: t, username: n, createdAt: serverTimestamp() }); updateDoc(doc(db, "posts", id), {commentCount: increment(1)}); i.value = ""; };
 
-        // --- SAVE PROFILE (UNCHANGED) ---
+        // --- SAVE PROFILE (SAFE) ---
         document.getElementById("saveProfileBtn").addEventListener("click", async () => {
             const btn = document.getElementById("saveProfileBtn"); btn.innerText = "Saving...";
             const picFile = document.getElementById("profilePicInput").files[0];
             const coverFile = document.getElementById("coverPicInput").files[0];
             let picUrl = null; let coverUrl = null;
+            
+            // Aggressive compression for Cover to ensure it saves!
             if(picFile) picUrl = await compressImage(picFile);
-            if(coverFile) coverUrl = await compressImage(coverFile);
+            if(coverFile) coverUrl = await compressImage(coverFile, 600, 0.5); // Lower quality for cover to fit size limit
+
             const data = { name: document.getElementById('p-name').value, nickname: document.getElementById('p-nickname').value, bio: document.getElementById('p-bio').value, dob: document.getElementById('p-dob').value, country: document.getElementById('p-country').value };
             if(picUrl) data.pic = picUrl; if(coverUrl) data.coverPic = coverUrl;
-            await setDoc(doc(db,"users",currentUser.uid), data, {merge:true});
-            btn.innerText = "✅ Profile Updated!"; setTimeout(()=>btn.innerText="💾 Save Profile Changes", 2000);
+            
+            try {
+                await setDoc(doc(db,"users",currentUser.uid), data, {merge:true});
+                btn.innerText = "✅ Profile Updated!"; 
+            } catch(e) {
+                alert("Image too big! Try a smaller one.");
+                btn.innerText = "❌ Error";
+            }
+            setTimeout(()=>btn.innerText="💾 Save Profile Changes", 2000);
         });
 
         // --- UTILS ---
         document.getElementById("sendBtn").addEventListener("click", async () => { const input = document.getElementById("postInput"); const file = document.getElementById("fileInput").files[0]; if(!input.value && !file) return; document.getElementById("sendBtn").innerText = "..."; let url = null; if(file) url = await compressImage(file); let name = currentUser.email.split('@')[0]; let pic = null; let bio = "Member"; const uDoc = await getDoc(doc(db, "users", currentUser.uid)); if(uDoc.exists()) { const d=uDoc.data(); name=d.name||name; pic=d.pic; bio=d.nickname||bio; } await addDoc(postsRef, { text: input.value, imageUrl: url, userEmail: currentUser.email, uid: currentUser.uid, username: name, userPic: pic, userBio: bio, createdAt: serverTimestamp(), likes: 0, likedBy: [], commentCount: 0, shareCount: 0 }); input.value = ""; document.getElementById("fileInput").value = ""; document.getElementById("sendBtn").innerText = "Post"; });
-        const compressImage = (file) => { return new Promise((r) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const c = document.createElement('canvas'); const s = 800/img.width; c.width=800; c.height=img.height*s; c.getContext('2d').drawImage(img,0,0,c.width,c.height); r(c.toDataURL('image/jpeg',0.7)); } } }); };
+        
+        // UPDATED COMPRESSOR: Added width and quality params
+        const compressImage = (file, maxWidth = 800, quality = 0.7) => { 
+            return new Promise((r) => { 
+                const reader = new FileReader(); reader.readAsDataURL(file); 
+                reader.onload = (e) => { 
+                    const img = new Image(); img.src = e.target.result; 
+                    img.onload = () => { 
+                        const c = document.createElement('canvas'); 
+                        const s = maxWidth/img.width; 
+                        c.width=maxWidth; c.height=img.height*s; 
+                        c.getContext('2d').drawImage(img,0,0,c.width,c.height); 
+                        r(c.toDataURL('image/jpeg', quality)); 
+                    } 
+                } 
+            }); 
+        };
+        
         document.getElementById('profilePicInput').addEventListener('change', function(e) { if(this.files[0]) { const r = new FileReader(); r.onload = function(e) { document.getElementById('my-pic').style.backgroundImage = `url('${e.target.result}')`; }; r.readAsDataURL(this.files[0]); } });
         document.getElementById('coverPicInput').addEventListener('change', function(e) { if(this.files[0]) { const r = new FileReader(); r.onload = function(e) { document.getElementById('my-cover-pic').style.backgroundImage = `url('${e.target.result}')`; }; r.readAsDataURL(this.files[0]); } });
         window.switchTab = (t) => { document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); };
