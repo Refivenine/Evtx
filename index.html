@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | The Live Network</title>
+    <title>EVTX | Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <link rel="manifest" href="manifest.json">
@@ -9,78 +9,76 @@
     <link rel="apple-touch-icon" href="https://refivenine.github.io/Evtx/logo.png">
 
     <style>
-        /* --- DESIGN ENGINE (CSS) --- */
+        /* --- DESIGN ENGINE --- */
         body {
-            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://refivenine.github.io/cover2.jpg');
-            background-attachment: fixed;
-            background-size: cover;
-            background-position: center;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0; padding: 0;
+            background: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.95)), url('https://refivenine.github.io/cover2.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0;
         }
 
+        /* LOGIN SCREEN (OVERLAY) */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: #000; z-index: 2000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box;
+        }
+        .auth-box {
+            background: #151515; padding: 30px; border-radius: 20px;
+            border: 1px solid #bf00ff; width: 100%; max-width: 350px;
+            text-align: center; box-shadow: 0 0 30px rgba(191, 0, 255, 0.2);
+        }
+        .auth-input {
+            width: 100%; padding: 12px; margin: 10px 0; background: #000;
+            border: 1px solid #333; color: #fff; border-radius: 8px; box-sizing: border-box;
+        }
+        .auth-btn {
+            width: 100%; padding: 12px; background: #bf00ff; color: #fff;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+        .switch-btn {
+            background: none; border: none; color: #777; margin-top: 15px;
+            text-decoration: underline; cursor: pointer; font-size: 14px;
+        }
+
+        /* MAIN APP (Hidden until login) */
+        #app-screen { display: none; }
+
         .header {
-            background: rgba(20, 20, 20, 0.95);
-            padding: 15px;
-            border-bottom: 2px solid #bf00ff;
-            position: sticky; top: 0; z-index: 1000;
-            display: flex; justify-content: space-between; align-items: center;
-            backdrop-filter: blur(10px);
+            background: rgba(20, 20, 20, 0.95); padding: 15px; border-bottom: 2px solid #bf00ff;
+            position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center;
         }
         .logo { font-weight: 900; color: #fff; font-size: 22px; letter-spacing: 2px; }
         .logo span { color: #bf00ff; }
         
-        .nav-btn {
-            background: #333; color: white; text-decoration: none;
-            padding: 8px 15px; border-radius: 20px; font-size: 14px;
-            border: 1px solid #444; transition: 0.3s;
+        .logout-btn {
+            background: #333; color: #fff; border: 1px solid #444;
+            padding: 5px 12px; border-radius: 15px; font-size: 12px; cursor: pointer;
         }
+
         .container { max-width: 600px; margin: 20px auto; padding: 10px; }
-
-        .create-box {
-            background: #151515; padding: 15px; border-radius: 12px;
-            border: 1px solid #333; margin-bottom: 25px;
-        }
-        .name-input {
-            width: 100%; background: #000; color: #bf00ff; border: 1px solid #333;
-            padding: 10px; border-radius: 8px; margin-bottom: 10px; font-weight: bold; box-sizing: border-box;
-        }
+        .create-box { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 25px; }
+        
         textarea {
-            width: 100%; background: #080808; color: #ffffff;
-            border: 2px solid #bf00ff; padding: 15px; border-radius: 10px;
-            resize: none; font-size: 16px; outline: none; box-sizing: border-box; 
-            margin-bottom: 10px;
+            width: 100%; background: #080808; color: #fff; border: 2px solid #bf00ff;
+            padding: 15px; border-radius: 10px; resize: none; font-size: 16px; outline: none; box-sizing: border-box;
         }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .file-label { cursor: pointer; font-size: 20px; padding: 5px 10px; background: #222; border-radius: 50%; border: 1px solid #444; }
+        .post-btn { background: #bf00ff; color: #fff; border: none; padding: 10px 25px; font-weight: bold; border-radius: 20px; cursor: pointer; }
 
-        .toolbar { display: flex; justify-content: space-between; align-items: center; }
-        .file-label {
-            cursor: pointer; font-size: 20px; padding: 5px 10px;
-            background: #222; border-radius: 50%; border: 1px solid #444; transition: 0.2s;
-        }
-        .post-btn {
-            background: #bf00ff; color: #fff; border: none;
-            padding: 10px 25px; font-weight: bold; border-radius: 20px;
-            cursor: pointer; transition: 0.2s;
-        }
-
-        .post {
-            background: #151515; border-radius: 25px; padding: 20px;
-            margin-bottom: 20px; border: 1px solid #222;
-        }
+        .post { background: #151515; border-radius: 25px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
         .user-header { display: flex; margin-bottom: 15px; }
         .avatar {
-            width: 45px; height: 45px; background: #333;
-            border-radius: 50%; margin-right: 12px;
-            border: 2px solid #bf00ff;
-            background-size: cover; background-position: center;
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            width: 45px; height: 45px; background: #333; border-radius: 50%; margin-right: 12px;
+            border: 2px solid #bf00ff; background-size: cover; background-position: center;
+            display: flex; align-items: center; justify-content: center; font-size: 20px; text-transform: uppercase;
         }
         .user-meta h4 { margin: 0; color: #fff; }
         .user-meta span { font-size: 12px; color: #777; }
         .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 15px; white-space: pre-wrap; }
-        .post-img { width: 100%; border-radius: 15px; margin-top: 10px; margin-bottom: 10px; border: 1px solid #333; }
-        .actions { border-top: 1px solid #333; padding-top: 15px; display: flex; justify-content: space-between; }
+        .post-img { width: 100%; border-radius: 15px; margin-top: 10px; border: 1px solid #333; }
+        .actions { border-top: 1px solid #333; padding-top: 15px; display: flex; justify-content: space-between; margin-top: 15px;}
         .act-btn { background: none; border: none; color: #777; cursor: pointer; font-size: 14px; }
         .act-btn:hover { color: #bf00ff; }
 
@@ -88,27 +86,41 @@
 </head>
 <body>
 
-    <div class="header">
-        <div class="logo">EV<span>TX</span></div>
-        <a href="https://refivenine.github.io/" class="nav-btn">⬅ Back to HQ</a>
+    <div id="auth-screen">
+        <div class="logo" style="margin-bottom: 20px; font-size: 40px;">EV<span>TX</span></div>
+        <div class="auth-box">
+            <h2 id="auth-title" style="color:#fff; margin-top:0;">Login</h2>
+            <input type="email" id="email" class="auth-input" placeholder="Email">
+            <input type="password" id="password" class="auth-input" placeholder="Password">
+            <button id="auth-action-btn" class="auth-btn">Enter Network</button>
+            <button id="toggle-auth-btn" class="switch-btn">New here? Create Account</button>
+            <div id="auth-msg" style="color: #ff3333; margin-top: 10px; font-size: 13px;"></div>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="create-box">
-            <input type="text" id="usernameInput" class="name-input" placeholder="Codename..." value="Refivenine">
-            <textarea id="postInput" rows="3" placeholder="What is happening?"></textarea>
-            
-            <div id="filePreview" style="color: #00ffcc; font-size: 12px; margin-bottom: 10px;"></div>
-
-            <div class="toolbar">
-                <input type="file" id="fileInput" accept="image/*" hidden>
-                <label for="fileInput" class="file-label">📷</label>
-                <button class="post-btn" id="sendBtn">🚀 Post</button>
-            </div>
+    <div id="app-screen">
+        <div class="header">
+            <div class="logo">EV<span>TX</span></div>
+            <button id="logoutBtn" class="logout-btn">Log Out</button>
         </div>
 
-        <div id="feed">
-            <div style="text-align:center; color:#555; padding: 20px;">Connecting to Satellite... 📡</div>
+        <div class="container">
+            <div class="create-box">
+                <div style="color: #00ffcc; font-size: 14px; margin-bottom: 10px;">
+                    Posting as: <span id="currentUserDisplay">...</span>
+                </div>
+                
+                <textarea id="postInput" rows="3" placeholder="What is happening?"></textarea>
+                <div id="filePreview" style="color: #bf00ff; font-size: 12px; margin-bottom: 5px;"></div>
+
+                <div class="toolbar">
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <label for="fileInput" class="file-label">📷</label>
+                    <button class="post-btn" id="sendBtn">🚀 Post</button>
+                </div>
+            </div>
+
+            <div id="feed">Loading feed...</div>
         </div>
     </div>
 
@@ -116,8 +128,12 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // IMPORT AUTH TOOLS
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } 
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // --- NO API KEYS NEEDED FOR IMAGES ANYMORE ---
+        // --- CONFIGURATION ---
+        const ADMIN_EMAIL = "hrangategamer@gmail.com"; // CHANGE THIS TO YOUR EMAIL!
         
         const firebaseConfig = {
           apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
@@ -130,9 +146,173 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
         const postsRef = collection(db, "posts");
 
-        // --- HELPER: COMPRESS IMAGE TO TEXT ---
+        // --- AUTH LOGIC ---
+        let isSignUp = false;
+        const authScreen = document.getElementById("auth-screen");
+        const appScreen = document.getElementById("app-screen");
+        const authTitle = document.getElementById("auth-title");
+        const authBtn = document.getElementById("auth-action-btn");
+        const toggleBtn = document.getElementById("toggle-auth-btn");
+        const authMsg = document.getElementById("auth-msg");
+
+        // 1. Check if user is already logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is Logged In -> Show App
+                authScreen.style.display = "none";
+                appScreen.style.display = "block";
+                document.getElementById("currentUserDisplay").innerText = user.email.split('@')[0]; // Show name part of email
+                loadFeed(user); // Load posts
+            } else {
+                // No User -> Show Login
+                authScreen.style.display = "flex";
+                appScreen.style.display = "none";
+            }
+        });
+
+        // 2. Handle Login/Signup Button Click
+        authBtn.addEventListener("click", async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            authMsg.innerText = "Processing...";
+
+            try {
+                if (isSignUp) {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                } else {
+                    await signInWithEmailAndPassword(auth, email, password);
+                }
+                // If successful, onAuthStateChanged will trigger automatically
+            } catch (error) {
+                authMsg.innerText = "Error: " + error.message;
+            }
+        });
+
+        // 3. Toggle between Login and Signup modes
+        toggleBtn.addEventListener("click", () => {
+            isSignUp = !isSignUp;
+            if (isSignUp) {
+                authTitle.innerText = "Create Account";
+                authBtn.innerText = "Sign Up";
+                toggleBtn.innerText = "Have an account? Login";
+            } else {
+                authTitle.innerText = "Login";
+                authBtn.innerText = "Enter Network";
+                toggleBtn.innerText = "New here? Create Account";
+            }
+            authMsg.innerText = "";
+        });
+
+        // 4. Logout
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            signOut(auth);
+            window.location.reload();
+        });
+
+
+        // --- FEED LOGIC (Only runs after login) ---
+        function loadFeed(currentUser) {
+            const q = query(postsRef, orderBy("createdAt", "desc"));
+            onSnapshot(q, (snapshot) => {
+                const feed = document.getElementById("feed");
+                feed.innerHTML = ""; 
+
+                snapshot.forEach((doc) => {
+                    const post = doc.data();
+                    const postEl = document.createElement("div");
+                    postEl.className = "post";
+                    
+                    let timeText = "Just now";
+                    if(post.createdAt) timeText = new Date(post.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    // --- ADMIN BADGE LOGIC ---
+                    let avatarHTML = "";
+                    let badgeHTML = "";
+                    
+                    // IF THE POSTER'S EMAIL MATCHES THE ADMIN EMAIL -> SHOW CROWN
+                    if (post.userEmail === ADMIN_EMAIL) { 
+                        avatarHTML = `<div class="avatar" style="background-image: url('https://refivenine.github.io/Evtx/logo.png'); border-color: #ffd700;"></div>`;
+                        badgeHTML = ` <span style="color: #ffd700; font-size: 16px;">👑</span>`;
+                    } else {
+                        const firstLetter = (post.username || "A").charAt(0).toUpperCase();
+                        avatarHTML = `<div class="avatar">${firstLetter}</div>`;
+                    }
+
+                    // Delete Button (Only visible if YOU are the Admin)
+                    let deleteBtnHTML = "";
+                    if (currentUser.email === ADMIN_EMAIL) {
+                        deleteBtnHTML = `<button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">🗑️</button>`;
+                    }
+
+                    // Image
+                    let imageHTML = post.imageUrl ? `<img src="${post.imageUrl}" class="post-img" loading="lazy">` : "";
+
+                    postEl.innerHTML = `
+                        <div class="user-header">
+                            ${avatarHTML}
+                            <div class="user-meta">
+                                <h4>${post.username} ${badgeHTML}</h4>
+                                <span>${timeText}</span>
+                            </div>
+                            ${deleteBtnHTML}
+                        </div>
+                        <div class="content">${post.text}</div>
+                        ${imageHTML}
+                        <div class="actions">
+                            <button class="act-btn like-btn" data-id="${doc.id}">❤️ <span>${post.likes || 0}</span></button>
+                            <button class="act-btn">💬</button>
+                            <button class="act-btn">🔄</button>
+                        </div>
+                    `;
+                    feed.appendChild(postEl);
+                });
+
+                // Attach listeners
+                document.querySelectorAll('.like-btn').forEach(btn => btn.addEventListener('click', () => {
+                    updateDoc(doc(db, "posts", btn.getAttribute('data-id')), { likes: increment(1) });
+                }));
+                document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', async () => {
+                    if(confirm("Admin Delete?")) await deleteDoc(doc(db, "posts", btn.getAttribute('data-id')));
+                }));
+            });
+        }
+
+        // --- POSTING LOGIC ---
+        document.getElementById("sendBtn").addEventListener("click", async () => {
+            const input = document.getElementById("postInput");
+            const fileInput = document.getElementById("fileInput");
+            const user = auth.currentUser;
+
+            if (!user) return; // Security check
+            if (input.value.trim() === "" && !fileInput.files[0]) return;
+
+            const btn = document.getElementById("sendBtn");
+            btn.disabled = true; btn.innerText = "📡...";
+
+            try {
+                let imageUrl = null;
+                if (fileInput.files[0]) imageUrl = await compressImage(fileInput.files[0]);
+
+                await addDoc(postsRef, {
+                    text: input.value,
+                    username: user.email.split('@')[0], // Use email prefix as username
+                    userEmail: user.email, // Save email to check for Admin status later
+                    imageUrl: imageUrl,
+                    createdAt: serverTimestamp(),
+                    likes: 0
+                });
+
+                input.value = ""; fileInput.value = "";
+                document.getElementById('filePreview').innerText = "";
+            } catch (e) { console.error(e); alert("Error posting"); }
+            
+            btn.disabled = false; btn.innerText = "🚀 Post";
+        });
+
+        // --- IMAGE COMPRESSOR ---
         const compressImage = (file) => {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -142,142 +322,16 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800; // Shrink to 800px width
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                        
+                        const scaleSize = 800 / img.width;
+                        canvas.width = 800; canvas.height = img.height * scaleSize;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        // Convert to lightweight text string (JPEG 70% quality)
                         resolve(canvas.toDataURL('image/jpeg', 0.7)); 
                     }
                 }
                 reader.onerror = (error) => reject(error);
             });
         }
-
-        // --- FILE PREVIEW ---
-        document.getElementById('fileInput').addEventListener('change', function() {
-            const fileName = this.files[0]?.name;
-            if(fileName) document.getElementById('filePreview').innerText = "📷 Ready: " + fileName;
-        });
-
-        // --- PART A: LISTENING FOR POSTS ---
-        const q = query(postsRef, orderBy("createdAt", "desc"));
-        
-        onSnapshot(q, (snapshot) => {
-            const feed = document.getElementById("feed");
-            feed.innerHTML = ""; 
-
-            snapshot.forEach((doc) => {
-                const post = doc.data();
-                const postElement = document.createElement("div");
-                postElement.className = "post";
-                
-                let timeText = "Just now";
-                if(post.createdAt) timeText = new Date(post.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const username = post.user || "Anonymous";
-                
-                // VIP CHECK
-                let avatarHTML = "";
-                let badgeHTML = "";
-                if (post.isVerified === true) {
-                    avatarHTML = `<div class="avatar" style="background-image: url('https://refivenine.github.io/Evtx/logo.png'); border-color: #ffd700;"></div>`;
-                    badgeHTML = ` <span style="color: #ffd700; font-size: 16px;">👑</span>`;
-                } else {
-                    const firstLetter = username.charAt(0).toUpperCase();
-                    avatarHTML = `<div class="avatar">${firstLetter}</div>`;
-                }
-
-                // IMAGE CHECK
-                let imageHTML = "";
-                if (post.imageUrl) {
-                    imageHTML = `<img src="${post.imageUrl}" class="post-img" loading="lazy">`;
-                }
-
-                postElement.innerHTML = `
-                    <div class="user-header">
-                        ${avatarHTML}
-                        <div class="user-meta">
-                            <h4>${username} ${badgeHTML}</h4>
-                            <span>@${username.toLowerCase().replace(/\s/g, '')} • ${timeText}</span>
-                        </div>
-                        <button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">🗑️</button>
-                    </div>
-                    <div class="content">${post.text}</div>
-                    ${imageHTML} 
-                    <div class="actions">
-                        <button class="act-btn like-btn" data-id="${doc.id}">❤️ <span>${post.likes || 0}</span></button>
-                        <button class="act-btn">💬 Comment</button>
-                        <button class="act-btn">🔄 Share</button>
-                    </div>
-                `;
-                feed.appendChild(postElement);
-            });
-
-            // Re-attach buttons
-            document.querySelectorAll('.like-btn').forEach(btn => btn.addEventListener('click', (e) => {
-                updateDoc(doc(db, "posts", btn.getAttribute('data-id')), { likes: increment(1) });
-            }));
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', async (e) => {
-                if(confirm("🛑 Delete this post?")) await deleteDoc(doc(db, "posts", btn.getAttribute('data-id')));
-            }));
-        });
-
-        // --- PART B: SENDING POST (DIRECT SAVE) ---
-        document.getElementById("sendBtn").addEventListener("click", async () => {
-            const input = document.getElementById("postInput");
-            const nameInput = document.getElementById("usernameInput");
-            const fileInput = document.getElementById("fileInput");
-            
-            const text = input.value;
-            const user = nameInput.value || "Anonymous";
-            const file = fileInput.files[0];
-            let isVerified = false;
-
-            if (text.trim() === "" && !file) return;
-
-            if (user === "Refivenine") {
-                let password = prompt("🔐 Enter Admin Password:");
-                if (password === "admin123") isVerified = true;
-                else { alert("🚫 Wrong Password"); return; }
-            }
-
-            const btn = document.getElementById("sendBtn");
-            btn.disabled = true;
-            btn.innerText = "📡 Processing...";
-
-            try {
-                let imageUrl = null;
-                
-                // COMPRESS AND SAVE DIRECTLY
-                if (file) {
-                    imageUrl = await compressImage(file);
-                }
-
-                await addDoc(postsRef, {
-                    text: text,
-                    user: user,
-                    imageUrl: imageUrl, 
-                    isVerified: isVerified,
-                    createdAt: serverTimestamp(),
-                    likes: 0
-                });
-
-                input.value = ""; 
-                fileInput.value = "";
-                document.getElementById('filePreview').innerText = "";
-
-            } catch (e) {
-                console.error("Error posting: ", e);
-                alert("Image too big or network error.");
-            }
-
-            btn.disabled = false;
-            btn.innerText = "🚀 Post";
-        });
     </script>
 </body>
 </html>
