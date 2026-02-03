@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | Login</title>
+    <title>EVTX | Identity</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <link rel="manifest" href="manifest.json">
@@ -13,10 +13,10 @@
         body {
             background: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.95)), url('https://refivenine.github.io/cover2.jpg');
             background-size: cover; background-position: center; background-attachment: fixed;
-            color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0;
+            color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; padding-bottom: 70px; /* Space for bottom nav */
         }
 
-        /* LOGIN SCREEN (OVERLAY) */
+        /* LOGIN SCREEN */
         #auth-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             background: #000; z-index: 2000;
@@ -41,46 +41,73 @@
             text-decoration: underline; cursor: pointer; font-size: 14px;
         }
 
-        /* MAIN APP (Hidden until login) */
-        #app-screen { display: none; }
-
+        /* APP HEADER */
         .header {
             background: rgba(20, 20, 20, 0.95); padding: 15px; border-bottom: 2px solid #bf00ff;
             position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center;
         }
         .logo { font-weight: 900; color: #fff; font-size: 22px; letter-spacing: 2px; }
         .logo span { color: #bf00ff; }
-        
-        .logout-btn {
-            background: #333; color: #fff; border: 1px solid #444;
-            padding: 5px 12px; border-radius: 15px; font-size: 12px; cursor: pointer;
-        }
+        .logout-btn { background: #333; color: #fff; border: 1px solid #444; padding: 5px 12px; border-radius: 15px; font-size: 12px; }
 
+        /* TABS & CONTAINERS */
         .container { max-width: 600px; margin: 20px auto; padding: 10px; }
-        .create-box { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 25px; }
-        
-        textarea {
-            width: 100%; background: #080808; color: #fff; border: 2px solid #bf00ff;
-            padding: 15px; border-radius: 10px; resize: none; font-size: 16px; outline: none; box-sizing: border-box;
-        }
-        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-        .file-label { cursor: pointer; font-size: 20px; padding: 5px 10px; background: #222; border-radius: 50%; border: 1px solid #444; }
-        .post-btn { background: #bf00ff; color: #fff; border: none; padding: 10px 25px; font-weight: bold; border-radius: 20px; cursor: pointer; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .active-tab { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* PROFILE SCREEN */
+        .profile-card {
+            background: #151515; padding: 25px; border-radius: 20px;
+            border: 1px solid #333; text-align: center;
+        }
+        .profile-pic-preview {
+            width: 100px; height: 100px; border-radius: 50%;
+            border: 3px solid #bf00ff; margin: 0 auto 15px;
+            background-size: cover; background-position: center; background-color: #333;
+        }
+        .form-group { text-align: left; margin-bottom: 15px; }
+        .form-label { font-size: 12px; color: #bf00ff; margin-bottom: 5px; display: block; }
+        .form-input {
+            width: 100%; background: #080808; border: 1px solid #333;
+            color: #fff; padding: 10px; border-radius: 8px; box-sizing: border-box;
+        }
+        .save-btn {
+            background: #bf00ff; color: #fff; border: none; padding: 12px;
+            width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: #101010; border-top: 1px solid #333;
+            display: flex; justify-content: space-around; padding: 15px 0;
+            z-index: 1000;
+        }
+        .nav-item {
+            color: #777; font-size: 24px; cursor: pointer; text-decoration: none;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .nav-item span { font-size: 10px; }
+        .nav-active { color: #bf00ff; }
+
+        /* FEED STYLES */
+        .create-box { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 25px; }
+        textarea { width: 100%; background: #080808; color: #fff; border: 2px solid #bf00ff; padding: 15px; border-radius: 10px; resize: none; box-sizing: border-box; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .post { background: #151515; border-radius: 25px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
         .user-header { display: flex; margin-bottom: 15px; }
         .avatar {
             width: 45px; height: 45px; background: #333; border-radius: 50%; margin-right: 12px;
             border: 2px solid #bf00ff; background-size: cover; background-position: center;
-            display: flex; align-items: center; justify-content: center; font-size: 20px; text-transform: uppercase;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
         }
         .user-meta h4 { margin: 0; color: #fff; }
         .user-meta span { font-size: 12px; color: #777; }
         .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 15px; white-space: pre-wrap; }
         .post-img { width: 100%; border-radius: 15px; margin-top: 10px; border: 1px solid #333; }
-        .actions { border-top: 1px solid #333; padding-top: 15px; display: flex; justify-content: space-between; margin-top: 15px;}
-        .act-btn { background: none; border: none; color: #777; cursor: pointer; font-size: 14px; }
-        .act-btn:hover { color: #bf00ff; }
+        .actions { border-top: 1px solid #333; padding-top: 15px; display: flex; justify-content: space-between; }
+        .act-btn { background: none; border: none; color: #777; cursor: pointer; }
 
     </style>
 </head>
@@ -98,42 +125,84 @@
         </div>
     </div>
 
-    <div id="app-screen">
+    <div id="app-screen" style="display:none;">
         <div class="header">
             <div class="logo">EV<span>TX</span></div>
             <button id="logoutBtn" class="logout-btn">Log Out</button>
         </div>
 
         <div class="container">
-            <div class="create-box">
-                <div style="color: #00ffcc; font-size: 14px; margin-bottom: 10px;">
-                    Posting as: <span id="currentUserDisplay">...</span>
+            
+            <div id="tab-home" class="tab-content active-tab">
+                <div class="create-box">
+                    <textarea id="postInput" rows="3" placeholder="What is happening?"></textarea>
+                    <div id="filePreview" style="color: #bf00ff; font-size: 12px; margin-bottom: 5px;"></div>
+                    <div class="toolbar">
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                        <label for="fileInput" class="file-label" style="font-size:20px; cursor:pointer;">📷</label>
+                        <button class="auth-btn" id="sendBtn" style="width:auto; margin:0;">🚀 Post</button>
+                    </div>
                 </div>
-                
-                <textarea id="postInput" rows="3" placeholder="What is happening?"></textarea>
-                <div id="filePreview" style="color: #bf00ff; font-size: 12px; margin-bottom: 5px;"></div>
+                <div id="feed">Loading feed...</div>
+            </div>
 
-                <div class="toolbar">
-                    <input type="file" id="fileInput" accept="image/*" hidden>
-                    <label for="fileInput" class="file-label">📷</label>
-                    <button class="post-btn" id="sendBtn">🚀 Post</button>
+            <div id="tab-profile" class="tab-content">
+                <div class="profile-card">
+                    <div id="profile-pic-display" class="profile-pic-preview"></div>
+                    <input type="file" id="profilePicInput" hidden>
+                    <button onclick="document.getElementById('profilePicInput').click()" style="background:#333; color:#fff; border:1px solid #555; padding:5px 10px; border-radius:10px; margin-bottom:20px;">📸 Change Photo</button>
+
+                    <div class="form-group">
+                        <label class="form-label">DISPLAY NAME</label>
+                        <input type="text" id="p-name" class="form-input" placeholder="Your Codename">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">BIO</label>
+                        <input type="text" id="p-bio" class="form-input" placeholder="Short description...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DATE OF BIRTH</label>
+                        <input type="date" id="p-dob" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">HOBBY</label>
+                        <input type="text" id="p-hobby" class="form-input" placeholder="e.g. Coding, Gaming">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">COUNTRY</label>
+                        <select id="p-country" class="form-input" style="background:#080808; color:#fff;">
+                            <option value="India">India</option>
+                            <option value="USA">USA</option>
+                            <option value="UK">UK</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <button id="saveProfileBtn" class="save-btn">💾 Save Profile</button>
                 </div>
             </div>
 
-            <div id="feed">Loading feed...</div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item nav-active" onclick="switchTab('home')">
+                🏠 <span>Home</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('profile')">
+                👤 <span>Profile</span>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc } 
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc, setDoc, getDoc } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        // IMPORT AUTH TOOLS
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // --- CONFIGURATION ---
-        const ADMIN_EMAIL = "hrangategamer@gmail.com"; // CHANGE THIS TO YOUR EMAIL!
+        // --- CONFIG ---
+        const ADMIN_EMAIL = "hrangategamer@gmail.com"; // UPDATE THIS!
         
         const firebaseConfig = {
           apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
@@ -149,72 +218,99 @@
         const auth = getAuth(app);
         const postsRef = collection(db, "posts");
 
-        // --- AUTH LOGIC ---
-        let isSignUp = false;
-        const authScreen = document.getElementById("auth-screen");
-        const appScreen = document.getElementById("app-screen");
-        const authTitle = document.getElementById("auth-title");
-        const authBtn = document.getElementById("auth-action-btn");
-        const toggleBtn = document.getElementById("toggle-auth-btn");
-        const authMsg = document.getElementById("auth-msg");
+        // --- NAVIGATION LOGIC ---
+        window.switchTab = (tabName) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('nav-active'));
+            
+            document.getElementById('tab-' + tabName).style.display = 'block';
+            
+            // Highlight icon
+            const idx = tabName === 'home' ? 0 : 1;
+            document.querySelectorAll('.nav-item')[idx].classList.add('nav-active');
+        };
 
-        // 1. Check if user is already logged in
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is Logged In -> Show App
-                authScreen.style.display = "none";
-                appScreen.style.display = "block";
-                document.getElementById("currentUserDisplay").innerText = user.email.split('@')[0]; // Show name part of email
-                loadFeed(user); // Load posts
-            } else {
-                // No User -> Show Login
-                authScreen.style.display = "flex";
-                appScreen.style.display = "none";
-            }
-        });
-
-        // 2. Handle Login/Signup Button Click
-        authBtn.addEventListener("click", async () => {
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
-            authMsg.innerText = "Processing...";
-
-            try {
-                if (isSignUp) {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                } else {
-                    await signInWithEmailAndPassword(auth, email, password);
+        // --- IMAGE COMPRESSOR ---
+        const compressImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const scale = 500 / img.width; // Smaller for profile pics
+                        canvas.width = 500; canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    }
                 }
-                // If successful, onAuthStateChanged will trigger automatically
-            } catch (error) {
-                authMsg.innerText = "Error: " + error.message;
-            }
-        });
+            });
+        };
 
-        // 3. Toggle between Login and Signup modes
-        toggleBtn.addEventListener("click", () => {
-            isSignUp = !isSignUp;
-            if (isSignUp) {
-                authTitle.innerText = "Create Account";
-                authBtn.innerText = "Sign Up";
-                toggleBtn.innerText = "Have an account? Login";
+        // --- AUTH & PROFILE LOGIC ---
+        let currentUserProfile = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById("auth-screen").style.display = "none";
+                document.getElementById("app-screen").style.display = "block";
+                
+                // Load Profile Data
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if(userDoc.exists()) {
+                    currentUserProfile = userDoc.data();
+                    // Fill Form
+                    document.getElementById('p-name').value = currentUserProfile.name || "";
+                    document.getElementById('p-bio').value = currentUserProfile.bio || "";
+                    document.getElementById('p-dob').value = currentUserProfile.dob || "";
+                    document.getElementById('p-hobby').value = currentUserProfile.hobby || "";
+                    document.getElementById('p-country').value = currentUserProfile.country || "India";
+                    if(currentUserProfile.pic) document.getElementById('profile-pic-display').style.backgroundImage = `url('${currentUserProfile.pic}')`;
+                }
+
+                loadFeed(user);
             } else {
-                authTitle.innerText = "Login";
-                authBtn.innerText = "Enter Network";
-                toggleBtn.innerText = "New here? Create Account";
+                document.getElementById("auth-screen").style.display = "flex";
+                document.getElementById("app-screen").style.display = "none";
             }
-            authMsg.innerText = "";
         });
 
-        // 4. Logout
-        document.getElementById("logoutBtn").addEventListener("click", () => {
-            signOut(auth);
-            window.location.reload();
+        // --- SAVE PROFILE ---
+        document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+            const user = auth.currentUser;
+            if(!user) return;
+            
+            const btn = document.getElementById("saveProfileBtn");
+            btn.innerText = "Saving...";
+            
+            const name = document.getElementById('p-name').value;
+            const bio = document.getElementById('p-bio').value;
+            const dob = document.getElementById('p-dob').value;
+            const hobby = document.getElementById('p-hobby').value;
+            const country = document.getElementById('p-country').value;
+            
+            // Handle Profile Pic
+            let picUrl = currentUserProfile?.pic || "";
+            const file = document.getElementById('profilePicInput').files[0];
+            if(file) picUrl = await compressImage(file);
+
+            await setDoc(doc(db, "users", user.uid), {
+                name, bio, dob, hobby, country, pic: picUrl
+            }, { merge: true });
+
+            // Update local state
+            currentUserProfile = { name, bio, dob, hobby, country, pic: picUrl };
+            document.getElementById('profile-pic-display').style.backgroundImage = `url('${picUrl}')`;
+            
+            btn.innerText = "✅ Saved!";
+            setTimeout(() => btn.innerText = "💾 Save Profile", 2000);
         });
 
-
-        // --- FEED LOGIC (Only runs after login) ---
-        function loadFeed(currentUser) {
+        // --- FEED ---
+        function loadFeed(user) {
             const q = query(postsRef, orderBy("createdAt", "desc"));
             onSnapshot(q, (snapshot) => {
                 const feed = document.getElementById("feed");
@@ -222,116 +318,100 @@
 
                 snapshot.forEach((doc) => {
                     const post = doc.data();
-                    const postEl = document.createElement("div");
-                    postEl.className = "post";
+                    const el = document.createElement("div");
+                    el.className = "post";
                     
-                    let timeText = "Just now";
-                    if(post.createdAt) timeText = new Date(post.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    // ADMIN CHECK
+                    const isAdmin = post.userEmail === ADMIN_EMAIL;
+                    let badge = isAdmin ? ` <span style="color:#ffd700;">👑</span>` : "";
                     
-                    // --- ADMIN BADGE LOGIC ---
-                    let avatarHTML = "";
-                    let badgeHTML = "";
+                    // AVATAR LOGIC (Uses stored post data)
+                    let avatarStyle = "";
+                    let avatarContent = "";
                     
-                    // IF THE POSTER'S EMAIL MATCHES THE ADMIN EMAIL -> SHOW CROWN
-                    if (post.userEmail === ADMIN_EMAIL) { 
-                        avatarHTML = `<div class="avatar" style="background-image: url('https://refivenine.github.io/Evtx/logo.png'); border-color: #ffd700;"></div>`;
-                        badgeHTML = ` <span style="color: #ffd700; font-size: 16px;">👑</span>`;
+                    if (isAdmin) {
+                        avatarStyle = `background-image: url('https://refivenine.github.io/Evtx/logo.png'); border-color: #ffd700;`;
+                    } else if (post.userPic) {
+                        avatarStyle = `background-image: url('${post.userPic}');`;
                     } else {
-                        const firstLetter = (post.username || "A").charAt(0).toUpperCase();
-                        avatarHTML = `<div class="avatar">${firstLetter}</div>`;
+                        avatarContent = (post.username || "A").charAt(0).toUpperCase();
                     }
 
-                    // Delete Button (Only visible if YOU are the Admin)
-                    let deleteBtnHTML = "";
-                    if (currentUser.email === ADMIN_EMAIL) {
-                        deleteBtnHTML = `<button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">🗑️</button>`;
-                    }
-
-                    // Image
-                    let imageHTML = post.imageUrl ? `<img src="${post.imageUrl}" class="post-img" loading="lazy">` : "";
-
-                    postEl.innerHTML = `
+                    // DISPLAY
+                    el.innerHTML = `
                         <div class="user-header">
-                            ${avatarHTML}
+                            <div class="avatar" style="${avatarStyle}">${avatarContent}</div>
                             <div class="user-meta">
-                                <h4>${post.username} ${badgeHTML}</h4>
-                                <span>${timeText}</span>
+                                <h4>${post.username} ${badge}</h4>
+                                <span>${post.userBio || "Member"}</span>
                             </div>
-                            ${deleteBtnHTML}
+                            ${user.email === ADMIN_EMAIL ? `<button class="act-btn delete-btn" data-id="${doc.id}">🗑️</button>` : ""}
                         </div>
                         <div class="content">${post.text}</div>
-                        ${imageHTML}
+                        ${post.imageUrl ? `<img src="${post.imageUrl}" class="post-img">` : ""}
                         <div class="actions">
-                            <button class="act-btn like-btn" data-id="${doc.id}">❤️ <span>${post.likes || 0}</span></button>
+                            <button class="act-btn like-btn" data-id="${doc.id}">❤️ ${post.likes||0}</button>
                             <button class="act-btn">💬</button>
-                            <button class="act-btn">🔄</button>
                         </div>
                     `;
-                    feed.appendChild(postEl);
+                    feed.appendChild(el);
                 });
-
-                // Attach listeners
-                document.querySelectorAll('.like-btn').forEach(btn => btn.addEventListener('click', () => {
-                    updateDoc(doc(db, "posts", btn.getAttribute('data-id')), { likes: increment(1) });
-                }));
-                document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', async () => {
-                    if(confirm("Admin Delete?")) await deleteDoc(doc(db, "posts", btn.getAttribute('data-id')));
-                }));
+                
+                // Re-attach listeners... (simplified for brevity)
+                document.querySelectorAll('.delete-btn').forEach(b=>b.addEventListener('click', ()=>deleteDoc(doc(db,"posts",b.dataset.id))));
+                document.querySelectorAll('.like-btn').forEach(b=>b.addEventListener('click', ()=>updateDoc(doc(db,"posts",b.dataset.id),{likes:increment(1)})));
             });
         }
 
-        // --- POSTING LOGIC ---
+        // --- POSTING ---
         document.getElementById("sendBtn").addEventListener("click", async () => {
-            const input = document.getElementById("postInput");
-            const fileInput = document.getElementById("fileInput");
             const user = auth.currentUser;
-
-            if (!user) return; // Security check
-            if (input.value.trim() === "" && !fileInput.files[0]) return;
-
-            const btn = document.getElementById("sendBtn");
-            btn.disabled = true; btn.innerText = "📡...";
-
-            try {
-                let imageUrl = null;
-                if (fileInput.files[0]) imageUrl = await compressImage(fileInput.files[0]);
-
-                await addDoc(postsRef, {
-                    text: input.value,
-                    username: user.email.split('@')[0], // Use email prefix as username
-                    userEmail: user.email, // Save email to check for Admin status later
-                    imageUrl: imageUrl,
-                    createdAt: serverTimestamp(),
-                    likes: 0
-                });
-
-                input.value = ""; fileInput.value = "";
-                document.getElementById('filePreview').innerText = "";
-            } catch (e) { console.error(e); alert("Error posting"); }
+            const input = document.getElementById("postInput");
+            const file = document.getElementById("fileInput").files[0];
             
-            btn.disabled = false; btn.innerText = "🚀 Post";
+            if(!input.value && !file) return;
+            document.getElementById("sendBtn").innerText = "📡...";
+
+            let imgUrl = null;
+            if(file) imgUrl = await compressImage(file);
+
+            // USE CUSTOM PROFILE DATA IF AVAILABLE
+            const displayName = currentUserProfile?.name || user.email.split('@')[0];
+            const userPic = currentUserProfile?.pic || null;
+            const userBio = currentUserProfile?.hobby ? currentUserProfile.hobby + " | " + currentUserProfile.country : "EVTX User";
+
+            await addDoc(postsRef, {
+                text: input.value,
+                imageUrl: imgUrl,
+                userEmail: user.email,
+                username: displayName, // SAVES YOUR CUSTOM NAME
+                userPic: userPic,      // SAVES YOUR SELFIE
+                userBio: userBio,
+                createdAt: serverTimestamp(),
+                likes: 0
+            });
+
+            input.value = ""; document.getElementById("fileInput").value = "";
+            document.getElementById("sendBtn").innerText = "🚀 Post";
+            switchTab('home'); // Go back to feed
         });
 
-        // --- IMAGE COMPRESSOR ---
-        const compressImage = (file) => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const scaleSize = 800 / img.width;
-                        canvas.width = 800; canvas.height = img.height * scaleSize;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7)); 
-                    }
-                }
-                reader.onerror = (error) => reject(error);
-            });
-        }
+        // AUTH HANDLERS (Same as before)
+        document.getElementById("auth-action-btn").addEventListener("click", () => {
+             const e = document.getElementById("email").value;
+             const p = document.getElementById("password").value;
+             const isSignup = document.getElementById("auth-action-btn").innerText === "Sign Up";
+             if(isSignup) createUserWithEmailAndPassword(auth, e, p).catch(err=>alert(err.message));
+             else signInWithEmailAndPassword(auth, e, p).catch(err=>alert(err.message));
+        });
+        document.getElementById("toggle-auth-btn").addEventListener("click", function() {
+            const isSignup = this.innerText.includes("Create");
+            this.innerText = isSignup ? "Have an account? Login" : "New here? Create Account";
+            document.getElementById("auth-action-btn").innerText = isSignup ? "Sign Up" : "Enter Network";
+            document.getElementById("auth-title").innerText = isSignup ? "Create Account" : "Login";
+        });
+        document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+
     </script>
 </body>
 </html>
