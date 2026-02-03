@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | Network</title>
+    <title>EVTX | Chat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <link rel="manifest" href="manifest.json">
@@ -48,12 +48,27 @@
         
         .container { max-width: 600px; margin: 0 auto; padding: 0; }
 
+        /* CHAT STYLES (NEW) */
+        .chat-list-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; background: #151515; }
+        .chat-list-item:hover { background: #222; }
+        .chat-preview { margin-left: 15px; flex: 1; }
+        .chat-name { font-weight: bold; color: #fff; margin: 0; }
+        .chat-last-msg { color: #777; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        
+        /* CHAT ROOM */
+        #chat-room { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #000; z-index: 5000; display: flex; flex-direction: column; }
+        .chat-header { padding: 15px; background: #151515; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 15px; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message-bubble { max-width: 70%; padding: 10px 15px; border-radius: 20px; font-size: 14px; position: relative; word-wrap: break-word; }
+        .msg-me { align-self: flex-end; background: #bf00ff; color: #fff; border-bottom-right-radius: 2px; }
+        .msg-them { align-self: flex-start; background: #222; color: #ddd; border-bottom-left-radius: 2px; }
+        .chat-input-area { padding: 15px; background: #151515; border-top: 1px solid #333; display: flex; gap: 10px; }
+
         /* NOTIFICATIONS */
         .notif-item { display: flex; align-items: center; background: #151515; padding: 15px; border-bottom: 1px solid #222; }
         .notif-item.unread { background: #1a1a2e; border-left: 3px solid #bf00ff; }
         .notif-icon { margin-right: 15px; color: #bf00ff; font-size: 20px; }
         .notif-text { font-size: 14px; color: #ddd; flex: 1; }
-        .notif-text b { color: #fff; }
         .badge { position: absolute; top: -5px; right: 10px; background: #e0245e; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 50%; display: none; }
 
         /* FEED & COMMON */
@@ -133,6 +148,19 @@
             <button onclick="logout()" class="btn" style="color:#777; font-size:12px;">Log Out</button>
         </div>
 
+        <div id="chat-room" class="hidden">
+            <div class="chat-header">
+                <button onclick="closeChat()" class="btn" style="color:#fff;">⬅</button>
+                <div id="chat-with-pic" class="avatar" style="width:35px; height:35px;"></div>
+                <h4 id="chat-with-name" style="margin:0; color:#fff;">User</h4>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="msg-input" class="mini-input" placeholder="Type a message...">
+                <button onclick="sendMessage()" class="btn" style="color:#bf00ff;"><svg class="icon" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></button>
+            </div>
+        </div>
+
         <div id="edit-overlay" class="hidden">
             <div class="edit-modal">
                 <h3 style="color:#bf00ff; margin-top:0;">✏️ Edit Post</h3>
@@ -161,6 +189,13 @@
                     </div>
                 </div>
                 <div id="feed">Loading...</div>
+            </div>
+
+            <div id="tab-chats" class="tab-content hidden">
+                <h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Messages</h3>
+                <div id="chat-list">
+                    <div style="text-align:center; padding:20px; color:#555;">No conversations yet.</div>
+                </div>
             </div>
 
             <div id="tab-search" class="tab-content hidden">
@@ -203,6 +238,7 @@
                     <div class="public-bio-box">
                         <h2 id="view-name" class="public-name"></h2><span id="view-nick" class="public-nick"></span>
                         <p id="view-bio" style="color:#ddd; margin:15px 0;"></p>
+                        <button id="message-user-btn" class="main-btn" style="width:auto; padding:8px 20px; font-size:14px;">💬 Message</button>
                         <div class="public-stats"><span id="view-country" class="stat-tag"></span></div>
                     </div>
                 </div>
@@ -212,6 +248,7 @@
 
         <div class="bottom-nav">
             <div class="nav-item nav-active" onclick="switchTab('home')"><svg class="icon" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg></div>
+            <div class="nav-item" onclick="switchTab('chats')"><svg class="icon" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg></div>
             <div class="nav-item" onclick="switchTab('search')"><svg class="icon" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
             <div class="nav-item" onclick="switchTab('notifs')">
                 <svg class="icon" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
@@ -223,7 +260,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, where, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc, setDoc, getDoc, getDocs } 
+        import { getFirestore, collection, addDoc, query, orderBy, where, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc, setDoc, getDoc, getDocs, or } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -234,6 +271,7 @@
         const firebaseConfig = { apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8", authDomain: "evtx-social.firebaseapp.com", projectId: "evtx-social", storageBucket: "evtx-social.firebasestorage.app", messagingSenderId: "24242683037", appId: "1:24242683037:web:48dcc74fe3d241cfb76874" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app); const postsRef = collection(db, "posts");
         let currentUser = null; let currentEditPostId = null; let previousTab = 'home'; let currentUserName = "User";
+        let currentChatId = null; // Track active chat
 
         // --- AUTH & LOAD ---
         onAuthStateChanged(auth, async (user) => {
@@ -243,7 +281,8 @@
                 document.getElementById("auth-screen").classList.add("hidden");
                 document.getElementById("app-screen").classList.remove("hidden");
                 loadFeed();
-                listenForNotifications(); // START LISTENING
+                listenForNotifications();
+                loadChatList(); // Load conversations
                 
                 const uDoc = await getDoc(doc(db, "users", user.uid));
                 if(uDoc.exists()) {
@@ -263,6 +302,124 @@
             setTimeout(() => { splash.style.opacity = "0"; setTimeout(() => splash.style.display = "none", 500); }, 1000);
         });
 
+        // --- CHAT SYSTEM (NEW ENGINE) ---
+        window.startChat = async (targetUid) => {
+            if(targetUid === currentUser.uid) return alert("You cannot message yourself.");
+            
+            // 1. Check if chat exists
+            const q = query(collection(db, "chats"), where("participants", "array-contains", currentUser.uid));
+            const sn = await getDocs(q);
+            let existingChatId = null;
+            
+            sn.forEach(d => {
+                const data = d.data();
+                if(data.participants.includes(targetUid)) existingChatId = d.id;
+            });
+
+            if (existingChatId) {
+                openChatWindow(existingChatId, targetUid);
+            } else {
+                // 2. Create new chat
+                const docRef = await addDoc(collection(db, "chats"), {
+                    participants: [currentUser.uid, targetUid],
+                    lastMessage: "Chat started",
+                    lastUpdated: serverTimestamp()
+                });
+                openChatWindow(docRef.id, targetUid);
+            }
+        }
+
+        window.openChatWindow = async (chatId, targetUid) => {
+            currentChatId = chatId;
+            document.getElementById("chat-room").classList.remove("hidden");
+            
+            // Load Target User Info
+            const uDoc = await getDoc(doc(db, "users", targetUid));
+            if(uDoc.exists()) {
+                const u = uDoc.data();
+                document.getElementById("chat-with-name").innerText = u.name || "User";
+                if(u.pic) document.getElementById("chat-with-pic").style.backgroundImage = `url('${u.pic}')`;
+                else document.getElementById("chat-with-pic").style.backgroundImage = 'none';
+            }
+
+            // Listen for Messages
+            const q = query(collection(db, "chats", chatId, "messages"), orderBy("createdAt", "asc"));
+            onSnapshot(q, (sn) => {
+                const div = document.getElementById("chat-messages");
+                div.innerHTML = "";
+                sn.forEach(d => {
+                    const m = d.data();
+                    const el = document.createElement("div");
+                    el.className = `message-bubble ${m.senderId === currentUser.uid ? 'msg-me' : 'msg-them'}`;
+                    el.innerText = m.text;
+                    div.appendChild(el);
+                });
+                div.scrollTop = div.scrollHeight; // Auto scroll to bottom
+            });
+        }
+
+        window.sendMessage = async () => {
+            const input = document.getElementById("msg-input");
+            const text = input.value.trim();
+            if(!text || !currentChatId) return;
+            
+            input.value = "";
+            await addDoc(collection(db, "chats", currentChatId, "messages"), {
+                text: text,
+                senderId: currentUser.uid,
+                createdAt: serverTimestamp()
+            });
+            
+            await updateDoc(doc(db, "chats", currentChatId), {
+                lastMessage: text,
+                lastUpdated: serverTimestamp()
+            });
+        }
+
+        window.closeChat = () => {
+            document.getElementById("chat-room").classList.add("hidden");
+            currentChatId = null;
+        }
+
+        function loadChatList() {
+            const q = query(collection(db, "chats"), where("participants", "array-contains", currentUser.uid));
+            onSnapshot(q, async (sn) => {
+                const list = document.getElementById("chat-list");
+                list.innerHTML = "";
+                
+                if(sn.empty) {
+                    list.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No conversations yet.</div>";
+                    return;
+                }
+
+                for (const d of sn.docs) {
+                    const chat = d.data();
+                    const otherUid = chat.participants.find(id => id !== currentUser.uid);
+                    
+                    // Fetch other user name
+                    let otherName = "User";
+                    let otherPic = "";
+                    const uDoc = await getDoc(doc(db, "users", otherUid));
+                    if(uDoc.exists()) {
+                        otherName = uDoc.data().name;
+                        otherPic = uDoc.data().pic;
+                    }
+
+                    const el = document.createElement("div");
+                    el.className = "chat-list-item";
+                    el.onclick = () => openChatWindow(d.id, otherUid);
+                    el.innerHTML = `
+                        <div class="avatar" style="width:40px; height:40px; background-image:url('${otherPic||''}')"></div>
+                        <div class="chat-preview">
+                            <p class="chat-name">${otherName}</p>
+                            <p class="chat-last-msg">${chat.lastMessage}</p>
+                        </div>
+                    `;
+                    list.appendChild(el);
+                }
+            });
+        }
+
         // --- FEED ---
         function loadFeed() {
             onSnapshot(query(postsRef, orderBy("createdAt", "desc")), (sn) => {
@@ -276,73 +433,49 @@
                     if(isA) as = "background-image:url('https://refivenine.github.io/Evtx/logo.png'); border-color:#ffd700;";
                     else if(p.userPic) as = `background-image:url('${p.userPic}');`;
                     else at = (p.username||"?").charAt(0).toUpperCase();
-                    
                     const il = p.likedBy && p.likedBy.includes(currentUser.uid);
                     const lc = il ? "act-btn liked" : "act-btn";
                     const canEdit = p.uid === currentUser.uid || currentUser.email === ADMIN_EMAIL;
                     let adminTools = canEdit ? `<div style="margin-left:auto; display:flex; gap:10px;"><button class="act-btn" onclick="openEditMode('${ds.id}','${escape(p.text)}')" style="color:#bf00ff;"><svg class="icon" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button><button class="act-btn" onclick="delPost('${ds.id}')" style="color:#cc0000;"><svg class="icon" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>` : "";
                     const clickAction = p.uid ? `onclick="openUserProfile('${p.uid}')"` : "";
-
                     el.innerHTML = `<div class="user-header"><div class="avatar" style="${as}" ${clickAction}>${at}</div><div class="user-meta" ${clickAction}><h4>${p.username} ${b}</h4><span>${p.userBio || "Member"}</span></div>${adminTools}</div><div class="content" id="text-${ds.id}">${p.text}</div>${p.imageUrl ? `<img src="${p.imageUrl}" class="post-img">` : ""}<div class="actions"><button class="${lc}" onclick="likePost('${ds.id}', '${p.uid}')"><svg class="icon" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> <span>${p.likes||0}</span></button><button class="act-btn" onclick="toggleComments('${ds.id}')"><svg class="icon" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> <span id="c-count-${ds.id}">${p.commentCount||0}</span></button><button class="act-btn" onclick="sharePost('${ds.id}', '${p.username}', '${p.uid}')"><svg class="icon" viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg> <span id="s-count-${ds.id}">${p.shareCount||0}</span></button></div><div id="comments-${ds.id}" class="comments-section"><div id="list-${ds.id}">Loading...</div><div class="comment-input-row"><input type="text" id="input-${ds.id}" class="mini-input" placeholder="Add a comment..."><button onclick="sendComment('${ds.id}', '${p.uid}')" class="btn mini-btn">Send</button></div></div>`;
                     f.appendChild(el);
                 });
             });
         }
 
-        // --- NOTIFICATION SYSTEM (FIXED: CLIENT SORTING) ---
+        // --- NOTIFICATIONS (CLIENT SORTED) ---
         function listenForNotifications() {
-            // FIXED: Removed orderBy() from database query to avoid Index Error.
             const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid));
-            
             onSnapshot(q, (sn) => {
                 const list = document.getElementById("notif-list");
                 list.innerHTML = "";
                 let notifs = [];
                 let unreadCount = 0;
-                
-                sn.forEach(d => {
-                    const n = d.data();
-                    n.id = d.id;
-                    notifs.push(n);
-                    if(!n.read) unreadCount++;
-                });
-
-                // SORT HERE INSTEAD OF DATABASE
+                sn.forEach(d => { const n = d.data(); n.id = d.id; notifs.push(n); if(!n.read) unreadCount++; });
                 notifs.sort((a,b) => (b.time?.seconds || 0) - (a.time?.seconds || 0));
-
-                if(notifs.length === 0) {
-                    list.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No notifications yet.</div>";
-                } else {
-                    notifs.forEach(n => {
-                        const item = document.createElement("div");
-                        item.className = `notif-item ${n.read ? '' : 'unread'}`;
-                        let icon = "🔔"; if(n.type === 'like') icon = "❤️"; if(n.type === 'comment') icon = "💬"; if(n.type === 'share') icon = "🔄";
-                        item.innerHTML = `<div class="notif-icon">${icon}</div><div class="notif-text"><b>${n.sender}</b> ${n.text} <span class="notif-time">${n.time ? new Date(n.time.seconds*1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ''}</span></div>`;
-                        list.appendChild(item);
-                    });
-                }
-                
+                if(notifs.length === 0) list.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No notifications yet.</div>";
+                else notifs.forEach(n => {
+                    const item = document.createElement("div");
+                    item.className = `notif-item ${n.read ? '' : 'unread'}`;
+                    let icon = "🔔"; if(n.type === 'like') icon = "❤️"; if(n.type === 'comment') icon = "💬"; if(n.type === 'share') icon = "🔄";
+                    item.innerHTML = `<div class="notif-icon">${icon}</div><div class="notif-text"><b>${n.sender}</b> ${n.text} <span class="notif-time">${n.time ? new Date(n.time.seconds*1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ''}</span></div>`;
+                    list.appendChild(item);
+                });
                 const badge = document.getElementById("notif-badge");
                 if(unreadCount > 0) { badge.style.display = "block"; badge.innerText = unreadCount; } else { badge.style.display = "none"; }
             });
         }
-
-        async function createNotification(targetUid, type, postId) {
-            if(!targetUid || targetUid === currentUser.uid) return; 
-            let text = "interacted."; if(type === 'like') text = "liked your post."; if(type === 'comment') text = "commented on your post."; if(type === 'share') text = "shared your post.";
-            await addDoc(collection(db, "notifications"), { recipient: targetUid, sender: currentUserName, type: type, text: text, postId: postId, read: false, time: serverTimestamp() });
-        }
+        async function createNotification(targetUid, type, postId) { if(!targetUid || targetUid === currentUser.uid) return; let text = "interacted."; if(type === 'like') text = "liked your post."; if(type === 'comment') text = "commented on your post."; if(type === 'share') text = "shared your post."; await addDoc(collection(db, "notifications"), { recipient: targetUid, sender: currentUserName, type: type, text: text, postId: postId, read: false, time: serverTimestamp() }); }
 
         // --- ACTIONS ---
         window.likePost = async (id, ownerUid) => { const pr = doc(db, "posts", id); const ds = await getDoc(pr); if (ds.exists()) { const p = ds.data(); const uid = currentUser.uid; let lb = p.likedBy || []; let cl = p.likes || 0; if (lb.includes(uid)) { lb = lb.filter(u => u !== uid); cl--; } else { lb.push(uid); cl++; createNotification(ownerUid, 'like', id); } await updateDoc(pr, { likedBy: lb, likes: cl }); } };
         window.sharePost = async (id, u, ownerUid) => { const t = document.getElementById("text-" + id).innerText; updateDoc(doc(db, "posts", id), {shareCount: increment(1)}); createNotification(ownerUid, 'share', id); const sd = { title: `Post by ${u}`, text: `${u}: "${t}"`, url: window.location.href }; if (navigator.share) { try { await navigator.share(sd); } catch (e) {} } else { try { await navigator.clipboard.writeText(`${sd.text}\n${sd.url}`); alert("🔗 Copied!"); } catch (e) {} } };
         window.sendComment = async (id, ownerUid) => { const i = document.getElementById(`input-${id}`); const t = i.value.trim(); if(!t) return; await addDoc(collection(db, "posts", id, "comments"), { text: t, username: currentUserName, createdAt: serverTimestamp() }); updateDoc(doc(db, "posts", id), {commentCount: increment(1)}); createNotification(ownerUid, 'comment', id); i.value = ""; };
 
-        // --- NAVIGATION ---
-        window.switchTab = async (t) => { if(t!=='user-view') previousTab=t; document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); if(t==='home') document.querySelectorAll('.nav-item')[0].classList.add('nav-active'); if(t==='search') document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); if(t==='notifs') { const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid), where("read", "==", false)); const sn = await getDocs(q); sn.forEach(d => updateDoc(doc(db, "notifications", d.id), {read: true})); document.querySelectorAll('.nav-item')[2].classList.add('nav-active'); } if(t==='profile') document.querySelectorAll('.nav-item')[3].classList.add('nav-active'); };
-        
-        // --- OTHER LOGIC ---
-        window.openUserProfile = async (uid) => { window.switchTab('user-view'); const d=await getDoc(doc(db,"users",uid)); if(d.exists()){const u=d.data();document.getElementById("view-name").innerText=u.name;document.getElementById("view-nick").innerText=u.nickname;document.getElementById("view-bio").innerText=u.bio;document.getElementById("view-country").innerText=u.country;if(u.pic)document.getElementById("view-pic").style.backgroundImage=`url('${u.pic}')`;if(u.coverPic)document.getElementById("view-cover").style.backgroundImage=`url('${u.coverPic}')`;} const q=query(postsRef,orderBy("createdAt","desc")); const s=await getDocs(q); const pd=document.getElementById("user-posts-feed"); pd.innerHTML=""; s.forEach(d=>{const p=d.data();if(p.uid===uid){const e=document.createElement("div");e.className="post";e.innerHTML=`<div class="content">${p.text}</div>${p.imageUrl?`<img src="${p.imageUrl}" class="post-img">`:""}`;pd.appendChild(e)}})};
+        // --- NAV & OTHER ---
+        window.switchTab = async (t) => { if(t!=='user-view') previousTab=t; document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); if(t==='home') document.querySelectorAll('.nav-item')[0].classList.add('nav-active'); if(t==='chats') document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); if(t==='search') document.querySelectorAll('.nav-item')[2].classList.add('nav-active'); if(t==='notifs') { const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid), where("read", "==", false)); const sn = await getDocs(q); sn.forEach(d => updateDoc(doc(db, "notifications", d.id), {read: true})); document.querySelectorAll('.nav-item')[3].classList.add('nav-active'); } if(t==='profile') document.querySelectorAll('.nav-item')[4].classList.add('nav-active'); };
+        window.openUserProfile = async (uid) => { window.switchTab('user-view'); document.getElementById("message-user-btn").onclick = () => startChat(uid); const d=await getDoc(doc(db,"users",uid)); if(d.exists()){const u=d.data();document.getElementById("view-name").innerText=u.name;document.getElementById("view-nick").innerText=u.nickname;document.getElementById("view-bio").innerText=u.bio;document.getElementById("view-country").innerText=u.country;if(u.pic)document.getElementById("view-pic").style.backgroundImage=`url('${u.pic}')`;if(u.coverPic)document.getElementById("view-cover").style.backgroundImage=`url('${u.coverPic}')`;} const q=query(postsRef,orderBy("createdAt","desc")); const s=await getDocs(q); const pd=document.getElementById("user-posts-feed"); pd.innerHTML=""; s.forEach(d=>{const p=d.data();if(p.uid===uid){const e=document.createElement("div");e.className="post";e.innerHTML=`<div class="content">${p.text}</div>${p.imageUrl?`<img src="${p.imageUrl}" class="post-img">`:""}`;pd.appendChild(e)}})};
         window.goBack = () => window.switchTab('home');
         window.openEditMode = (id,t) => {currentEditPostId=id;document.getElementById('edit-overlay').classList.remove('hidden');document.getElementById('edit-text-input').value=unescape(t)};
         window.closeEditMode = () => document.getElementById('edit-overlay').classList.add('hidden');
