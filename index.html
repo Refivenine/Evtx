@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | Network</title>
+    <title>EVTX | Social</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     
     <link rel="manifest" href="manifest.json">
@@ -35,15 +35,26 @@
         .pulse-logo span { color: var(--app-color); }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
 
-        /* FRIEND BUTTON STYLES */
+        /* FRIEND BUTTON */
         .friend-btn {
             background: #333; color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 13px;
-            font-weight: bold; margin-right: 10px; transition: 0.2s; border: 1px solid #444;
+            font-weight: bold; margin-right: 10px; transition: 0.2s; border: 1px solid #444; cursor: pointer;
         }
         .friend-btn.add { background: var(--app-color); border-color: var(--app-color); }
         .friend-btn.requested { background: #222; color: #888; }
-        .friend-btn.accept { background: #00c853; border-color: #00c853; } /* Green for accept */
+        .friend-btn.accept { background: #00c853; border-color: #00c853; } 
         .friend-btn.friends { background: #111; color: var(--app-color); border-color: var(--app-color); }
+
+        /* NOTIFICATIONS (CLICKABLE) */
+        .notif-item { 
+            display: flex; align-items: center; background: #151515; padding: 15px; 
+            border-bottom: 1px solid #222; cursor: pointer; /* NEW: Shows it's clickable */
+            transition: background 0.2s;
+        }
+        .notif-item:active { background: #222; } /* Tap effect */
+        .notif-item.unread { background: #1a1a2e; border-left: 3px solid var(--app-color); }
+        .notif-icon { margin-right: 15px; color: var(--app-color); font-size: 20px; } 
+        .notif-text { font-size: 14px; color: #ddd; flex: 1; }
 
         /* BADGES */
         .nav-item { position: relative; color: #555; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -52,9 +63,8 @@
             position: absolute; top: -5px; right: -5px; background: #ff0000; color: #fff;
             font-size: 10px; font-weight: 900; min-width: 16px; height: 16px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center; border: 2px solid #000;
-            z-index: 10; display: none; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10; display: none;
         }
-        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
         /* CROPPER */
         #cropper-modal { position: fixed; inset: 0; background: #000; z-index: 6000; display: flex; flex-direction: column; }
@@ -102,13 +112,8 @@
         .mini-input { width: 100%; background: #000; border: 1px solid #333; padding: 8px; border-radius: 20px; color: #fff; outline: none; }
         .mini-btn { background: #333; color: #fff; border-radius: 20px; padding: 5px 15px; font-size: 12px; }
         .single-comment { font-size: 13px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #222; } .c-user { color: var(--app-color); font-weight: bold; margin-right: 5px; }
-        
-        /* NOTIFICATIONS */
-        .notif-item { display: flex; align-items: center; background: #151515; padding: 15px; border-bottom: 1px solid #222; }
-        .notif-item.unread { background: #1a1a2e; border-left: 3px solid var(--app-color); }
-        .notif-icon { margin-right: 15px; color: var(--app-color); font-size: 20px; } .notif-text { font-size: 14px; color: #ddd; flex: 1; }
-
-        /* PROFILE LAYOUT */
+        #edit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .edit-modal { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #333; }
         .profile-container { background: #151515; border-radius: 0 0 20px 20px; overflow: hidden; border: 1px solid #333; border-top: none; margin-bottom: 20px; }
         .cover-photo-container { position: relative; width: 100%; height: 180px; background: #222; background-size: cover; background-position: center; border-bottom: 3px solid var(--app-color); transition: border-color 0.3s; }
         .big-avatar { width: 110px; height: 110px; border-radius: 50%; border: 4px solid #151515; background-size: cover; background-position: center; background-color: #333; position: absolute; bottom: -55px; left: 50%; transform: translateX(-50%); z-index: 10; transition: border-color 0.3s; }
@@ -243,25 +248,30 @@
                 s.forEach(d=>{const x=d.data();x.id=d.id;n.push(x);if(!x.read)u++});
                 n.sort((a,b)=>(b.time?.seconds||0)-(a.time?.seconds||0));
                 if(n.length===0)l.innerHTML="<div style='text-align:center;padding:20px;color:#555;'>No notifications</div>";
-                else n.forEach(x=>{const e=document.createElement("div");e.className=`notif-item ${x.read?'':'unread'}`;let i="🔔";if(x.type==='like')i="❤️";if(x.type==='comment')i="💬";if(x.type==='share')i="🔄";if(x.type==='friend_req')i="👥";e.innerHTML=`<div class="notif-icon">${i}</div><div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;l.appendChild(e)});
+                else n.forEach(x=>{
+                    const e=document.createElement("div");e.className=`notif-item ${x.read?'':'unread'}`;
+                    let i="🔔";if(x.type==='like')i="❤️";if(x.type==='comment')i="💬";if(x.type==='share')i="🔄";if(x.type==='friend_req')i="👥";
+                    // CLICKABLE NOTIFICATION (GOES TO SENDER PROFILE)
+                    e.onclick = () => openUserProfile(x.senderUid);
+                    e.innerHTML=`<div class="notif-icon">${i}</div><div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;l.appendChild(e)});
                 const b=document.getElementById("notif-badge");
                 if(u>0){b.style.display="flex";b.innerText=u}else{b.style.display="none"}
             }) 
         }
-        async function createNotification(t,y,pid) { if(!t||t===currentUser.uid)return; let txt="interacted."; if(y==='like')txt="liked your post."; if(y==='comment')txt="commented."; if(y==='share')txt="shared your post."; if(y==='friend_req')txt="sent a friend request."; if(y==='friend_accept')txt="accepted your friend request."; await addDoc(collection(db,"notifications"),{recipient:t,sender:currentUserName,type:y,text:txt,postId:pid,read:false,time:serverTimestamp()}); }
+        async function createNotification(t,y,pid) { 
+            if(!t||t===currentUser.uid)return; 
+            let txt="interacted."; if(y==='like')txt="liked your post."; if(y==='comment')txt="commented."; if(y==='share')txt="shared your post."; if(y==='friend_req')txt="sent a friend request."; if(y==='friend_accept')txt="accepted your friend request."; 
+            await addDoc(collection(db,"notifications"),{recipient:t,sender:currentUserName, senderUid: currentUser.uid, type:y,text:txt,postId:pid,read:false,time:serverTimestamp()}); 
+        }
         window.likePost = async (id,oid) => { const r=doc(db,"posts",id); const d=await getDoc(r); if(d.exists()){const p=d.data();const u=currentUser.uid;let l=p.likedBy||[];let c=p.likes||0;if(l.includes(u)){l=l.filter(x=>x!==u);c--}else{l.push(u);c++;createNotification(oid,'like',id)} await updateDoc(r,{likedBy:l,likes:c})} };
         window.sharePost = async (id,u,oid) => { updateDoc(doc(db,"posts",id),{shareCount:increment(1)}); createNotification(oid,'share',id); const d={title:`Post by ${u}`,text:"Check this out",url:window.location.href}; if(navigator.share)try{await navigator.share(d)}catch(e){}else alert("Link copied") };
         window.sendComment = async (id,oid) => { const i=document.getElementById(`input-${id}`); const t=i.value.trim(); if(!t)return; await addDoc(collection(db,"posts",id,"comments"),{text:t,username:currentUserName,createdAt:serverTimestamp()}); updateDoc(doc(db,"posts",id),{commentCount:increment(1)}); createNotification(oid,'comment',id); i.value="" };
         
-        // --- FRIEND SYSTEM ---
         window.toggleFriend = async (targetUid) => {
             const btn = document.getElementById("friend-user-btn");
             const myRef = doc(db, "users", currentUser.uid);
             const targetRef = doc(db, "users", targetUid);
-            
-            // Get current state from button text (quick check)
             const state = btn.innerText;
-
             if (state === "Add Friend") {
                 await updateDoc(myRef, { requestsSent: arrayUnion(targetUid) });
                 await updateDoc(targetRef, { requestsReceived: arrayUnion(currentUser.uid) });
@@ -278,7 +288,6 @@
                 await updateDoc(myRef, { friends: arrayRemove(targetUid) });
                 await updateDoc(targetRef, { friends: arrayRemove(currentUser.uid) });
             }
-            // Button update happens via onSnapshot listener in openUserProfile
         }
 
         // --- NAV & HELPERS ---
@@ -295,7 +304,7 @@
             document.getElementById("friend-user-btn").onclick=()=>toggleFriend(uid);
             const btn = document.getElementById("friend-user-btn");
             
-            // Real-time friend status listener
+            // Listen for friend status
             onSnapshot(doc(db, "users", currentUser.uid), (doc) => {
                 const me = doc.data();
                 if(me.friends && me.friends.includes(uid)) { btn.innerText = "Friends"; btn.className = "friend-btn friends"; }
