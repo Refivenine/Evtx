@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | Social</title>
+    <title>EVTX | Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <link rel="manifest" href="manifest.json">
@@ -51,7 +51,6 @@
         .form-section { padding: 20px; padding-top: 0; }
         .form-label { color: #bf00ff; font-size: 12px; margin-top: 20px; display: block; font-weight: 700; letter-spacing: 1px; }
         .form-input { width: 100%; background: #080808; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; box-sizing: border-box; }
-        .form-input:focus { border-color: #bf00ff; outline: none; }
         textarea.form-input { resize: vertical; font-family: sans-serif; }
 
         /* FEED & COMMON */
@@ -67,6 +66,11 @@
         .actions { border-top: 1px solid #222; padding-top: 12px; margin-top: 10px; display: flex; justify-content: space-between; padding-right: 10px; }
         .act-btn { background: none; color: #888; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
         .act-btn:hover { color: #bf00ff; } .liked { color: #e0245e !important; } .liked svg { fill: #e0245e; stroke: none; }
+        
+        /* EDIT POST OVERLAY */
+        #edit-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0,0,0,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .edit-modal { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #333; }
+        .edit-modal h3 { color: #bf00ff; margin-top: 0; }
         
         /* INLINE COMMENTS */
         .comments-section { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; animation: slideDown 0.2s ease; }
@@ -105,6 +109,22 @@
         <div class="header">
             <div class="logo">EV<span>TX</span></div>
             <button onclick="logout()" class="btn" style="color:#777; font-size:12px;">Log Out</button>
+        </div>
+
+        <div id="edit-overlay" class="hidden">
+            <div class="edit-modal">
+                <h3>✏️ Edit Post</h3>
+                <textarea id="edit-text-input" class="form-input" rows="4"></textarea>
+                <div id="edit-img-preview" style="color:#bf00ff; font-size:12px; margin:10px 0;"></div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                     <button onclick="document.getElementById('edit-file-input').click()" class="btn" style="background:#333; color:#fff; padding:8px 15px; border-radius:10px;">Change Image</button>
+                     <input type="file" id="edit-file-input" hidden accept="image/*">
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:20px;">
+                    <button onclick="closeEditMode()" class="btn" style="color:#777;">Cancel</button>
+                    <button onclick="saveEditedPost()" class="main-btn" style="margin:0; width:auto;">Save Changes</button>
+                </div>
+            </div>
         </div>
 
         <div class="container">
@@ -164,21 +184,20 @@
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // --- CONFIG ---
-        const ADMIN_EMAIL = "hrangategamer@gmail.com"; // VERIFY THIS!
+        const ADMIN_EMAIL = "hrangategamer@gmail.com"; // UPDATE THIS!
         
         const firebaseConfig = { apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8", authDomain: "evtx-social.firebaseapp.com", projectId: "evtx-social", storageBucket: "evtx-social.firebasestorage.app", messagingSenderId: "24242683037", appId: "1:24242683037:web:48dcc74fe3d241cfb76874" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app); const postsRef = collection(db, "posts");
         let currentUser = null;
+        let currentEditPostId = null;
 
-        // --- AUTH & LOAD DATA ---
+        // --- AUTH & DATA ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById("auth-screen").classList.add("hidden");
                 document.getElementById("app-screen").classList.remove("hidden");
                 loadFeed();
-                
-                // LOAD PROFILE DATA
                 const uDoc = await getDoc(doc(db, "users", user.uid));
                 if(uDoc.exists()) {
                     const d = uDoc.data();
@@ -196,25 +215,7 @@
             }
         });
 
-        // --- SAVE PROFILE ---
-        document.getElementById("saveProfileBtn").addEventListener("click", async () => {
-            const btn = document.getElementById("saveProfileBtn"); btn.innerText = "Saving...";
-            const picFile = document.getElementById("profilePicInput").files[0];
-            const coverFile = document.getElementById("coverPicInput").files[0];
-            let picUrl = null; let coverUrl = null;
-            if(picFile) picUrl = await compressImage(picFile);
-            if(coverFile) coverUrl = await compressImage(coverFile);
-            const data = { name: document.getElementById('p-name').value, nickname: document.getElementById('p-nickname').value, bio: document.getElementById('p-bio').value, dob: document.getElementById('p-dob').value, country: document.getElementById('p-country').value };
-            if(picUrl) data.pic = picUrl; if(coverUrl) data.coverPic = coverUrl;
-            await setDoc(doc(db,"users",currentUser.uid), data, {merge:true});
-            btn.innerText = "✅ Profile Updated!"; setTimeout(()=>btn.innerText="💾 Save Profile Changes", 2000);
-        });
-
-        // --- IMAGE PREVIEWS ---
-        document.getElementById('profilePicInput').addEventListener('change', function(e) { if(this.files[0]) { const r = new FileReader(); r.onload = function(e) { document.getElementById('my-pic').style.backgroundImage = `url('${e.target.result}')`; }; r.readAsDataURL(this.files[0]); } });
-        document.getElementById('coverPicInput').addEventListener('change', function(e) { if(this.files[0]) { const r = new FileReader(); r.onload = function(e) { document.getElementById('my-cover-pic').style.backgroundImage = `url('${e.target.result}')`; }; r.readAsDataURL(this.files[0]); } });
-
-        // --- FEED & ACTIONS (RESTORED!) ---
+        // --- FEED & ACTIONS ---
         function loadFeed() {
             onSnapshot(query(postsRef, orderBy("createdAt", "desc")), (sn) => {
                 const f = document.getElementById("feed"); f.innerHTML = "";
@@ -231,11 +232,24 @@
                     const il = p.likedBy && p.likedBy.includes(currentUser.uid);
                     const lc = il ? "act-btn liked" : "act-btn";
 
+                    // Owner or Admin can Edit/Delete
+                    const isOwner = p.uid === currentUser.uid;
+                    const canEdit = isOwner || currentUser.email === ADMIN_EMAIL;
+                    
+                    let adminTools = "";
+                    if(canEdit) {
+                        adminTools = `
+                        <div style="margin-left:auto; display:flex; gap:10px;">
+                            <button class="act-btn" onclick="openEditMode('${ds.id}', '${escape(p.text)}')" style="color:#bf00ff;"><svg class="icon" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                            <button class="act-btn" onclick="delPost('${ds.id}')" style="color:#cc0000;"><svg class="icon" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                        </div>`;
+                    }
+
                     el.innerHTML = `
                         <div class="user-header">
                             <div class="avatar" style="${as}">${at}</div>
                             <div class="user-meta"><h4>${p.username} ${b}</h4><span>${p.userBio || "Member"}</span></div>
-                            ${currentUser.email === ADMIN_EMAIL ? `<button class="act-btn" onclick="delPost('${ds.id}')" style="margin-left:auto; color:#cc0000;"><svg class="icon" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : ""}
+                            ${adminTools}
                         </div>
                         <div class="content" id="text-${ds.id}">${p.text}</div>
                         ${p.imageUrl ? `<img src="${p.imageUrl}" class="post-img">` : ""}
@@ -251,7 +265,6 @@
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg> <span id="s-count-${ds.id}">${p.shareCount||0}</span>
                             </button>
                         </div>
-
                         <div id="comments-${ds.id}" class="comments-section">
                             <div id="list-${ds.id}">Loading...</div>
                             <div class="comment-input-row">
@@ -265,26 +278,55 @@
             });
         }
 
-        // --- ACTION LOGIC ---
+        // --- EDIT POST LOGIC ---
+        window.openEditMode = (id, text) => {
+            currentEditPostId = id;
+            document.getElementById('edit-overlay').classList.remove('hidden');
+            document.getElementById('edit-text-input').value = unescape(text);
+            document.getElementById('edit-img-preview').innerText = "";
+        }
+        window.closeEditMode = () => {
+            document.getElementById('edit-overlay').classList.add('hidden');
+            currentEditPostId = null;
+        }
+        window.saveEditedPost = async () => {
+            if(!currentEditPostId) return;
+            const newText = document.getElementById('edit-text-input').value;
+            const file = document.getElementById('edit-file-input').files[0];
+            const updates = { text: newText };
+            if(file) updates.imageUrl = await compressImage(file);
+            
+            await updateDoc(doc(db, "posts", currentEditPostId), updates);
+            closeEditMode();
+            alert("Post Updated!");
+        }
+
+        // --- STANDARD ACTIONS ---
         window.likePost = async (id) => { const pr = doc(db, "posts", id); const ds = await getDoc(pr); if (ds.exists()) { const p = ds.data(); const uid = currentUser.uid; let lb = p.likedBy || []; let cl = p.likes || 0; if (lb.includes(uid)) { lb = lb.filter(u => u !== uid); cl--; } else { lb.push(uid); cl++; } await updateDoc(pr, { likedBy: lb, likes: cl }); } };
         window.delPost = (id) => { if(confirm("Delete?")) deleteDoc(doc(db,"posts",id)); };
         window.sharePost = async (id, u) => { const t = document.getElementById("text-" + id).innerText; updateDoc(doc(db, "posts", id), {shareCount: increment(1)}); const sd = { title: `Post by ${u}`, text: `${u}: "${t}"`, url: window.location.href }; if (navigator.share) { try { await navigator.share(sd); } catch (e) { console.log(e); } } else { try { await navigator.clipboard.writeText(`${sd.text}\n${sd.url}`); alert("🔗 Copied!"); } catch (e) { alert("Error"); } } };
         window.toggleComments = (id) => { const s = document.getElementById(`comments-${id}`); const h = s.style.display === "none" || s.style.display === ""; if (h) { s.style.display = "block"; const l = document.getElementById(`list-${id}`); onSnapshot(collection(db, "posts", id, "comments"), (sn) => { l.innerHTML = ""; if(sn.empty) l.innerHTML = "<div style='color:#555; font-size:12px;'>No comments yet.</div>"; sn.forEach(cd => { const c = cd.data(); const r = document.createElement("div"); r.className = "single-comment"; r.innerHTML = `<span class="c-user">${c.username}:</span> ${c.text}`; l.appendChild(r); }); }); } else { s.style.display = "none"; } };
         window.sendComment = async (id) => { const i = document.getElementById(`input-${id}`); const t = i.value.trim(); if(!t) return; let n = "User"; const ud = await getDoc(doc(db, "users", currentUser.uid)); if(ud.exists()) n = ud.data().name || currentUser.email.split('@')[0]; await addDoc(collection(db, "posts", id, "comments"), { text: t, username: n, createdAt: serverTimestamp() }); updateDoc(doc(db, "posts", id), {commentCount: increment(1)}); i.value = ""; };
 
-        // POSTING & UTILS
-        document.getElementById("sendBtn").addEventListener("click", async () => {
-            const input = document.getElementById("postInput"); const file = document.getElementById("fileInput").files[0];
-            if(!input.value && !file) return; document.getElementById("sendBtn").innerText = "...";
-            let url = null; if(file) url = await compressImage(file);
-            let name = currentUser.email.split('@')[0]; let pic = null; let bio = "Member";
-            const uDoc = await getDoc(doc(db, "users", currentUser.uid));
-            if(uDoc.exists()) { const d=uDoc.data(); name=d.name||name; pic=d.pic; bio=d.nickname||bio; }
-            await addDoc(postsRef, { text: input.value, imageUrl: url, userEmail: currentUser.email, uid: currentUser.uid, username: name, userPic: pic, userBio: bio, createdAt: serverTimestamp(), likes: 0, likedBy: [], commentCount: 0, shareCount: 0 });
-            input.value = ""; document.getElementById("fileInput").value = ""; document.getElementById("sendBtn").innerText = "Post";
+        // --- SAVE PROFILE (UNCHANGED) ---
+        document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+            const btn = document.getElementById("saveProfileBtn"); btn.innerText = "Saving...";
+            const picFile = document.getElementById("profilePicInput").files[0];
+            const coverFile = document.getElementById("coverPicInput").files[0];
+            let picUrl = null; let coverUrl = null;
+            if(picFile) picUrl = await compressImage(picFile);
+            if(coverFile) coverUrl = await compressImage(coverFile);
+            const data = { name: document.getElementById('p-name').value, nickname: document.getElementById('p-nickname').value, bio: document.getElementById('p-bio').value, dob: document.getElementById('p-dob').value, country: document.getElementById('p-country').value };
+            if(picUrl) data.pic = picUrl; if(coverUrl) data.coverPic = coverUrl;
+            await setDoc(doc(db,"users",currentUser.uid), data, {merge:true});
+            btn.innerText = "✅ Profile Updated!"; setTimeout(()=>btn.innerText="💾 Save Profile Changes", 2000);
         });
 
+        // --- UTILS ---
+        document.getElementById("sendBtn").addEventListener("click", async () => { const input = document.getElementById("postInput"); const file = document.getElementById("fileInput").files[0]; if(!input.value && !file) return; document.getElementById("sendBtn").innerText = "..."; let url = null; if(file) url = await compressImage(file); let name = currentUser.email.split('@')[0]; let pic = null; let bio = "Member"; const uDoc = await getDoc(doc(db, "users", currentUser.uid)); if(uDoc.exists()) { const d=uDoc.data(); name=d.name||name; pic=d.pic; bio=d.nickname||bio; } await addDoc(postsRef, { text: input.value, imageUrl: url, userEmail: currentUser.email, uid: currentUser.uid, username: name, userPic: pic, userBio: bio, createdAt: serverTimestamp(), likes: 0, likedBy: [], commentCount: 0, shareCount: 0 }); input.value = ""; document.getElementById("fileInput").value = ""; document.getElementById("sendBtn").innerText = "Post"; });
         const compressImage = (file) => { return new Promise((r) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const c = document.createElement('canvas'); const s = 800/img.width; c.width=800; c.height=img.height*s; c.getContext('2d').drawImage(img,0,0,c.width,c.height); r(c.toDataURL('image/jpeg',0.7)); } } }); };
+        document.getElementById('profilePicInput').addEventListener('change', function(e) { if(this.files[0]) { const r = new FileReader(); r.onload = function(e) { document.getElementById('my-pic').style.backgroundImage = `url('${e.target.result}')`; }; r.readAsDataURL(this.files[0]); } });
+        document.getElementById('coverPicInput').addEventListener('change', function(e) { if(this.files[0]) { const r = new FileReader(); r.onload = function(e) { document.getElementById('my-cover-pic').style.backgroundImage = `url('${e.target.result}')`; }; r.readAsDataURL(this.files[0]); } });
         window.switchTab = (t) => { document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); };
         window.logout = () => signOut(auth);
         document.getElementById("auth-action-btn").addEventListener("click", () => { const e=document.getElementById("email").value; const p=document.getElementById("password").value; if(document.getElementById("auth-action-btn").innerText.includes("Enter")) signInWithEmailAndPassword(auth,e,p).catch(alert); else createUserWithEmailAndPassword(auth,e,p).catch(alert); });
