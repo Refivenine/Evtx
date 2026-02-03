@@ -114,7 +114,7 @@
         #edit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .edit-modal { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #333; }
         
-        /* PROFILE LAYOUTS (FIXED VIEW) */
+        /* PROFILE LAYOUTS (FIXED) */
         .profile-container { background: #151515; border-radius: 0 0 20px 20px; overflow: hidden; border: 1px solid #333; border-top: none; margin-bottom: 20px; }
         .cover-photo-container { position: relative; width: 100%; height: 180px; background: #222; background-size: cover; background-position: center; border-bottom: 3px solid var(--app-color); transition: border-color 0.3s; }
         .big-avatar { width: 110px; height: 110px; border-radius: 50%; border: 4px solid #151515; background-size: cover; background-position: center; background-color: #333; position: absolute; bottom: -55px; left: 50%; transform: translateX(-50%); z-index: 10; transition: border-color 0.3s; }
@@ -128,9 +128,10 @@
         .color-picker-wrapper { display: flex; align-items: center; gap: 15px; background: #080808; padding: 10px; border-radius: 10px; border: 1px solid #333; }
         input[type="color"] { -webkit-appearance: none; border: none; width: 40px; height: 40px; border-radius: 50%; overflow: hidden; padding: 0; margin: 0; cursor: pointer; }
         
+        /* FIXED PUBLIC BIO BOX */
         .public-bio-box { text-align: center; padding: 0 20px 20px 20px; } 
-        .public-name { font-size: 22px; font-weight: bold; margin: 0; color: #fff; display: block; min-height: 20px;} 
-        .public-nick { color: var(--app-color); font-size: 14px; margin-bottom: 10px; display: block; min-height: 15px; }
+        .public-name { font-size: 22px; font-weight: bold; margin: 0; color: #fff; display: block; min-height: 30px; } 
+        .public-nick { color: var(--app-color); font-size: 14px; margin-bottom: 10px; display: block; min-height: 20px; }
         .public-stats { display: flex; justify-content: center; gap: 15px; margin-top: 15px; color: #777; font-size: 13px; } 
         .stat-tag { background: #222; padding: 4px 10px; border-radius: 10px; border: 1px solid #333; }
         .back-btn-float { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); color: #fff; padding: 8px 12px; border-radius: 20px; backdrop-filter: blur(5px); z-index: 20; border: none; font-weight: bold; cursor: pointer;}
@@ -153,19 +154,19 @@
         <div id="edit-overlay" class="hidden"><div class="edit-modal"><h3 style="color:var(--app-color); margin-top:0;">✏️ Edit Post</h3><textarea id="edit-text-input" class="form-input" rows="4"></textarea><div id="edit-img-preview" style="color:var(--app-color); font-size:12px; margin:10px 0;"></div><div style="display:flex; gap:10px; margin-top:10px;"><button onclick="document.getElementById('edit-file-input').click()" class="btn" style="background:#333; color:#fff; padding:8px 15px; border-radius:10px;">Change Image</button><input type="file" id="edit-file-input" hidden accept="image/*"></div><div style="display:flex; justify-content:space-between; margin-top:20px;"><button onclick="closeEditMode()" class="btn" style="color:#777;">Cancel</button><button onclick="saveEditedPost()" class="main-btn" style="margin:0; width:auto;">Save Changes</button></div></div></div>
         
         <div class="container">
-            <div id="tab-home" class="tab-content"><div class="create-box"><textarea id="postInput" rows="2" placeholder="What is happening?"></textarea><div id="filePreview" style="color: var(--app-color); font-size: 12px; margin: 5px 0;"></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;"><label for="fileInput" style="cursor:pointer; color:var(--app-color);"><svg class="icon" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></label><input type="file" id="fileInput" accept="image/*" hidden><button id="sendBtn" class="main-btn" style="width:auto; margin:0; padding:8px 20px;">Post</button></div></div><div id="feed">Loading...</div></div>
+            <div id="tab-home" class="tab-content"><div class="create-box"><textarea id="postInput" rows="2" placeholder="What is happening?"></textarea><div id="filePreview" style="color: var(--app-color); font-size: 12px; margin: 5px 0;"></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;"><label for="fileInput" style="cursor:pointer; color:var(--app-color);"><svg class="icon" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></label><input type="file" id="fileInput" accept="image/*" hidden><button id="sendBtn" class="main-btn" style="width:auto; margin:0; padding:8px 20px;">Post</button></div></div><div id="feed">Loading...</div></div>
             <div id="tab-chats" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Messages</h3><div id="chat-list"><div style="text-align:center; padding:20px; color:#555;">No conversations yet.</div></div></div>
             <div id="tab-search" class="tab-content hidden"><input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search users..."><div id="searchResults"></div></div>
             <div id="tab-notifs" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Activity</h3><div id="notif-list"><div style="text-align:center; padding:20px; color:#555;">No notifications yet.</div></div></div>
             
             <div id="tab-profile" class="tab-content hidden"><div class="profile-container"><div class="profile-header-overlap"><div id="my-cover-pic" class="cover-photo-container"><button onclick="document.getElementById('coverPicInput').click()" class="edit-cover-btn"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Edit Cover</button></div><div id="my-pic" class="big-avatar"></div><button onclick="document.getElementById('profilePicInput').click()" class="edit-pic-btn">📷</button></div><input type="file" id="profilePicInput" hidden accept="image/*"><input type="file" id="coverPicInput" hidden accept="image/*"><div class="form-section"><label class="form-label">AURA COLOR</label><div class="color-picker-wrapper"><input type="color" id="p-theme" value="#bf00ff"><span style="font-size:13px; color:#777;">Pick a color that represents you.</span></div><label class="form-label">DISPLAY NAME</label><input type="text" id="p-name" class="form-input" placeholder="e.g. John Doe"><label class="form-label">NICKNAME</label><input type="text" id="p-nickname" class="form-input" placeholder="@handle"><label class="form-label">BIO</label><textarea id="p-bio" class="form-input" rows="3"></textarea><label class="form-label">COUNTRY</label><input type="text" id="p-country" class="form-input"><button id="saveProfileBtn" class="main-btn" style="margin-top: 30px; margin-bottom: 20px;">💾 Save Changes</button></div></div></div>
             
-            <div id="tab-user-view" class="tab-content hidden"><div class="profile-container"><div class="cover-photo-container" id="view-cover"><button onclick="goBack()" class="back-btn-float">⬅ Back</button></div><div class="profile-header-overlap" style="margin-bottom:50px;"><div id="view-pic" class="big-avatar"></div></div><div class="public-bio-box"><h2 id="view-name" class="public-name"></h2><span id="view-nick" class="public-nick"></span><p id="view-bio" style="color:#ddd; margin:15px 0;"></p>
+            <div id="tab-user-view" class="tab-content hidden"><div class="profile-container"><div class="cover-photo-container" id="view-cover"><button onclick="goBack()" class="back-btn-float">⬅ Back</button></div><div class="profile-header-overlap" style="margin-bottom:50px;"><div id="view-pic" class="big-avatar"></div></div><div class="public-bio-box"><h2 id="view-name" class="public-name">Loading...</h2><span id="view-nick" class="public-nick"></span><p id="view-bio" style="color:#ddd; margin:15px 0;">...</p>
             <div style="display:flex; justify-content:center; gap:10px;">
                 <button id="message-user-btn" class="main-btn" style="width:auto; padding:8px 20px; font-size:14px;">💬 Message</button>
                 <button id="friend-user-btn" class="friend-btn">Add Friend</button>
             </div>
-            <div class="public-stats"><span id="view-country" class="stat-tag"></span></div></div></div><div id="user-posts-feed"></div></div>
+            <div class="public-stats"><span id="view-country" class="stat-tag">🏳️ ...</span></div></div></div><div id="user-posts-feed"></div></div>
         </div>
 
         <div class="bottom-nav">
@@ -254,7 +255,7 @@
                 else n.forEach(x=>{
                     const e=document.createElement("div");e.className=`notif-item ${x.read?'':'unread'}`;
                     let i="🔔";if(x.type==='like')i="❤️";if(x.type==='comment')i="💬";if(x.type==='share')i="🔄";if(x.type==='friend_req')i="👥";
-                    // CLICKABLE NOTIFICATION (GOES TO SENDER PROFILE)
+                    // CLICKABLE NOTIFICATION FIX
                     e.onclick = () => openUserProfile(x.senderUid);
                     e.innerHTML=`<div class="notif-icon">${i}</div><div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;l.appendChild(e)});
                 const b=document.getElementById("notif-badge");
@@ -307,9 +308,6 @@
             document.getElementById("friend-user-btn").onclick=()=>toggleFriend(uid);
             const btn = document.getElementById("friend-user-btn");
             
-            // Default "Add Friend" state
-            btn.innerText = "Add Friend"; btn.className = "friend-btn add";
-
             // Listen for friend status (UPDATED FOR SAFETY)
             onSnapshot(doc(db, "users", currentUser.uid), (doc) => {
                 if(doc.exists()) {
