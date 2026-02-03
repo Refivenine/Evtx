@@ -128,7 +128,6 @@
         .color-picker-wrapper { display: flex; align-items: center; gap: 15px; background: #080808; padding: 10px; border-radius: 10px; border: 1px solid #333; }
         input[type="color"] { -webkit-appearance: none; border: none; width: 40px; height: 40px; border-radius: 50%; overflow: hidden; padding: 0; margin: 0; cursor: pointer; }
         
-        /* FIXED PUBLIC BIO BOX */
         .public-bio-box { text-align: center; padding: 0 20px 20px 20px; } 
         .public-name { font-size: 22px; font-weight: bold; margin: 0; color: #fff; display: block; min-height: 30px; } 
         .public-nick { color: var(--app-color); font-size: 14px; margin-bottom: 10px; display: block; min-height: 20px; }
@@ -194,6 +193,7 @@
         const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app); const postsRef = collection(db, "posts");
         let currentUser = null; let currentEditPostId = null; let previousTab = 'home'; let currentUserName = "User"; let currentChatId = null;
         let cropper = null; let cropTarget = null; let finalPostImage = null; let finalProfilePic = null; let finalCoverPic = null;
+        let friendListener = null;
 
         const applyTheme = (color) => { const c = color || "#bf00ff"; document.documentElement.style.setProperty('--app-color', c); };
         const applyUserViewTheme = (color) => { const c = color || "#bf00ff"; document.getElementById('view-cover').style.borderBottomColor = c; document.getElementById('view-nick').style.color = c; document.getElementById('message-user-btn').style.background = c; };
@@ -255,8 +255,8 @@
                 else n.forEach(x=>{
                     const e=document.createElement("div");e.className=`notif-item ${x.read?'':'unread'}`;
                     let i="🔔";if(x.type==='like')i="❤️";if(x.type==='comment')i="💬";if(x.type==='share')i="🔄";if(x.type==='friend_req')i="👥";
-                    // CLICKABLE NOTIFICATION FIX
-                    e.onclick = () => openUserProfile(x.senderUid);
+                    // SAFE LINK: Only if senderUid exists
+                    if(x.senderUid) e.onclick = () => openUserProfile(x.senderUid);
                     e.innerHTML=`<div class="notif-icon">${i}</div><div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;l.appendChild(e)});
                 const b=document.getElementById("notif-badge");
                 if(u>0){b.style.display="flex";b.innerText=u}else{b.style.display="none"}
@@ -302,14 +302,28 @@
         window.closeChat = () => { document.getElementById("chat-room").classList.add("hidden"); currentChatId=null; }
         window.switchTab = async (t) => { if(t!=='user-view') previousTab=t; document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active'); if(t==='chats')document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); if(t==='search')document.querySelectorAll('.nav-item')[2].classList.add('nav-active'); if(t==='notifs'){const q=query(collection(db,"notifications"),where("recipient","==",currentUser.uid),where("read","==",false));const s=await getDocs(q);s.forEach(d=>updateDoc(doc(db,"notifications",d.id),{read:true}));document.querySelectorAll('.nav-item')[3].classList.add('nav-active')} if(t==='profile')document.querySelectorAll('.nav-item')[4].classList.add('nav-active') };
         
+        // --- SAFE PROFILE LOADER (FIXED) ---
         window.openUserProfile = async (uid) => { 
+            if(!uid) return; // Prevent crashes if ID is missing
             window.switchTab('user-view'); 
+            
+            // RESET UI
+            document.getElementById("view-name").innerText = "Loading...";
+            document.getElementById("view-nick").innerText = "";
+            document.getElementById("view-bio").innerText = "";
+            document.getElementById("view-pic").style.backgroundImage = "none";
+            document.getElementById("view-cover").style.backgroundImage = "none";
+            document.getElementById("friend-user-btn").className = "friend-btn add";
+            document.getElementById("friend-user-btn").innerText = "Add Friend";
+
             document.getElementById("message-user-btn").onclick=()=>startChat(uid); 
             document.getElementById("friend-user-btn").onclick=()=>toggleFriend(uid);
-            const btn = document.getElementById("friend-user-btn");
             
-            // Listen for friend status (UPDATED FOR SAFETY)
-            onSnapshot(doc(db, "users", currentUser.uid), (doc) => {
+            const btn = document.getElementById("friend-user-btn");
+            if(friendListener) friendListener(); // Kill old listener
+            
+            // FRIEND STATUS LISTENER
+            friendListener = onSnapshot(doc(db, "users", currentUser.uid), (doc) => {
                 if(doc.exists()) {
                     const me = doc.data();
                     if(me.friends && me.friends.includes(uid)) { btn.innerText = "Friends"; btn.className = "friend-btn friends"; }
@@ -319,25 +333,30 @@
                 }
             });
 
-            const d=await getDoc(doc(db,"users",uid)); 
-            if(d.exists()){
-                const u=d.data();
-                // SAFE DEFAULTS (FIXES BLANK SCREEN)
-                document.getElementById("view-name").innerText = u.name || "Anonymous User";
-                document.getElementById("view-nick").innerText = u.nickname || "@unknown";
-                document.getElementById("view-bio").innerText = u.bio || "This user has no bio.";
-                document.getElementById("view-country").innerText = u.country ? "🏳️ " + u.country : "🏳️ Earth";
-                
-                if(u.pic) document.getElementById("view-pic").style.backgroundImage = `url('${u.pic}')`;
-                else document.getElementById("view-pic").style.backgroundImage = "none";
-                
-                if(u.coverPic) document.getElementById("view-cover").style.backgroundImage = `url('${u.coverPic}')`;
-                else document.getElementById("view-cover").style.backgroundImage = "none";
-                
-                // APPLY TARGET USER THEME
-                if(u.themeColor) applyUserViewTheme(u.themeColor);
-                else applyUserViewTheme("#bf00ff");
-            } 
+            // LOAD USER DATA
+            try {
+                const d=await getDoc(doc(db,"users",uid)); 
+                if(d.exists()){
+                    const u=d.data();
+                    document.getElementById("view-name").innerText = u.name || "Anonymous User";
+                    document.getElementById("view-nick").innerText = u.nickname || "@unknown";
+                    document.getElementById("view-bio").innerText = u.bio || "No bio available.";
+                    document.getElementById("view-country").innerText = u.country ? "🏳️ " + u.country : "🏳️ Earth";
+                    
+                    if(u.pic) document.getElementById("view-pic").style.backgroundImage = `url('${u.pic}')`;
+                    if(u.coverPic) document.getElementById("view-cover").style.backgroundImage = `url('${u.coverPic}')`;
+                    
+                    if(u.themeColor) applyUserViewTheme(u.themeColor);
+                    else applyUserViewTheme("#bf00ff");
+                } else {
+                    document.getElementById("view-name").innerText = "User Not Found";
+                }
+            } catch(e) {
+                console.log(e);
+                document.getElementById("view-name").innerText = "Error Loading Profile";
+            }
+
+            // LOAD POSTS
             const q=query(postsRef,orderBy("createdAt","desc")); 
             const s=await getDocs(q); 
             const p=document.getElementById("user-posts-feed"); 
