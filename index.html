@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | Social</title>
+    <title>EVTX | Network</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     
     <link rel="manifest" href="manifest.json">
@@ -48,12 +48,13 @@
         /* NOTIFICATIONS */
         .notif-item { 
             display: flex; align-items: center; background: #151515; padding: 15px; 
-            border-bottom: 1px solid #222; cursor: pointer; transition: background 0.2s;
+            border-bottom: 1px solid #222; cursor: pointer; transition: background 0.1s;
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
-        .notif-item:active { background: #222; }
+        .notif-item:active { background: #2a2a2a; transform: scale(0.99); } /* CLICK FEEDBACK */
         .notif-item.unread { background: #1a1a2e; border-left: 3px solid var(--app-color); }
         .notif-icon { margin-right: 15px; color: var(--app-color); font-size: 20px; } 
-        .notif-text { font-size: 14px; color: #ddd; flex: 1; }
+        .notif-text { font-size: 14px; color: #ddd; flex: 1; pointer-events: none; } /* Clicks pass through text */
 
         /* BADGES */
         .nav-item { position: relative; color: #555; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -114,7 +115,7 @@
         #edit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .edit-modal { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #333; }
         
-        /* PROFILE LAYOUTS (FIXED) */
+        /* PROFILE LAYOUTS */
         .profile-container { background: #151515; border-radius: 0 0 20px 20px; overflow: hidden; border: 1px solid #333; border-top: none; margin-bottom: 20px; }
         .cover-photo-container { position: relative; width: 100%; height: 180px; background: #222; background-size: cover; background-position: center; border-bottom: 3px solid var(--app-color); transition: border-color 0.3s; }
         .big-avatar { width: 110px; height: 110px; border-radius: 50%; border: 4px solid #151515; background-size: cover; background-position: center; background-color: #333; position: absolute; bottom: -55px; left: 50%; transform: translateX(-50%); z-index: 10; transition: border-color 0.3s; }
@@ -244,7 +245,7 @@
         window.closeChat = () => { document.getElementById("chat-room").classList.add("hidden"); currentChatId=null; }
         function loadChatList() { const q=query(collection(db,"chats"),where("participants","array-contains",currentUser.uid)); onSnapshot(q,async(s)=>{const l=document.getElementById("chat-list");l.innerHTML="";if(s.empty)return l.innerHTML="<div style='text-align:center;padding:20px;color:#555;'>No messages</div>"; for(const d of s.docs){const c=d.data();const oid=c.participants.find(i=>i!==currentUser.uid);let on="User";let op="";const u=await getDoc(doc(db,"users",oid));if(u.exists()){on=u.data().name;op=u.data().pic} const isUnread = !c.isRead && c.lastSenderId !== currentUser.uid; const elClass = isUnread ? "chat-list-item unread-chat" : "chat-list-item"; const e=document.createElement("div");e.className=elClass;e.onclick=()=>openChatWindow(d.id,oid);e.innerHTML=`<div class="avatar" style="width:40px;height:40px;background-image:url('${op||''}')"></div><div class="chat-preview"><p class="chat-name">${on}</p><p class="chat-last-msg">${c.lastMessage}</p></div>${isUnread ? '<div class="unread-dot"></div>' : ''}`;l.appendChild(e)}}) }
 
-        // --- NOTIFS & BADGES ---
+        // --- NOTIFS & BADGES (FIXED CLICK HANDLER) ---
         function listenForNotifications() { 
             const q=query(collection(db,"notifications"),where("recipient","==",currentUser.uid)); 
             onSnapshot(q,(s)=>{
@@ -255,9 +256,26 @@
                 else n.forEach(x=>{
                     const e=document.createElement("div");e.className=`notif-item ${x.read?'':'unread'}`;
                     let i="🔔";if(x.type==='like')i="❤️";if(x.type==='comment')i="💬";if(x.type==='share')i="🔄";if(x.type==='friend_req')i="👥";
-                    // SAFE LINK: Only if senderUid exists (PREVENTS BLANK SCREENS)
-                    if(x.senderUid) e.onclick = () => openUserProfile(x.senderUid);
-                    e.innerHTML=`<div class="notif-icon">${i}</div><div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;l.appendChild(e)});
+                    e.innerHTML=`<div class="notif-icon">${i}</div><div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;
+                    
+                    // --- SMART CLICK HANDLER ---
+                    e.addEventListener('click', async () => {
+                        if(x.senderUid) {
+                            await openUserProfile(x.senderUid); // New data works perfectly
+                        } else {
+                            // FALLBACK: Search by Name for Old Data
+                            const q = query(collection(db, "users"), where("name", "==", x.sender));
+                            const sn = await getDocs(q);
+                            if(!sn.empty) {
+                                await openUserProfile(sn.docs[0].id);
+                            } else {
+                                alert("Profile not found (Old notification)");
+                            }
+                        }
+                    });
+                    
+                    l.appendChild(e);
+                });
                 const b=document.getElementById("notif-badge");
                 if(u>0){b.style.display="flex";b.innerText=u}else{b.style.display="none"}
             }) 
@@ -302,7 +320,6 @@
         window.closeChat = () => { document.getElementById("chat-room").classList.add("hidden"); currentChatId=null; }
         window.switchTab = async (t) => { if(t!=='user-view') previousTab=t; document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active'); if(t==='chats')document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); if(t==='search')document.querySelectorAll('.nav-item')[2].classList.add('nav-active'); if(t==='notifs'){const q=query(collection(db,"notifications"),where("recipient","==",currentUser.uid),where("read","==",false));const s=await getDocs(q);s.forEach(d=>updateDoc(doc(db,"notifications",d.id),{read:true}));document.querySelectorAll('.nav-item')[3].classList.add('nav-active')} if(t==='profile')document.querySelectorAll('.nav-item')[4].classList.add('nav-active') };
         
-        // --- SAFE PROFILE LOADER (FIXED) ---
         window.openUserProfile = async (uid) => { 
             if(!uid) return; // Prevent crashes if ID is missing
             window.switchTab('user-view'); 
