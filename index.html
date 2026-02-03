@@ -255,7 +255,7 @@
                 else n.forEach(x=>{
                     const e=document.createElement("div");e.className=`notif-item ${x.read?'':'unread'}`;
                     let i="🔔";if(x.type==='like')i="❤️";if(x.type==='comment')i="💬";if(x.type==='share')i="🔄";if(x.type==='friend_req')i="👥";
-                    // SAFE LINK: Only if senderUid exists
+                    // SAFE LINK: Only if senderUid exists (PREVENTS BLANK SCREENS)
                     if(x.senderUid) e.onclick = () => openUserProfile(x.senderUid);
                     e.innerHTML=`<div class="notif-icon">${i}</div><div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;l.appendChild(e)});
                 const b=document.getElementById("notif-badge");
