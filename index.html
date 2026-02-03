@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVTX | Identity</title>
+    <title>EVTX | Network</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <link rel="manifest" href="manifest.json">
@@ -13,101 +13,111 @@
         body {
             background: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.95)), url('https://refivenine.github.io/cover2.jpg');
             background-size: cover; background-position: center; background-attachment: fixed;
-            color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; padding-bottom: 70px; /* Space for bottom nav */
+            color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; padding-bottom: 80px;
         }
+
+        /* UTILS */
+        .hidden { display: none !important; }
+        .btn { border: none; outline: none; cursor: pointer; }
 
         /* LOGIN SCREEN */
         #auth-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-            background: #000; z-index: 2000;
+            background: #000; z-index: 3000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 20px; box-sizing: border-box;
         }
         .auth-box {
             background: #151515; padding: 30px; border-radius: 20px;
-            border: 1px solid #bf00ff; width: 100%; max-width: 350px;
-            text-align: center; box-shadow: 0 0 30px rgba(191, 0, 255, 0.2);
+            border: 1px solid #bf00ff; width: 85%; max-width: 350px; text-align: center;
         }
         .auth-input {
             width: 100%; padding: 12px; margin: 10px 0; background: #000;
             border: 1px solid #333; color: #fff; border-radius: 8px; box-sizing: border-box;
         }
-        .auth-btn {
+        .main-btn {
             width: 100%; padding: 12px; background: #bf00ff; color: #fff;
-            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
-        .switch-btn {
-            background: none; border: none; color: #777; margin-top: 15px;
-            text-decoration: underline; cursor: pointer; font-size: 14px;
+            border-radius: 8px; font-weight: bold; margin-top: 10px;
         }
 
-        /* APP HEADER */
+        /* APP LAYOUT */
         .header {
             background: rgba(20, 20, 20, 0.95); padding: 15px; border-bottom: 2px solid #bf00ff;
             position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
         }
         .logo { font-weight: 900; color: #fff; font-size: 22px; letter-spacing: 2px; }
         .logo span { color: #bf00ff; }
-        .logout-btn { background: #333; color: #fff; border: 1px solid #444; padding: 5px 12px; border-radius: 15px; font-size: 12px; }
+        
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
 
-        /* TABS & CONTAINERS */
-        .container { max-width: 600px; margin: 20px auto; padding: 10px; }
+        /* TABS */
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .active-tab { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* PROFILE SCREEN */
-        .profile-card {
-            background: #151515; padding: 25px; border-radius: 20px;
-            border: 1px solid #333; text-align: center;
+        /* FEED & POSTS */
+        .create-box { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 25px; }
+        textarea { width: 100%; background: #080808; color: #fff; border: 2px solid #bf00ff; padding: 15px; border-radius: 10px; resize: none; box-sizing: border-box; }
+        
+        .post { background: #151515; border-radius: 20px; padding: 15px; margin-bottom: 20px; border: 1px solid #222; }
+        .user-header { display: flex; align-items: center; margin-bottom: 12px; }
+        .avatar {
+            width: 45px; height: 45px; background: #333; border-radius: 50%; margin-right: 12px;
+            border: 2px solid #bf00ff; background-size: cover; background-position: center;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;
         }
-        .profile-pic-preview {
-            width: 100px; height: 100px; border-radius: 50%;
-            border: 3px solid #bf00ff; margin: 0 auto 15px;
-            background-size: cover; background-position: center; background-color: #333;
+        .user-meta h4 { margin: 0; color: #fff; font-size: 15px; cursor: pointer; }
+        .user-meta span { font-size: 12px; color: #777; }
+        .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 10px; white-space: pre-wrap; }
+        .post-img { width: 100%; border-radius: 12px; margin-top: 5px; border: 1px solid #333; }
+        .actions { border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; display: flex; gap: 20px; }
+        .act-btn { background: none; color: #777; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        .act-btn:hover { color: #bf00ff; }
+
+        /* SEARCH TAB */
+        .search-bar {
+            width: 100%; padding: 12px; background: #111; border: 1px solid #333;
+            color: #fff; border-radius: 30px; margin-bottom: 20px; padding-left: 20px; outline: none;
         }
+        .search-bar:focus { border-color: #bf00ff; }
+        .user-result {
+            display: flex; align-items: center; background: #1a1a1a; padding: 10px;
+            border-radius: 15px; margin-bottom: 10px; cursor: pointer; border: 1px solid #333;
+        }
+        .user-result:hover { border-color: #bf00ff; }
+
+        /* PROFILE VIEW (PUBLIC & PRIVATE) */
+        .profile-header {
+            text-align: center; background: #151515; padding: 30px; border-radius: 20px;
+            border: 1px solid #333; margin-bottom: 20px; position: relative;
+        }
+        .big-avatar {
+            width: 100px; height: 100px; margin: 0 auto 15px; border-radius: 50%;
+            border: 3px solid #bf00ff; background-size: cover; background-position: center; background-color: #333;
+        }
+        .stat-box { display: flex; justify-content: center; gap: 15px; margin: 15px 0; font-size: 14px; color: #aaa; }
+        .stat-tag { background: #222; padding: 5px 10px; border-radius: 10px; border: 1px solid #333; }
+
+        /* EDIT FORM */
         .form-group { text-align: left; margin-bottom: 15px; }
         .form-label { font-size: 12px; color: #bf00ff; margin-bottom: 5px; display: block; }
-        .form-input {
-            width: 100%; background: #080808; border: 1px solid #333;
-            color: #fff; padding: 10px; border-radius: 8px; box-sizing: border-box;
-        }
-        .save-btn {
-            background: #bf00ff; color: #fff; border: none; padding: 12px;
-            width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
+        .form-input { width: 100%; background: #080808; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; box-sizing: border-box; }
 
         /* BOTTOM NAV */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: #101010; border-top: 1px solid #333;
-            display: flex; justify-content: space-around; padding: 15px 0;
-            z-index: 1000;
+            display: flex; justify-content: space-around; padding: 12px 0; z-index: 2000;
         }
-        .nav-item {
-            color: #777; font-size: 24px; cursor: pointer; text-decoration: none;
-            display: flex; flex-direction: column; align-items: center; gap: 5px;
-        }
-        .nav-item span { font-size: 10px; }
+        .nav-item { color: #555; font-size: 24px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .nav-item span { font-size: 10px; margin-top: 2px; }
         .nav-active { color: #bf00ff; }
 
-        /* FEED STYLES */
-        .create-box { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 25px; }
-        textarea { width: 100%; background: #080808; color: #fff; border: 2px solid #bf00ff; padding: 15px; border-radius: 10px; resize: none; box-sizing: border-box; }
-        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-        .post { background: #151515; border-radius: 25px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
-        .user-header { display: flex; margin-bottom: 15px; }
-        .avatar {
-            width: 45px; height: 45px; background: #333; border-radius: 50%; margin-right: 12px;
-            border: 2px solid #bf00ff; background-size: cover; background-position: center;
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        /* BACK BUTTON */
+        .back-btn {
+            position: absolute; top: 15px; left: 15px; background: #333; color: white;
+            padding: 5px 10px; border-radius: 10px; font-size: 12px; text-decoration: none;
         }
-        .user-meta h4 { margin: 0; color: #fff; }
-        .user-meta span { font-size: 12px; color: #777; }
-        .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 15px; white-space: pre-wrap; }
-        .post-img { width: 100%; border-radius: 15px; margin-top: 10px; border: 1px solid #333; }
-        .actions { border-top: 1px solid #333; padding-top: 15px; display: flex; justify-content: space-between; }
-        .act-btn { background: none; border: none; color: #777; cursor: pointer; }
 
     </style>
 </head>
@@ -116,57 +126,61 @@
     <div id="auth-screen">
         <div class="logo" style="margin-bottom: 20px; font-size: 40px;">EV<span>TX</span></div>
         <div class="auth-box">
-            <h2 id="auth-title" style="color:#fff; margin-top:0;">Login</h2>
+            <h2 id="auth-title" style="color:#fff;">Login</h2>
             <input type="email" id="email" class="auth-input" placeholder="Email">
             <input type="password" id="password" class="auth-input" placeholder="Password">
-            <button id="auth-action-btn" class="auth-btn">Enter Network</button>
-            <button id="toggle-auth-btn" class="switch-btn">New here? Create Account</button>
+            <button id="auth-action-btn" class="main-btn btn">Enter Network</button>
+            <p id="toggle-auth-btn" style="color:#777; font-size:14px; text-decoration:underline; cursor:pointer;">New here? Create Account</p>
             <div id="auth-msg" style="color: #ff3333; margin-top: 10px; font-size: 13px;"></div>
         </div>
     </div>
 
-    <div id="app-screen" style="display:none;">
+    <div id="app-screen" class="hidden">
+        
         <div class="header">
             <div class="logo">EV<span>TX</span></div>
-            <button id="logoutBtn" class="logout-btn">Log Out</button>
+            <button onclick="logout()" class="btn" style="background:#333; color:#fff; padding:5px 12px; border-radius:15px; font-size:12px;">Log Out</button>
         </div>
 
         <div class="container">
-            
+
             <div id="tab-home" class="tab-content active-tab">
                 <div class="create-box">
-                    <textarea id="postInput" rows="3" placeholder="What is happening?"></textarea>
-                    <div id="filePreview" style="color: #bf00ff; font-size: 12px; margin-bottom: 5px;"></div>
-                    <div class="toolbar">
+                    <textarea id="postInput" rows="2" placeholder="What is happening?"></textarea>
+                    <div id="filePreview" style="color: #bf00ff; font-size: 12px; margin: 5px 0;"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label for="fileInput" style="font-size:22px; cursor:pointer;">📷</label>
                         <input type="file" id="fileInput" accept="image/*" hidden>
-                        <label for="fileInput" class="file-label" style="font-size:20px; cursor:pointer;">📷</label>
-                        <button class="auth-btn" id="sendBtn" style="width:auto; margin:0;">🚀 Post</button>
+                        <button id="sendBtn" class="main-btn btn" style="width:auto; margin:0; padding:8px 20px;">🚀 Post</button>
                     </div>
                 </div>
                 <div id="feed">Loading feed...</div>
             </div>
 
-            <div id="tab-profile" class="tab-content">
-                <div class="profile-card">
-                    <div id="profile-pic-display" class="profile-pic-preview"></div>
-                    <input type="file" id="profilePicInput" hidden>
-                    <button onclick="document.getElementById('profilePicInput').click()" style="background:#333; color:#fff; border:1px solid #555; padding:5px 10px; border-radius:10px; margin-bottom:20px;">📸 Change Photo</button>
+            <div id="tab-search" class="tab-content">
+                <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search users...">
+                <div id="searchResults">
+                    <div style="text-align:center; color:#555; margin-top:20px;">Search for anyone on the network.</div>
+                </div>
+            </div>
 
+            <div id="tab-profile" class="tab-content">
+                <div class="profile-header">
+                    <div id="my-pic" class="big-avatar"></div>
+                    <button onclick="document.getElementById('profilePicInput').click()" class="btn" style="background:#333; color:#fff; padding:5px 10px; border-radius:10px; margin-bottom:10px;">📸 Change Photo</button>
+                    <input type="file" id="profilePicInput" hidden>
+                    
                     <div class="form-group">
                         <label class="form-label">DISPLAY NAME</label>
-                        <input type="text" id="p-name" class="form-input" placeholder="Your Codename">
+                        <input type="text" id="p-name" class="form-input">
                     </div>
                     <div class="form-group">
                         <label class="form-label">BIO</label>
-                        <input type="text" id="p-bio" class="form-input" placeholder="Short description...">
+                        <input type="text" id="p-bio" class="form-input">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">DATE OF BIRTH</label>
-                        <input type="date" id="p-dob" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">HOBBY</label>
-                        <input type="text" id="p-hobby" class="form-input" placeholder="e.g. Coding, Gaming">
+                        <label class="form-label">HOBBY / TAG</label>
+                        <input type="text" id="p-hobby" class="form-input">
                     </div>
                     <div class="form-group">
                         <label class="form-label">COUNTRY</label>
@@ -177,33 +191,46 @@
                             <option value="Other">Other</option>
                         </select>
                     </div>
-                    
-                    <button id="saveProfileBtn" class="save-btn">💾 Save Profile</button>
+                    <button id="saveProfileBtn" class="main-btn btn">💾 Save Changes</button>
                 </div>
+            </div>
+
+            <div id="tab-user-view" class="tab-content">
+                <div class="profile-header">
+                    <button onclick="goBack()" class="btn back-btn">⬅ Back</button>
+                    <div id="view-pic" class="big-avatar"></div>
+                    <h2 id="view-name" style="margin:5px 0;">Name</h2>
+                    <div id="view-badge"></div>
+                    <p id="view-bio" style="color:#ccc; font-size:14px;">Bio goes here</p>
+                    <div class="stat-box">
+                        <span id="view-country" class="stat-tag">🏳️ Country</span>
+                        <span id="view-hobby" class="stat-tag">⚡ Hobby</span>
+                    </div>
+                </div>
+                <h3 style="border-bottom:1px solid #333; padding-bottom:10px; font-size:16px; color:#777;">USER POSTS</h3>
+                <div id="user-posts-feed"></div>
             </div>
 
         </div>
 
         <div class="bottom-nav">
-            <div class="nav-item nav-active" onclick="switchTab('home')">
-                🏠 <span>Home</span>
-            </div>
-            <div class="nav-item" onclick="switchTab('profile')">
-                👤 <span>Profile</span>
-            </div>
+            <div class="nav-item nav-active" onclick="switchTab('home')">🏠<span>Home</span></div>
+            <div class="nav-item" onclick="switchTab('search')">🔍<span>Search</span></div>
+            <div class="nav-item" onclick="switchTab('profile')">👤<span>Me</span></div>
         </div>
+
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc, setDoc, getDoc } 
+        import { getFirestore, collection, addDoc, query, orderBy, where, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc, setDoc, getDoc, getDocs } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // --- CONFIG ---
-        const ADMIN_EMAIL = "hrangategamer@gmail.com"; // UPDATE THIS!
-        
+        // --- 1. CONFIGURATION ---
+        const ADMIN_EMAIL = "hrangategamer@gmail.com"; 
+
         const firebaseConfig = {
           apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
           authDomain: "evtx-social.firebaseapp.com",
@@ -217,20 +244,253 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const postsRef = collection(db, "posts");
+        const usersRef = collection(db, "users");
 
-        // --- NAVIGATION LOGIC ---
+        let currentUser = null;
+        let currentUserData = {};
+        let previousTab = 'home';
+
+        // --- AUTH ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById("auth-screen").classList.add("hidden");
+                document.getElementById("app-screen").classList.remove("hidden");
+                
+                // Load My Profile
+                const docSnap = await getDoc(doc(db, "users", user.uid));
+                if(docSnap.exists()) {
+                    currentUserData = docSnap.data();
+                    fillProfileForm(currentUserData);
+                }
+                loadFeed();
+            } else {
+                document.getElementById("auth-screen").classList.remove("hidden");
+                document.getElementById("app-screen").classList.add("hidden");
+            }
+        });
+
+        // --- TABS & NAVIGATION ---
         window.switchTab = (tabName) => {
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            if(tabName !== 'user-view') previousTab = tabName; // Remember for back button
+            
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('nav-active'));
             
-            document.getElementById('tab-' + tabName).style.display = 'block';
+            document.getElementById('tab-' + tabName).classList.add('active-tab');
             
-            // Highlight icon
-            const idx = tabName === 'home' ? 0 : 1;
-            document.querySelectorAll('.nav-item')[idx].classList.add('nav-active');
+            // Icon Highlight
+            const map = {'home':0, 'search':1, 'profile':2};
+            if(map[tabName] !== undefined) document.querySelectorAll('.nav-item')[map[tabName]].classList.add('nav-active');
         };
 
-        // --- IMAGE COMPRESSOR ---
+        window.goBack = () => window.switchTab(previousTab);
+        window.logout = () => signOut(auth);
+
+        // --- SEARCH LOGIC ---
+        document.getElementById("searchInput").addEventListener("input", async (e) => {
+            const text = e.target.value.trim();
+            const resultsDiv = document.getElementById("searchResults");
+            resultsDiv.innerHTML = "";
+            
+            if(text.length < 2) return;
+
+            // Simple search query (case sensitive usually, but works for exact matches)
+            const q = query(usersRef, where("name", ">=", text), where("name", "<=", text + "\uf8ff"));
+            const snapshot = await getDocs(q);
+
+            if(snapshot.empty) {
+                resultsDiv.innerHTML = "<div style='text-align:center; color:#555;'>No users found.</div>";
+            } else {
+                snapshot.forEach(doc => {
+                    const u = doc.data();
+                    const div = document.createElement("div");
+                    div.className = "user-result";
+                    div.onclick = () => openUserProfile(doc.id); // Open profile on click
+                    div.innerHTML = `
+                        <div class="avatar" style="background-image: url('${u.pic || ''}'); border-color:${u.pic ? '#bf00ff':'#333'}">${u.pic ? '' : u.name[0]}</div>
+                        <div>
+                            <h4 style="margin:0; color:#fff;">${u.name}</h4>
+                            <span style="font-size:12px; color:#777;">${u.bio || "No bio"}</span>
+                        </div>
+                    `;
+                    resultsDiv.appendChild(div);
+                });
+            }
+        });
+
+        // --- PUBLIC PROFILE VIEWER ---
+        window.openUserProfile = async (targetUid) => {
+            // Switch to view tab
+            window.switchTab('user-view');
+            const viewDiv = document.getElementById("tab-user-view");
+            
+            // 1. Get User Details
+            const docSnap = await getDoc(doc(db, "users", targetUid));
+            if(!docSnap.exists()) return;
+            const u = docSnap.data();
+
+            document.getElementById("view-name").innerText = u.name || "Unknown";
+            document.getElementById("view-bio").innerText = u.bio || "Member of EVTX";
+            document.getElementById("view-country").innerText = "🏳️ " + (u.country || "Earth");
+            document.getElementById("view-hobby").innerText = "⚡ " + (u.hobby || "Chilling");
+            
+            const badge = document.getElementById("view-badge");
+            // Basic admin check (not secure but visual)
+            badge.innerHTML = ""; 
+            
+            const picDiv = document.getElementById("view-pic");
+            if(u.pic) {
+                picDiv.style.backgroundImage = `url('${u.pic}')`;
+                picDiv.innerText = "";
+            } else {
+                picDiv.style.backgroundImage = "none";
+                picDiv.innerText = u.name.charAt(0).toUpperCase();
+                picDiv.style.display = "flex"; picDiv.style.alignItems = "center"; picDiv.style.justifyContent = "center"; picDiv.style.fontSize = "40px";
+            }
+
+            // 2. Get User's Posts
+            const postsDiv = document.getElementById("user-posts-feed");
+            postsDiv.innerHTML = "Loading posts...";
+            
+            const q = query(postsRef, where("uid", "==", targetUid), orderBy("createdAt", "desc"));
+            // Note: This query requires an Index in Firestore. If it fails, check console for link.
+            
+            // Fallback for query index issues: Just load recent and filter (client side)
+            // Ideally we use the query above, but for now let's query all and filter to avoid index errors for you.
+            const allQ = query(postsRef, orderBy("createdAt", "desc"));
+            const allSnap = await getDocs(allQ);
+            
+            postsDiv.innerHTML = "";
+            let count = 0;
+            allSnap.forEach(doc => {
+                const post = doc.data();
+                if(post.uid === targetUid) {
+                    count++;
+                    postsDiv.appendChild(createPostElement(doc.id, post));
+                }
+            });
+            if(count === 0) postsDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#555'>No posts yet.</div>";
+        };
+
+
+        // --- FEED & POSTING ---
+        function loadFeed() {
+            const q = query(postsRef, orderBy("createdAt", "desc"));
+            onSnapshot(q, (snapshot) => {
+                const feed = document.getElementById("feed");
+                feed.innerHTML = "";
+                snapshot.forEach(doc => {
+                    feed.appendChild(createPostElement(doc.id, doc.data()));
+                });
+            });
+        }
+
+        function createPostElement(id, post) {
+            const div = document.createElement("div");
+            div.className = "post";
+            
+            // Admin Check
+            const isAdmin = post.userEmail === ADMIN_EMAIL;
+            const badge = isAdmin ? " <span style='color:#ffd700'>👑</span>" : "";
+            
+            let avatarStyle = "";
+            let avatarContent = "";
+
+            if (isAdmin) {
+                avatarStyle = `background-image: url('https://refivenine.github.io/Evtx/logo.png'); border-color: #ffd700;`;
+            } else if (post.userPic) {
+                avatarStyle = `background-image: url('${post.userPic}');`;
+            } else {
+                avatarContent = (post.username || "?").charAt(0).toUpperCase();
+            }
+
+            // Clickable User Area
+            const userClick = post.uid ? `onclick="openUserProfile('${post.uid}')"` : "";
+
+            div.innerHTML = `
+                <div class="user-header">
+                    <div class="avatar" style="${avatarStyle}" ${userClick}>${avatarContent}</div>
+                    <div class="user-meta" ${userClick}>
+                        <h4>${post.username} ${badge}</h4>
+                        <span>${post.userBio || ""}</span>
+                    </div>
+                    ${currentUser && currentUser.email === ADMIN_EMAIL ? `<button onclick="delPost('${id}')" class="btn" style="margin-left:auto; color:#cc0000;">🗑️</button>` : ""}
+                </div>
+                <div class="content">${post.text}</div>
+                ${post.imageUrl ? `<img src="${post.imageUrl}" class="post-img">` : ""}
+                <div class="actions">
+                    <button class="act-btn" onclick="likePost('${id}')">❤️ ${post.likes||0}</button>
+                </div>
+            `;
+            return div;
+        }
+
+        // --- GLOBAL ACTIONS ---
+        window.likePost = (id) => updateDoc(doc(db,"posts",id), {likes: increment(1)});
+        window.delPost = (id) => { if(confirm("Delete?")) deleteDoc(doc(db,"posts",id)); };
+
+        // --- POSTING ---
+        document.getElementById("sendBtn").addEventListener("click", async () => {
+            const input = document.getElementById("postInput");
+            const file = document.getElementById("fileInput").files[0];
+            if(!input.value && !file) return;
+
+            document.getElementById("sendBtn").innerText = "📡...";
+            let url = null;
+            if(file) url = await compressImage(file);
+
+            const name = currentUserData.name || currentUser.email.split('@')[0];
+            
+            await addDoc(postsRef, {
+                text: input.value,
+                imageUrl: url,
+                uid: currentUser.uid, // SAVING UID IS CRITICAL FOR PROFILES
+                userEmail: currentUser.email,
+                username: name,
+                userPic: currentUserData.pic || null,
+                userBio: currentUserData.hobby || "Member",
+                createdAt: serverTimestamp(),
+                likes: 0
+            });
+
+            input.value = ""; document.getElementById("fileInput").value = "";
+            document.getElementById("filePreview").innerText = "";
+            document.getElementById("sendBtn").innerText = "🚀 Post";
+        });
+
+        // --- PROFILE SAVING ---
+        function fillProfileForm(data) {
+            document.getElementById('p-name').value = data.name || "";
+            document.getElementById('p-bio').value = data.bio || "";
+            document.getElementById('p-hobby').value = data.hobby || "";
+            document.getElementById('p-country').value = data.country || "India";
+            if(data.pic) document.getElementById('my-pic').style.backgroundImage = `url('${data.pic}')`;
+        }
+
+        document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+            const btn = document.getElementById("saveProfileBtn");
+            btn.innerText = "Saving...";
+            
+            const file = document.getElementById("profilePicInput").files[0];
+            let url = currentUserData.pic || null;
+            if(file) url = await compressImage(file);
+
+            const newData = {
+                name: document.getElementById('p-name').value,
+                bio: document.getElementById('p-bio').value,
+                hobby: document.getElementById('p-hobby').value,
+                country: document.getElementById('p-country').value,
+                pic: url
+            };
+
+            await setDoc(doc(db, "users", currentUser.uid), newData, {merge:true});
+            currentUserData = newData;
+            fillProfileForm(newData);
+            btn.innerText = "✅ Saved"; setTimeout(()=>btn.innerText="💾 Save Changes", 2000);
+        });
+
+        // --- IMAGE HELPER ---
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -240,8 +500,8 @@
                     img.src = e.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const scale = 500 / img.width; // Smaller for profile pics
-                        canvas.width = 500; canvas.height = img.height * scale;
+                        const scale = 600 / img.width;
+                        canvas.width = 600; canvas.height = img.height * scale;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         resolve(canvas.toDataURL('image/jpeg', 0.7));
@@ -250,159 +510,13 @@
             });
         };
 
-        // --- AUTH & PROFILE LOGIC ---
-        let currentUserProfile = null;
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                document.getElementById("auth-screen").style.display = "none";
-                document.getElementById("app-screen").style.display = "block";
-                
-                // Load Profile Data
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if(userDoc.exists()) {
-                    currentUserProfile = userDoc.data();
-                    // Fill Form
-                    document.getElementById('p-name').value = currentUserProfile.name || "";
-                    document.getElementById('p-bio').value = currentUserProfile.bio || "";
-                    document.getElementById('p-dob').value = currentUserProfile.dob || "";
-                    document.getElementById('p-hobby').value = currentUserProfile.hobby || "";
-                    document.getElementById('p-country').value = currentUserProfile.country || "India";
-                    if(currentUserProfile.pic) document.getElementById('profile-pic-display').style.backgroundImage = `url('${currentUserProfile.pic}')`;
-                }
-
-                loadFeed(user);
-            } else {
-                document.getElementById("auth-screen").style.display = "flex";
-                document.getElementById("app-screen").style.display = "none";
-            }
-        });
-
-        // --- SAVE PROFILE ---
-        document.getElementById("saveProfileBtn").addEventListener("click", async () => {
-            const user = auth.currentUser;
-            if(!user) return;
-            
-            const btn = document.getElementById("saveProfileBtn");
-            btn.innerText = "Saving...";
-            
-            const name = document.getElementById('p-name').value;
-            const bio = document.getElementById('p-bio').value;
-            const dob = document.getElementById('p-dob').value;
-            const hobby = document.getElementById('p-hobby').value;
-            const country = document.getElementById('p-country').value;
-            
-            // Handle Profile Pic
-            let picUrl = currentUserProfile?.pic || "";
-            const file = document.getElementById('profilePicInput').files[0];
-            if(file) picUrl = await compressImage(file);
-
-            await setDoc(doc(db, "users", user.uid), {
-                name, bio, dob, hobby, country, pic: picUrl
-            }, { merge: true });
-
-            // Update local state
-            currentUserProfile = { name, bio, dob, hobby, country, pic: picUrl };
-            document.getElementById('profile-pic-display').style.backgroundImage = `url('${picUrl}')`;
-            
-            btn.innerText = "✅ Saved!";
-            setTimeout(() => btn.innerText = "💾 Save Profile", 2000);
-        });
-
-        // --- FEED ---
-        function loadFeed(user) {
-            const q = query(postsRef, orderBy("createdAt", "desc"));
-            onSnapshot(q, (snapshot) => {
-                const feed = document.getElementById("feed");
-                feed.innerHTML = ""; 
-
-                snapshot.forEach((doc) => {
-                    const post = doc.data();
-                    const el = document.createElement("div");
-                    el.className = "post";
-                    
-                    // ADMIN CHECK
-                    const isAdmin = post.userEmail === ADMIN_EMAIL;
-                    let badge = isAdmin ? ` <span style="color:#ffd700;">👑</span>` : "";
-                    
-                    // AVATAR LOGIC (Uses stored post data)
-                    let avatarStyle = "";
-                    let avatarContent = "";
-                    
-                    if (isAdmin) {
-                        avatarStyle = `background-image: url('https://refivenine.github.io/Evtx/logo.png'); border-color: #ffd700;`;
-                    } else if (post.userPic) {
-                        avatarStyle = `background-image: url('${post.userPic}');`;
-                    } else {
-                        avatarContent = (post.username || "A").charAt(0).toUpperCase();
-                    }
-
-                    // DISPLAY
-                    el.innerHTML = `
-                        <div class="user-header">
-                            <div class="avatar" style="${avatarStyle}">${avatarContent}</div>
-                            <div class="user-meta">
-                                <h4>${post.username} ${badge}</h4>
-                                <span>${post.userBio || "Member"}</span>
-                            </div>
-                            ${user.email === ADMIN_EMAIL ? `<button class="act-btn delete-btn" data-id="${doc.id}">🗑️</button>` : ""}
-                        </div>
-                        <div class="content">${post.text}</div>
-                        ${post.imageUrl ? `<img src="${post.imageUrl}" class="post-img">` : ""}
-                        <div class="actions">
-                            <button class="act-btn like-btn" data-id="${doc.id}">❤️ ${post.likes||0}</button>
-                            <button class="act-btn">💬</button>
-                        </div>
-                    `;
-                    feed.appendChild(el);
-                });
-                
-                // Re-attach listeners... (simplified for brevity)
-                document.querySelectorAll('.delete-btn').forEach(b=>b.addEventListener('click', ()=>deleteDoc(doc(db,"posts",b.dataset.id))));
-                document.querySelectorAll('.like-btn').forEach(b=>b.addEventListener('click', ()=>updateDoc(doc(db,"posts",b.dataset.id),{likes:increment(1)})));
-            });
-        }
-
-        // --- POSTING ---
-        document.getElementById("sendBtn").addEventListener("click", async () => {
-            const user = auth.currentUser;
-            const input = document.getElementById("postInput");
-            const file = document.getElementById("fileInput").files[0];
-            
-            if(!input.value && !file) return;
-            document.getElementById("sendBtn").innerText = "📡...";
-
-            let imgUrl = null;
-            if(file) imgUrl = await compressImage(file);
-
-            // USE CUSTOM PROFILE DATA IF AVAILABLE
-            const displayName = currentUserProfile?.name || user.email.split('@')[0];
-            const userPic = currentUserProfile?.pic || null;
-            const userBio = currentUserProfile?.hobby ? currentUserProfile.hobby + " | " + currentUserProfile.country : "EVTX User";
-
-            await addDoc(postsRef, {
-                text: input.value,
-                imageUrl: imgUrl,
-                userEmail: user.email,
-                username: displayName, // SAVES YOUR CUSTOM NAME
-                userPic: userPic,      // SAVES YOUR SELFIE
-                userBio: userBio,
-                createdAt: serverTimestamp(),
-                likes: 0
-            });
-
-            input.value = ""; document.getElementById("fileInput").value = "";
-            document.getElementById("sendBtn").innerText = "🚀 Post";
-            switchTab('home'); // Go back to feed
-        });
-
-        // AUTH HANDLERS (Same as before)
+        // --- AUTH HANDLERS ---
         document.getElementById("auth-action-btn").addEventListener("click", () => {
              const e = document.getElementById("email").value;
              const p = document.getElementById("password").value;
              const isSignup = document.getElementById("auth-action-btn").innerText === "Sign Up";
-             if(isSignup) createUserWithEmailAndPassword(auth, e, p).catch(err=>alert(err.message));
-             else signInWithEmailAndPassword(auth, e, p).catch(err=>alert(err.message));
+             if(isSignup) createUserWithEmailAndPassword(auth, e, p).catch(err=>document.getElementById('auth-msg').innerText=err.message);
+             else signInWithEmailAndPassword(auth, e, p).catch(err=>document.getElementById('auth-msg').innerText=err.message);
         });
         document.getElementById("toggle-auth-btn").addEventListener("click", function() {
             const isSignup = this.innerText.includes("Create");
@@ -410,8 +524,6 @@
             document.getElementById("auth-action-btn").innerText = isSignup ? "Sign Up" : "Enter Network";
             document.getElementById("auth-title").innerText = isSignup ? "Create Account" : "Login";
         });
-        document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
-
     </script>
 </body>
 </html>
