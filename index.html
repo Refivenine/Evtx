@@ -128,14 +128,18 @@
 
     <div class="container">
         
-        <div class="create-box clearfix">
-            <div class="input-group">
-                <input type="text" id="usernameInput" class="name-input" placeholder="Codename..." value="Refivenine">
-                <input type="text" id="imageLinkInput" class="link-input" placeholder="Paste Image Link (Optional)...">
-            </div>
-            
+       <div class="create-box">
+            <input type="text" id="usernameInput" class="name-input" placeholder="Codename..." value="Refivenine">
             <textarea id="postInput" rows="3" placeholder="What is happening?"></textarea>
-            <button class="post-btn" id="sendBtn">🚀 Post</button>
+            
+            <div id="filePreview" style="color: #00ffcc; font-size: 12px; margin-top: 5px;"></div>
+
+            <div class="toolbar">
+                <input type="file" id="fileInput" accept="image/*" hidden>
+                <label for="fileInput" class="file-label">📷</label>
+                
+                <button class="post-btn" id="sendBtn">🚀 Post</button>
+            </div>
         </div>
 
         <div id="feed">
@@ -143,12 +147,21 @@
         </div>
     </div>
 
-  <script type="module">
+ <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc } 
         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // NO STORAGE NEEDED HERE!
+        // --- 1. PASTE YOUR IMGBB KEY HERE ---
+        const imgbbAPIKey = "<script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc } 
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // --- 1. PASTE YOUR IMGBB KEY HERE ---
+        const imgbbAPIKey = "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8"; 
+        // ------------------------------------
+
         const firebaseConfig = {
           apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
           authDomain: "evtx-social.firebaseapp.com",
@@ -161,6 +174,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const postsRef = collection(db, "posts");
+
+        // --- FILE PREVIEW ---
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const fileName = this.files[0]?.name;
+            if(fileName) document.getElementById('filePreview').innerText = "📷 Image Selected: " + fileName;
+        });
 
         // --- PART A: LISTENING FOR POSTS ---
         const q = query(postsRef, orderBy("createdAt", "desc"));
@@ -182,8 +201,8 @@
                 let avatarHTML = "";
                 let badgeHTML = "";
                 
-                // --- LOGO UPDATE: Use the uploaded logo.png for Admin ---
                 if (post.isVerified === true) {
+                    // Uses your uploaded logo
                     avatarHTML = `<div class="avatar" style="background-image: url('https://refivenine.github.io/Evtx/logo.png'); border-color: #ffd700;"></div>`;
                     badgeHTML = ` <span style="color: #ffd700; font-size: 16px;">👑</span>`;
                 } else {
@@ -226,32 +245,26 @@
                     updateDoc(doc(db, "posts", id), { likes: increment(1) });
                 });
             });
-            
-            // --- FIXED DELETE LOGIC ---
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    // This was the missing line!
-                    const id = btn.getAttribute('data-id'); 
-                    
-                    if(confirm("🛑 Delete this post?")) {
-                        await deleteDoc(doc(db, "posts", id));
-                    }
+                    const id = btn.getAttribute('data-id');
+                    if(confirm("🛑 Delete this post?")) await deleteDoc(doc(db, "posts", id));
                 });
             });
         });
 
-        // --- PART B: SENDING POST ---
+        // --- PART B: SENDING POST (WITH FREE UPLOAD) ---
         document.getElementById("sendBtn").addEventListener("click", async () => {
             const input = document.getElementById("postInput");
             const nameInput = document.getElementById("usernameInput");
-            const linkInput = document.getElementById("imageLinkInput");
-
+            const fileInput = document.getElementById("fileInput"); // Restored Camera Input
+            
             const text = input.value;
             const user = nameInput.value || "Anonymous";
-            const imageUrl = linkInput.value;
+            const file = fileInput.files[0];
             let isVerified = false;
 
-            if (text.trim() === "" && imageUrl.trim() === "") return;
+            if (text.trim() === "" && !file) return;
 
             // VIP SECURITY
             if (user === "Refivenine") {
@@ -260,23 +273,228 @@
                 else { alert("🚫 Wrong Password"); return; }
             }
 
+            // DISABLE BUTTON & SHOW LOADING
+            const btn = document.getElementById("sendBtn");
+            btn.disabled = true;
+            btn.innerText = "📡 Uploading...";
+
             try {
+                let imageUrl = null;
+
+                // 1. UPLOAD TO IMGBB (If file selected)
+                if (file) {
+                    const formData = new FormData();
+                    formData.append("image", file);
+                    
+                    // Send to ImgBB
+                    const response = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbAPIKey}`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    const data = await response.json();
+                    
+                    if(data.success) {
+                        imageUrl = data.data.url; // Get the web link!
+                    } else {
+                        alert("Upload Failed: " + data.error.message);
+                        btn.disabled = false;
+                        btn.innerText = "🚀 Post";
+                        return;
+                    }
+                }
+
+                // 2. SAVE TO FIREBASE
                 await addDoc(postsRef, {
                     text: text,
                     user: user,
-                    imageUrl: imageUrl,
+                    imageUrl: imageUrl, // Saving the Link from ImgBB
                     isVerified: isVerified,
                     createdAt: serverTimestamp(),
                     likes: 0
                 });
 
+                // RESET
                 input.value = ""; 
-                linkInput.value = "";
+                fileInput.value = "";
+                document.getElementById('filePreview').innerText = "";
+
             } catch (e) {
                 console.error("Error posting: ", e);
+                alert("Something went wrong!");
             }
+
+            // ENABLE BUTTON
+            btn.disabled = false;
+            btn.innerText = "🚀 Post";
+        });
+    </script>"; 
+        // ------------------------------------
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
+          authDomain: "evtx-social.firebaseapp.com",
+          projectId: "evtx-social",
+          storageBucket: "evtx-social.firebasestorage.app",
+          messagingSenderId: "24242683037",
+          appId: "1:24242683037:web:48dcc74fe3d241cfb76874"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const postsRef = collection(db, "posts");
+
+        // --- FILE PREVIEW ---
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const fileName = this.files[0]?.name;
+            if(fileName) document.getElementById('filePreview').innerText = "📷 Image Selected: " + fileName;
         });
 
+        // --- PART A: LISTENING FOR POSTS ---
+        const q = query(postsRef, orderBy("createdAt", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const feed = document.getElementById("feed");
+            feed.innerHTML = ""; 
+
+            snapshot.forEach((doc) => {
+                const post = doc.data();
+                const postElement = document.createElement("div");
+                postElement.className = "post";
+                
+                let timeText = "Just now";
+                if(post.createdAt) timeText = new Date(post.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const username = post.user || "Anonymous";
+                
+                // VIP CHECK
+                let avatarHTML = "";
+                let badgeHTML = "";
+                
+                if (post.isVerified === true) {
+                    // Uses your uploaded logo
+                    avatarHTML = `<div class="avatar" style="background-image: url('https://refivenine.github.io/Evtx/logo.png'); border-color: #ffd700;"></div>`;
+                    badgeHTML = ` <span style="color: #ffd700; font-size: 16px;">👑</span>`;
+                } else {
+                    const firstLetter = username.charAt(0).toUpperCase();
+                    avatarHTML = `<div class="avatar">${firstLetter}</div>`;
+                }
+
+                // IMAGE CHECK
+                let imageHTML = "";
+                if (post.imageUrl) {
+                    imageHTML = `<img src="${post.imageUrl}" class="post-img" loading="lazy">`;
+                }
+
+                postElement.innerHTML = `
+                    <div class="user-header">
+                        ${avatarHTML}
+                        <div class="user-meta">
+                            <h4>${username} ${badgeHTML}</h4>
+                            <span>@${username.toLowerCase().replace(/\s/g, '')} • ${timeText}</span>
+                        </div>
+                        <button class="act-btn delete-btn" data-id="${doc.id}" style="margin-left: auto; color: #cc0000;">🗑️</button>
+                    </div>
+                    <div class="content">${post.text}</div>
+                    ${imageHTML} 
+                    <div class="actions">
+                        <button class="act-btn like-btn" data-id="${doc.id}">
+                            ❤️ <span>${post.likes || 0}</span>
+                        </button>
+                        <button class="act-btn">💬 Comment</button>
+                        <button class="act-btn">🔄 Share</button>
+                    </div>
+                `;
+                feed.appendChild(postElement);
+            });
+
+            // Re-attach buttons
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = btn.getAttribute('data-id');
+                    updateDoc(doc(db, "posts", id), { likes: increment(1) });
+                });
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = btn.getAttribute('data-id');
+                    if(confirm("🛑 Delete this post?")) await deleteDoc(doc(db, "posts", id));
+                });
+            });
+        });
+
+        // --- PART B: SENDING POST (WITH FREE UPLOAD) ---
+        document.getElementById("sendBtn").addEventListener("click", async () => {
+            const input = document.getElementById("postInput");
+            const nameInput = document.getElementById("usernameInput");
+            const fileInput = document.getElementById("fileInput"); // Restored Camera Input
+            
+            const text = input.value;
+            const user = nameInput.value || "Anonymous";
+            const file = fileInput.files[0];
+            let isVerified = false;
+
+            if (text.trim() === "" && !file) return;
+
+            // VIP SECURITY
+            if (user === "Refivenine") {
+                let password = prompt("🔐 Enter Password to post as Admin:");
+                if (password === "admin123") isVerified = true;
+                else { alert("🚫 Wrong Password"); return; }
+            }
+
+            // DISABLE BUTTON & SHOW LOADING
+            const btn = document.getElementById("sendBtn");
+            btn.disabled = true;
+            btn.innerText = "📡 Uploading...";
+
+            try {
+                let imageUrl = null;
+
+                // 1. UPLOAD TO IMGBB (If file selected)
+                if (file) {
+                    const formData = new FormData();
+                    formData.append("image", file);
+                    
+                    // Send to ImgBB
+                    const response = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbAPIKey}`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    const data = await response.json();
+                    
+                    if(data.success) {
+                        imageUrl = data.data.url; // Get the web link!
+                    } else {
+                        alert("Upload Failed: " + data.error.message);
+                        btn.disabled = false;
+                        btn.innerText = "🚀 Post";
+                        return;
+                    }
+                }
+
+                // 2. SAVE TO FIREBASE
+                await addDoc(postsRef, {
+                    text: text,
+                    user: user,
+                    imageUrl: imageUrl, // Saving the Link from ImgBB
+                    isVerified: isVerified,
+                    createdAt: serverTimestamp(),
+                    likes: 0
+                });
+
+                // RESET
+                input.value = ""; 
+                fileInput.value = "";
+                document.getElementById('filePreview').innerText = "";
+
+            } catch (e) {
+                console.error("Error posting: ", e);
+                alert("Something went wrong!");
+            }
+
+            // ENABLE BUTTON
+            btn.disabled = false;
+            btn.innerText = "🚀 Post";
+        });
     </script>
 
 </body>
