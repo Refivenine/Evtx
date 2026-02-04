@@ -159,7 +159,66 @@
             <div id="tab-search" class="tab-content hidden"><input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search users..."><div id="searchResults"></div></div>
             <div id="tab-notifs" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Activity</h3><div id="notif-list"><div style="text-align:center; padding:20px; color:#555;">No notifications yet.</div></div></div>
             
-            <div id="tab-profile" class="tab-content hidden"><div class="profile-container"><div class="profile-header-overlap"><div id="my-cover-pic" class="cover-photo-container"><button onclick="document.getElementById('coverPicInput').click()" class="edit-cover-btn"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Edit Cover</button></div><div id="my-pic" class="big-avatar"></div><button onclick="document.getElementById('profilePicInput').click()" class="edit-pic-btn">📷</button></div><input type="file" id="profilePicInput" hidden accept="image/*"><input type="file" id="coverPicInput" hidden accept="image/*"><div class="form-section"><label class="form-label">AURA COLOR</label><div class="color-picker-wrapper"><input type="color" id="p-theme" value="#bf00ff"><span style="font-size:13px; color:#777;">Pick a color that represents you.</span></div><label class="form-label">DISPLAY NAME</label><input type="text" id="p-name" class="form-input" placeholder="e.g. John Doe"><label class="form-label">NICKNAME</label><input type="text" id="p-nickname" class="form-input" placeholder="@handle"><label class="form-label">BIO</label><textarea id="p-bio" class="form-input" rows="3"></textarea><label class="form-label">COUNTRY</label><input type="text" id="p-country" class="form-input"><button id="saveProfileBtn" class="main-btn" style="margin-top: 30px; margin-bottom: 20px;">💾 Save Changes</button></div></div></div>
+            <div id="tab-profile" class="tab-content hidden"><div class="profile-container"><div class="profile-header-overlap"><div id="my-cover-pic" class="cover-photo-container"><button onclick="document.getElementById('coverPicInput').click()" class="edit-cover-btn"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Edit Cover</button></div><div id="my-pic" class="big-avatar"></div><button onclick="// REPLACE YOUR EXISTING saveProfileBtn LISTENER WITH THIS CODE
+document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+    const b = document.getElementById("saveProfileBtn");
+    b.innerText = "Saving...";
+    const t = document.getElementById('p-theme').value;
+    const newName = document.getElementById('p-name').value;
+    const newNick = document.getElementById('p-nickname').value;
+    
+    // 1. Prepare User Data
+    const d = {
+        name: newName,
+        nickname: newNick,
+        bio: document.getElementById('p-bio').value,
+        country: document.getElementById('p-country').value,
+        themeColor: t
+    };
+    if (finalProfilePic) d.pic = finalProfilePic;
+    if (finalCoverPic) d.coverPic = finalCoverPic;
+
+    try {
+        // 2. Update the USER document
+        await setDoc(doc(db, "users", currentUser.uid), d, { merge: true });
+        
+        // --- START OF NEW CODE ---
+        
+        // 3. Update local variable immediately
+        currentUserName = newName || currentUser.email.split('@')[0];
+
+        // 4. Find and update ALL existing posts by this user
+        const q = query(postsRef, where("uid", "==", currentUser.uid));
+        const querySnapshot = await getDocs(q);
+        
+        const updatePromises = [];
+        querySnapshot.forEach((doc) => {
+            // Create update object for the post
+            const postUpdate = { 
+                username: currentUserName, 
+                userBio: newNick || "Member" 
+            };
+            // Only update pic if a new one was chosen
+            if (d.pic) postUpdate.userPic = d.pic;
+
+            // Add update operation to the list
+            updatePromises.push(updateDoc(doc.ref, postUpdate));
+        });
+        
+        // Wait for all post updates to finish
+        await Promise.all(updatePromises);
+        
+        // --- END OF NEW CODE ---
+
+        applyTheme(t);
+        b.innerText = "✅ Saved & Posts Updated";
+
+    } catch (e) {
+        console.error(e);
+        b.innerText = "❌ Error";
+    }
+    setTimeout(() => b.innerText = "💾 Save Changes", 2000);
+});
             
             <div id="tab-user-view" class="tab-content hidden"><div class="profile-container"><div class="cover-photo-container" id="view-cover"><button onclick="goBack()" class="back-btn-float">⬅ Back</button></div><div class="profile-header-overlap" style="margin-bottom:50px;"><div id="view-pic" class="big-avatar"></div></div><div class="public-bio-box"><h2 id="view-name" class="public-name">Loading...</h2><span id="view-nick" class="public-nick"></span><p id="view-bio" style="color:#ddd; margin:15px 0;">...</p>
             <div style="display:flex; justify-content:center; gap:10px;">
