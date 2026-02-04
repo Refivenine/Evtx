@@ -262,7 +262,7 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const ADMIN_EMAIL = "hrangategamer@gmail.com";
-        const firebaseConfig = { apiKey: "AIzaSyAiakBfUC4QScczQq6wARW7KC0-gKcomg8", authDomain: "evtx-social.firebaseapp.com", projectId: "evtx-social", storageBucket: "evtx-social.firebaseapp.com", messagingSenderId: "542777804477", appId: "1:542777804477:web:2a30d55e7178c714341b6c" };
+        const firebaseConfig = { apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8", authDomain: "evtx-social.firebaseapp.com", projectId: "evtx-social", storageBucket: "evtx-social.firebaseapp.com", messagingSenderId: "542777804477", appId: "1:542777804477:web:2a30d55e7178c714341b6c" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app); const postsRef = collection(db, "posts");
         let currentUser = null; let currentEditPostId = null; let previousTab = 'home'; let currentUserName = "User"; let currentChatId = null;
         let cropper = null; let cropTarget = null; let finalPostImage = null; let finalProfilePic = null; let finalCoverPic = null;
