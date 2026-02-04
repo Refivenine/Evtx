@@ -136,6 +136,18 @@
         .stat-tag { background: #222; padding: 4px 10px; border-radius: 10px; border: 1px solid #333; }
         .back-btn-float { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); color: #fff; padding: 8px 12px; border-radius: 20px; backdrop-filter: blur(5px); z-index: 20; border: none; font-weight: bold; cursor: pointer;}
 
+        /* PROFILE TABS & GALLERY */
+        .profile-tabs { display: flex; border-bottom: 1px solid #333; margin-bottom: 15px; }
+        .p-tab-btn { flex: 1; padding: 15px; text-align: center; color: #777; cursor: pointer; font-weight: bold; font-size: 14px; position: relative; }
+        .p-tab-active { color: var(--app-color); }
+        .p-tab-active::after { content: ''; position: absolute; bottom: 0; left: 25%; width: 50%; height: 3px; background: var(--app-color); border-radius: 3px 3px 0 0; }
+        
+        .grid-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 5px; }
+        .grid-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 4px; cursor: pointer; background: #222; }
+        
+        .friend-item { display: flex; align-items: center; padding: 12px; background: #1a1a1a; margin-bottom: 8px; border-radius: 12px; }
+        .friend-info { flex: 1; margin-left: 12px; }
+
         /* NAV */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 12px 0; z-index: 2000; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
         .search-bar { width: 90%; margin: 15px auto; display:block; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 30px; outline: none; box-sizing: border-box; }
@@ -159,14 +171,27 @@
             <div id="tab-search" class="tab-content hidden"><input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search users..."><div id="searchResults"></div></div>
             <div id="tab-notifs" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Activity</h3><div id="notif-list"><div style="text-align:center; padding:20px; color:#555;">No notifications yet.</div></div></div>
             
-            <div id="tab-profile" class="tab-content hidden"><div class="profile-container"><div class="profile-header-overlap"><div id="my-cover-pic" class="cover-photo-container"><button onclick="document.getElementById('coverPicInput').click()" class="edit-cover-btn"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Edit Cover</button></div><div id="my-pic" class="big-avatar"></div><button onclick="document.getElementById('profilePicInput').click()" class="edit-pic-btn">📷</button></div><input type="file" id="profilePicInput" hidden accept="image/*"><input type="file" id="coverPicInput" hidden accept="image/*"><div class="form-section"><label class="form-label">AURA COLOR</label><div class="color-picker-wrapper"><input type="color" id="p-theme" value="#bf00ff"><span style="font-size:13px; color:#777;">Pick a color that represents you.</span></div><label class="form-label">DISPLAY NAME</label><input type="text" id="p-name" class="form-input" placeholder="e.g. John Doe"><label class="form-label">NICKNAME</label><input type="text" id="p-nickname" class="form-input" placeholder="@handle"><label class="form-label">BIO</label><textarea id="p-bio" class="form-input" rows="3"></textarea><label class="form-label">COUNTRY</label><input type="text" id="p-country" class="form-input"><button id="saveProfileBtn" class="main-btn" style="margin-top: 30px; margin-bottom: 20px;">💾 Save Changes</button></div></div></div>
+            <div id="tab-profile" class="tab-content hidden"><div class="profile-container"><div class="profile-header-overlap"><div id="my-cover-pic" class="cover-photo-container"><button onclick="document.getElementById('coverPicInput').click()" class="edit-cover-btn"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Edit Cover</button></div><div id="my-pic" class="big-avatar"></div><button onclick="document.getElementById('profilePicInput').click()" class="edit-pic-btn">📷</button></div><input type="file" id="profilePicInput" hidden accept="image/*"><input type="file" id="coverPicInput" hidden accept="image/*"><div class="form-section"><label class="form-label">AURA COLOR</label><div class="color-picker-wrapper"><input type="color" id="p-theme" value="#bf00ff"><span style="font-size:13px; color:#777;">Pick a color that represents you.</span></div><label class="form-label">DISPLAY NAME</label><input type="text" id="p-name" class="form-input" placeholder="e.g. John Doe"><label class="form-label">NICKNAME</label><input type="text" id="p-nickname" class="form-input" placeholder="@handle"><label class="form-label">BIO</label><textarea id="p-bio" class="form-input" rows="3"></textarea><label class="form-label">COUNTRY</label><input type="text" id="p-country" class="form-input"><button id="saveProfileBtn" class="main-btn" style="margin-top: 30px; margin-bottom: 20px;">💾 Save Changes</button><button id="viewMyProfileBtn" class="friend-btn" style="width:100%; text-align:center; margin-top:10px; border-color:#555;">👀 View My Public Profile</button></div></div></div>
             
             <div id="tab-user-view" class="tab-content hidden"><div class="profile-container"><div class="cover-photo-container" id="view-cover"><button onclick="goBack()" class="back-btn-float">⬅ Back</button></div><div class="profile-header-overlap" style="margin-bottom:50px;"><div id="view-pic" class="big-avatar"></div></div><div class="public-bio-box"><h2 id="view-name" class="public-name">Loading...</h2><span id="view-nick" class="public-nick"></span><p id="view-bio" style="color:#ddd; margin:15px 0;">...</p>
             <div style="display:flex; justify-content:center; gap:10px;">
                 <button id="message-user-btn" class="main-btn" style="width:auto; padding:8px 20px; font-size:14px;">💬 Message</button>
                 <button id="friend-user-btn" class="friend-btn">Add Friend</button>
             </div>
-            <div class="public-stats"><span id="view-country" class="stat-tag">🏳️ ...</span></div></div></div><div id="user-posts-feed"></div></div>
+            <div class="public-stats"><span id="view-country" class="stat-tag">🏳️ ...</span></div></div>
+            
+            <div class="profile-tabs">
+                <div class="p-tab-btn p-tab-active" onclick="switchProfileTab('posts')" id="pt-posts">Posts</div>
+                <div class="p-tab-btn" onclick="switchProfileTab('images')" id="pt-images">Images</div>
+                <div class="p-tab-btn" onclick="switchProfileTab('friends')" id="pt-friends">Friends</div>
+            </div>
+            
+            </div>
+            
+            <div id="user-posts-feed" class="p-content-box"></div>
+            <div id="user-images-feed" class="p-content-box hidden grid-gallery"></div>
+            <div id="user-friends-list" class="p-content-box hidden" style="padding:10px;"></div>
+            </div>
         </div>
 
         <div class="bottom-nav">
@@ -195,7 +220,7 @@
         
         let currentUser = null; let currentEditPostId = null; let previousTab = 'home'; let currentUserName = "User"; let currentChatId = null;
         let cropper = null; let cropTarget = null; let finalPostImage = null; let finalProfilePic = null; let finalCoverPic = null;
-        let friendListener = null;
+        let friendListener = null; let currentUserViewing = null;
 
         const applyTheme = (color) => { const c = color || "#bf00ff"; document.documentElement.style.setProperty('--app-color', c); };
         const applyUserViewTheme = (color) => { const c = color || "#bf00ff"; document.getElementById('view-cover').style.borderBottomColor = c; document.getElementById('view-nick').style.color = c; document.getElementById('message-user-btn').style.background = c; };
@@ -267,6 +292,10 @@
             setTimeout(() => b.innerText = "💾 Save Changes", 2000);
         });
 
+        document.getElementById("viewMyProfileBtn").addEventListener("click", () => {
+            openUserProfile(currentUser.uid);
+        });
+
         document.getElementById("sendBtn").addEventListener("click", async () => { const i=document.getElementById("postInput"); if(!i.value&&!finalPostImage)return; document.getElementById("sendBtn").innerText="..."; try { let n=currentUserName; let pic=null; let bio="Member"; const d=await getDoc(doc(db,"users",currentUser.uid)); if(d.exists()){const dd=d.data();n=dd.name||n;pic=dd.pic;bio=dd.nickname||bio} await addDoc(postsRef,{text:i.value, imageUrl: finalPostImage, userEmail:currentUser.email, uid:currentUser.uid, username:n, userPic:pic, userBio:bio, createdAt:serverTimestamp(), likes:0, likedBy:[], commentCount:0, shareCount:0}); i.value=""; finalPostImage=null; document.getElementById("filePreview").innerHTML=""; document.getElementById("sendBtn").innerText="Post"; } catch (err) { alert("Error: " + err.message); document.getElementById("sendBtn").innerText="Post"; } });
         
         // --- CHAT ---
@@ -310,6 +339,84 @@
             else if (state === "Friends") { if(!confirm("Unfriend this user?")) return; await updateDoc(myRef, { friends: arrayRemove(targetUid) }); await updateDoc(targetRef, { friends: arrayRemove(currentUser.uid) }); }
         }
 
+        // --- NEW PROFILE TABS LOGIC ---
+        window.switchProfileTab = (tab) => {
+            // UI
+            document.querySelectorAll('.p-tab-btn').forEach(b => b.classList.remove('p-tab-active'));
+            document.getElementById('pt-'+tab).classList.add('p-tab-active');
+            
+            // Content
+            document.querySelectorAll('.p-content-box').forEach(b => b.classList.add('hidden'));
+            
+            if(tab === 'posts') document.getElementById('user-posts-feed').classList.remove('hidden');
+            if(tab === 'images') {
+                document.getElementById('user-images-feed').classList.remove('hidden');
+                loadUserImages(currentUserViewing);
+            }
+            if(tab === 'friends') {
+                document.getElementById('user-friends-list').classList.remove('hidden');
+                loadUserFriends(currentUserViewing);
+            }
+        };
+
+        async function loadUserImages(uid) {
+            const container = document.getElementById('user-images-feed');
+            container.innerHTML = "<div style='grid-column:1/-1;text-align:center;padding:20px;color:#555;'>Loading...</div>";
+            const q = query(postsRef, orderBy("createdAt", "desc"));
+            const s = await getDocs(q);
+            container.innerHTML = "";
+            let count = 0;
+            s.forEach(d => {
+                const x = d.data();
+                if(x.uid === uid && x.imageUrl) {
+                    count++;
+                    const img = document.createElement("img");
+                    img.className = "grid-img";
+                    img.src = x.imageUrl;
+                    img.onclick = () => { window.open(x.imageUrl, '_blank'); };
+                    container.appendChild(img);
+                }
+            });
+            if(count === 0) container.innerHTML = "<div style='grid-column:1/-1;text-align:center;padding:20px;color:#555;'>No images shared.</div>";
+        }
+
+        async function loadUserFriends(uid) {
+            const container = document.getElementById('user-friends-list');
+            container.innerHTML = "<div style='text-align:center;padding:20px;color:#555;'>Loading...</div>";
+            try {
+                const uDoc = await getDoc(doc(db, "users", uid));
+                if(!uDoc.exists()) return;
+                const friends = uDoc.data().friends || [];
+                
+                container.innerHTML = "";
+                if(friends.length === 0) {
+                    container.innerHTML = "<div style='text-align:center;padding:20px;color:#555;'>No friends yet.</div>";
+                    return;
+                }
+
+                for (const fid of friends) {
+                    const fDoc = await getDoc(doc(db, "users", fid));
+                    if(fDoc.exists()) {
+                        const f = fDoc.data();
+                        const div = document.createElement("div");
+                        div.className = "friend-item";
+                        div.innerHTML = `
+                            <div class="avatar" style="width:40px;height:40px;margin:0;background-image:url('${f.pic || ''}')"></div>
+                            <div class="friend-info">
+                                <div style="font-weight:bold;color:#fff;">${f.name}</div>
+                                <div style="font-size:12px;color:#777;">${f.nickname || '@user'}</div>
+                            </div>
+                            <button class="btn" style="color:var(--app-color);font-size:12px;font-weight:bold;" onclick="openUserProfile('${fid}')">View</button>
+                        `;
+                        container.appendChild(div);
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+                container.innerHTML = "<div style='text-align:center;padding:20px;color:#cc0000;'>Error loading friends.</div>";
+            }
+        }
+
         // --- NAV & HELPERS ---
         function loadFeed() { onSnapshot(query(postsRef, orderBy("createdAt", "desc")), (sn) => { const f = document.getElementById("feed"); f.innerHTML = ""; sn.forEach(ds => { const p = ds.data(); const el = document.createElement("div"); el.className = "post"; const isA = p.userEmail === ADMIN_EMAIL; const b = isA ? `<span style="color:#ffd700; margin-left:4px;">👑</span>` : ""; let as = ""; let at = ""; if(isA) as = "background-image:url('https://refivenine.github.io/Evtx/logo.png'); border-color:#ffd700;"; else if(p.userPic) as = `background-image:url('${p.userPic}');`; else at = (p.username||"?").charAt(0).toUpperCase(); const il = p.likedBy && p.likedBy.includes(currentUser.uid); const lc = il ? "act-btn liked" : "act-btn"; const canEdit = p.uid === currentUser.uid || currentUser.email === ADMIN_EMAIL; let adminTools = canEdit ? `<div style="margin-left:auto; display:flex; gap:10px;"><button class="act-btn" onclick="openEditMode('${ds.id}','${escape(p.text)}')" style="color:var(--app-color);"><svg class="icon" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button><button class="act-btn" onclick="delPost('${ds.id}')" style="color:#cc0000;"><svg class="icon" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>` : ""; const clickAction = p.uid ? `onclick="openUserProfile('${p.uid}')"` : ""; el.innerHTML = `<div class="user-header"><div class="avatar" style="${as}" ${clickAction}>${at}</div><div class="user-meta" ${clickAction}><h4>${p.username} ${b}</h4><span>${p.userBio || "Member"}</span></div>${adminTools}</div><div class="content" id="text-${ds.id}">${p.text}</div>${p.imageUrl ? `<img src="${p.imageUrl}" class="post-img">` : ""}<div class="actions"><button class="${lc}" onclick="likePost('${ds.id}', '${p.uid}')"><svg class="icon" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> <span>${p.likes||0}</span></button><button class="act-btn" onclick="toggleComments('${ds.id}')"><svg class="icon" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> <span id="c-count-${ds.id}">${p.commentCount||0}</span></button><button class="act-btn" onclick="sharePost('${ds.id}', '${p.username}', '${p.uid}')"><svg class="icon" viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg> <span id="s-count-${ds.id}">${p.shareCount||0}</span></button></div><div id="comments-${ds.id}" class="comments-section"><div id="list-${ds.id}">Loading...</div><div class="comment-input-row"><input type="text" id="input-${ds.id}" class="mini-input" placeholder="Add a comment..."><button onclick="sendComment('${ds.id}', '${p.uid}')" class="btn mini-btn">Send</button></div></div>`; f.appendChild(el); }); }); }
         window.openEditMode = (id,t) => {currentEditPostId=id;document.getElementById('edit-overlay').classList.remove('hidden');document.getElementById('edit-text-input').value=unescape(t)};
@@ -319,13 +426,26 @@
         window.switchTab = async (t) => { if(t!=='user-view') previousTab=t; document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active'); if(t==='chats')document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); if(t==='search')document.querySelectorAll('.nav-item')[2].classList.add('nav-active'); if(t==='notifs'){const q=query(collection(db,"notifications"),where("recipient","==",currentUser.uid),where("read","==",false));const s=await getDocs(q);s.forEach(d=>updateDoc(doc(db,"notifications",d.id),{read:true}));document.querySelectorAll('.nav-item')[3].classList.add('nav-active')} if(t==='profile')document.querySelectorAll('.nav-item')[4].classList.add('nav-active') };
         
         window.openUserProfile = async (uid) => { 
-            if(!uid) return; window.switchTab('user-view'); 
+            if(!uid) return; 
+            currentUserViewing = uid; // Set global ID for tabs
+            window.switchTab('user-view'); 
+            
+            // Reset UI
+            window.switchProfileTab('posts'); // Default to posts
             document.getElementById("view-name").innerText = "Loading..."; document.getElementById("view-nick").innerText = ""; document.getElementById("view-bio").innerText = ""; document.getElementById("view-pic").style.backgroundImage = "none"; document.getElementById("view-cover").style.backgroundImage = "none"; document.getElementById("friend-user-btn").className = "friend-btn add"; document.getElementById("friend-user-btn").innerText = "Add Friend";
+            
+            // Logic
             document.getElementById("message-user-btn").onclick=()=>startChat(uid); document.getElementById("friend-user-btn").onclick=()=>toggleFriend(uid);
+            
             if(friendListener) friendListener(); 
             friendListener = onSnapshot(doc(db, "users", currentUser.uid), (doc) => { if(doc.exists()) { const me = doc.data(); if(me.friends && me.friends.includes(uid)) { document.getElementById("friend-user-btn").innerText = "Friends"; document.getElementById("friend-user-btn").className = "friend-btn friends"; } else if(me.requestsSent && me.requestsSent.includes(uid)) { document.getElementById("friend-user-btn").innerText = "Request Sent"; document.getElementById("friend-user-btn").className = "friend-btn requested"; } else if(me.requestsReceived && me.requestsReceived.includes(uid)) { document.getElementById("friend-user-btn").innerText = "Accept Request"; document.getElementById("friend-user-btn").className = "friend-btn accept"; } else { document.getElementById("friend-user-btn").innerText = "Add Friend"; document.getElementById("friend-user-btn").className = "friend-btn add"; } } });
+            
             try { const d=await getDoc(doc(db,"users",uid)); if(d.exists()){ const u=d.data(); document.getElementById("view-name").innerText = u.name || "Anonymous User"; document.getElementById("view-nick").innerText = u.nickname || "@unknown"; document.getElementById("view-bio").innerText = u.bio || "No bio available."; document.getElementById("view-country").innerText = u.country ? "🏳️ " + u.country : "🏳️ Earth"; if(u.pic) document.getElementById("view-pic").style.backgroundImage = `url('${u.pic}')`; if(u.coverPic) document.getElementById("view-cover").style.backgroundImage = `url('${u.coverPic}')`; applyUserViewTheme(u.themeColor || "#bf00ff"); } else { document.getElementById("view-name").innerText = "User Not Found"; } } catch(e) { console.log(e); document.getElementById("view-name").innerText = "Error Loading Profile"; }
-            const q=query(postsRef,orderBy("createdAt","desc")); const s=await getDocs(q); const p=document.getElementById("user-posts-feed"); p.innerHTML=""; s.forEach(d=>{const x=d.data();if(x.uid===uid){const e=document.createElement("div");e.className="post";e.innerHTML=`<div class="content">${x.text}</div>${x.imageUrl?`<img src="${x.imageUrl}" class="post-img">`:""}`;p.appendChild(e)}}) 
+            
+            const q=query(postsRef,orderBy("createdAt","desc")); const s=await getDocs(q); const p=document.getElementById("user-posts-feed"); p.innerHTML=""; 
+            let count = 0;
+            s.forEach(d=>{const x=d.data();if(x.uid===uid){count++; const e=document.createElement("div");e.className="post";e.innerHTML=`<div class="content">${x.text}</div>${x.imageUrl?`<img src="${x.imageUrl}" class="post-img">`:""}`;p.appendChild(e)}}) 
+            if(count === 0) p.innerHTML = "<div style='text-align:center;padding:20px;color:#555;'>No posts yet.</div>";
         };
         
         window.goBack = () => window.switchTab('home');
