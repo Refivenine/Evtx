@@ -53,6 +53,7 @@
         }
         .notif-item:active { background: #2a2a2a; transform: scale(0.99); }
         .notif-item.unread { background: #1a1a2e; border-left: 3px solid var(--app-color); }
+        .notif-icon { margin-right: 15px; color: var(--app-color); font-size: 20px; } 
         .notif-text { font-size: 14px; color: #ddd; flex: 1; pointer-events: none; }
 
         /* BADGES */
@@ -302,25 +303,48 @@
             } catch (err) { alert("Error: " + err.message); btn.innerText="Post"; } 
         });
 
-        document.getElementById("saveProfileBtn").addEventListener("click", async () => { const b=document.getElementById("saveProfileBtn"); b.innerText="Saving..."; const t=document.getElementById('p-theme').value; const d={ name:document.getElementById('p-name').value, nickname:document.getElementById('p-nickname').value, bio:document.getElementById('p-bio').value, country:document.getElementById('p-country').value, themeColor:t }; 
-            if(finalProfilePic) d.pic = await uploadToCloudinary(finalProfilePic);
-            if(finalCoverPic) d.coverPic = await uploadToCloudinary(finalCoverPic);
+        // --- SAVE PROFILE (BATCH UPDATE) ---
+        document.getElementById("saveProfileBtn").addEventListener("click", async () => { 
+            const b = document.getElementById("saveProfileBtn"); 
+            b.innerText = "Saving...";
+            const t = document.getElementById('p-theme').value;
+            const newName = document.getElementById('p-name').value;
+            const newNick = document.getElementById('p-nickname').value;
             
-            await setDoc(doc(db,"users",currentUser.uid),d,{merge:true}); 
-            currentUserName = d.name; // Update local immediately
+            const d = { 
+                name: newName, 
+                nickname: newNick, 
+                bio: document.getElementById('p-bio').value, 
+                country: document.getElementById('p-country').value, 
+                themeColor: t 
+            };
+            
+            if (finalProfilePic) d.pic = await uploadToCloudinary(finalProfilePic);
+            if (finalCoverPic) d.coverPic = await uploadToCloudinary(finalCoverPic);
 
-            // BATCH UPDATE FIX
+            // 1. Update User Profile
+            await setDoc(doc(db, "users", currentUser.uid), d, { merge: true });
+            currentUserName = newName; 
+
+            // 2. BATCH UPDATE ALL OLD POSTS
             const q = query(postsRef, where("uid", "==", currentUser.uid));
             const querySnapshot = await getDocs(q);
             const updatePromises = [];
+            
             querySnapshot.forEach((doc) => {
-                const postUpdate = { username: d.name, userBio: d.nickname || "Member" };
-                if(d.pic) postUpdate.userPic = d.pic;
+                const postUpdate = { 
+                    username: newName, 
+                    userBio: newNick || "Member" 
+                };
+                if (d.pic) postUpdate.userPic = d.pic;
                 updatePromises.push(updateDoc(doc.ref, postUpdate));
             });
+            
             await Promise.all(updatePromises);
 
-            applyTheme(t); b.innerText="✅ Saved & Updated"; setTimeout(()=>b.innerText="Save Changes",2000); 
+            applyTheme(t); 
+            b.innerText = "✅ Saved & Updated"; 
+            setTimeout(() => b.innerText = "💾 Save Changes", 2000); 
         });
 
         // --- INTERACTIONS & FEED ---
@@ -359,7 +383,7 @@
             createNotification(oid,'comment',id); i.value=""; 
         };
 
-        // --- SMART FEED SYSTEM (FIX FOR VIDEO RESTART) ---
+        // --- SMART FEED SYSTEM (VIDEO FIX) ---
         function loadFeed() { 
             const q = query(postsRef, orderBy("createdAt", "desc"));
             onSnapshot(q, (snapshot) => { 
@@ -375,33 +399,19 @@
                         el.className = "post";
                         el.id = `post-${id}`;
                         el.innerHTML = getPostHTML(id, p);
-                        
-                        // Insert at correct index
-                        if (change.newIndex >= f.children.length) {
-                            f.appendChild(el);
-                        } else {
-                            f.insertBefore(el, f.children[change.newIndex]);
-                        }
+                        if (change.newIndex >= f.children.length) { f.appendChild(el); } else { f.insertBefore(el, f.children[change.newIndex]); }
                     }
                     if (change.type === "modified") {
                         const el = document.getElementById(`post-${id}`);
                         if (el) {
-                            // Update Likes Count & Icon
                             const likeBtn = el.querySelector(".like-btn");
                             const isLiked = p.likedBy && p.likedBy.includes(currentUser.uid);
                             likeBtn.className = `act-btn like-btn ${isLiked ? 'liked' : ''}`;
                             likeBtn.querySelector("span").innerText = p.likes || 0;
-                            
-                            // Update Comment Count
                             el.querySelector(".comment-btn span").innerText = p.commentCount || 0;
-                            
-                            // Update Share Count
                             el.querySelector(".share-btn span").innerText = p.shareCount || 0;
-                            
-                            // Update Content Text (in case of edit)
                             el.querySelector(".content").innerText = p.text;
                             
-                            // Update User Info (in case of profile change)
                             const header = el.querySelector(".user-meta h4");
                             if(header.innerText.split(' ')[0] !== p.username) header.innerText = p.username + (p.userEmail===ADMIN_EMAIL ? " 👑" : "");
                         }
@@ -474,7 +484,30 @@
         window.sendMessage=async()=>{const i=document.getElementById("msg-input");if(i.value&&currentChatId){await addDoc(collection(db,"chats",currentChatId,"messages"),{text:i.value,senderId:currentUser.uid,createdAt:serverTimestamp()});await updateDoc(doc(db,"chats",currentChatId),{lastMessage:i.value,lastUpdated:serverTimestamp(),isRead:false,lastSenderId:currentUser.uid});i.value=""}};
         window.closeChat=()=>{document.getElementById("chat-room").classList.add("hidden");currentChatId=null};
         function listenForChatBadges(){onSnapshot(query(collection(db,"chats"),where("participants","array-contains",currentUser.uid)),s=>{let c=0;s.forEach(d=>{const x=d.data();if(!x.isRead&&x.lastSenderId!==currentUser.uid)c++});const b=document.getElementById("chat-badge");b.style.display=c>0?"flex":"none";b.innerText=c})};
-        function listenForNotifications(){onSnapshot(query(collection(db,"notifications"),where("recipient","==",currentUser.uid)),s=>{let c=0;const l=document.getElementById("notif-list");l.innerHTML="";s.forEach(d=>{const x=d.data();if(!x.read)c++;const e=document.createElement("div");e.className=`notif-item ${x.read?'':'unread'}`;e.innerHTML=`<div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;e.onclick=async()=>{if(x.senderUid)await openUserProfile(x.senderUid);};l.appendChild(e)});const b=document.getElementById("notif-badge");b.style.display=c>0?"flex":"none";b.innerText=c})};
+        
+        function listenForNotifications(){
+            onSnapshot(query(collection(db,"notifications"),where("recipient","==",currentUser.uid)), s=>{
+                let c=0; const l=document.getElementById("notif-list"); l.innerHTML="";
+                if(s.empty) { l.innerHTML = "<div style='text-align:center;padding:20px;color:#555;'>No new notifications.</div>"; }
+                const notifs = []; s.forEach(d => { notifs.push({id: d.id, ...d.data()}); });
+                notifs.sort((a,b) => (b.time?.seconds || 0) - (a.time?.seconds || 0));
+                notifs.forEach(x => {
+                    if(!x.read) c++;
+                    const e=document.createElement("div");
+                    e.className=`notif-item ${x.read?'':'unread'}`;
+                    let icon="🔔"; if(x.type==='like') icon="❤️"; else if(x.type==='comment') icon="💬"; else if(x.type==='friend_req') icon="👥";
+                    e.innerHTML=`<div class="notif-icon" style="font-size:20px;margin-right:15px;">${icon}</div><div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;
+                    e.onclick = async () => {
+                        if(!x.read) updateDoc(doc(db,"notifications",x.id),{read:true});
+                        if(x.senderUid) { await openUserProfile(x.senderUid); } 
+                        else { const q = query(collection(db, "users"), where("name", "==", x.sender)); const sn = await getDocs(q); if(!sn.empty) openUserProfile(sn.docs[0].id); else alert("User profile not found."); }
+                    };
+                    l.appendChild(e);
+                });
+                const b=document.getElementById("notif-badge"); b.style.display=c>0?"flex":"none"; b.innerText=c;
+            })
+        };
+
         function loadChatList(){onSnapshot(query(collection(db,"chats"),where("participants","array-contains",currentUser.uid)),async s=>{const l=document.getElementById("chat-list");l.innerHTML="";if(s.empty)return l.innerHTML="<div style='text-align:center;padding:20px;color:#555;'>No messages</div>";for(const d of s.docs){const c=d.data();const oid=c.participants.find(i=>i!==currentUser.uid);const u=await getDoc(doc(db,"users",oid));const name=u.exists()?u.data().name:"User";const pic=u.exists()?u.data().pic:"";const e=document.createElement("div");e.className="chat-list-item";e.onclick=()=>openChatWindow(d.id,oid);e.innerHTML=`<div class="avatar" style="background-image:url('${pic}')"></div><div class="chat-preview"><p class="chat-name">${name}</p><p class="chat-last-msg">${c.lastMessage}</p></div>`;l.appendChild(e)}})};
         window.goBack=()=>window.switchTab('home'); window.logout=()=>signOut(auth);
         document.getElementById("searchInput").addEventListener("input",async(e)=>{const t=e.target.value.toLowerCase();const r=document.getElementById("searchResults");r.innerHTML="";if(t.length<2)return;const s=await getDocs(collection(db,"users"));s.forEach(d=>{const u=d.data();if(u.name?.toLowerCase().includes(t)){const e=document.createElement("div");e.className="user-result";e.onclick=()=>openUserProfile(d.id);e.innerHTML=`<div class="avatar" style="background-image:url('${u.pic||''}')"></div><div style="color:#fff;">${u.name}</div>`;r.appendChild(e)}})});
