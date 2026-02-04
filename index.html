@@ -243,7 +243,7 @@ document.getElementById("saveProfileBtn").addEventListener("click", async () => 
         </div>
     </div>
 
-    <script type="module">
+   <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, where, onSnapshot, serverTimestamp, updateDoc, doc, increment, deleteDoc, setDoc, getDoc, getDocs, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -251,6 +251,7 @@ document.getElementById("saveProfileBtn").addEventListener("click", async () => 
         const ADMIN_EMAIL = "hrangategamer@gmail.com"; 
         const firebaseConfig = { apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8", authDomain: "evtx-social.firebaseapp.com", projectId: "evtx-social", storageBucket: "evtx-social.firebasestorage.app", messagingSenderId: "24242683037", appId: "1:24242683037:web:48dcc74fe3d241cfb76874" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app); const postsRef = collection(db, "posts");
+        
         let currentUser = null; let currentEditPostId = null; let previousTab = 'home'; let currentUserName = "User"; let currentChatId = null;
         let cropper = null; let cropTarget = null; let finalPostImage = null; let finalProfilePic = null; let finalCoverPic = null;
         let friendListener = null;
@@ -258,6 +259,7 @@ document.getElementById("saveProfileBtn").addEventListener("click", async () => 
         const applyTheme = (color) => { const c = color || "#bf00ff"; document.documentElement.style.setProperty('--app-color', c); };
         const applyUserViewTheme = (color) => { const c = color || "#bf00ff"; document.getElementById('view-cover').style.borderBottomColor = c; document.getElementById('view-nick').style.color = c; document.getElementById('message-user-btn').style.background = c; };
 
+        // --- AUTH & STARTUP ---
         onAuthStateChanged(auth, async (user) => {
             const splash = document.getElementById("splash-screen");
             if (user) {
@@ -293,8 +295,37 @@ document.getElementById("saveProfileBtn").addEventListener("click", async () => 
         document.getElementById("coverPicInput").addEventListener('change', function() { if(this.files[0]) initCrop(this.files[0], 'cover'); });
         document.getElementById("edit-file-input").addEventListener('change', function() { if(this.files[0]) initCrop(this.files[0], 'edit-post'); });
 
-        // --- CORE ---
-        document.getElementById("saveProfileBtn").addEventListener("click", async () => { const b=document.getElementById("saveProfileBtn"); b.innerText="Saving..."; const t = document.getElementById('p-theme').value; const d={name:document.getElementById('p-name').value, nickname:document.getElementById('p-nickname').value, bio:document.getElementById('p-bio').value, country:document.getElementById('p-country').value, themeColor: t}; if(finalProfilePic) d.pic = finalProfilePic; if(finalCoverPic) d.coverPic = finalCoverPic; try { await setDoc(doc(db,"users",currentUser.uid),d,{merge:true}); applyTheme(t); b.innerText="✅ Saved"; } catch(e) { b.innerText="❌ Error"; } setTimeout(()=>b.innerText="Save Changes",2000); });
+        // --- CORE (WITH FIX) ---
+        document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+            const b = document.getElementById("saveProfileBtn"); b.innerText = "Saving...";
+            const t = document.getElementById('p-theme').value;
+            const newName = document.getElementById('p-name').value;
+            const newNick = document.getElementById('p-nickname').value;
+            
+            const d = { name: newName, nickname: newNick, bio: document.getElementById('p-bio').value, country: document.getElementById('p-country').value, themeColor: t };
+            if (finalProfilePic) d.pic = finalProfilePic;
+            if (finalCoverPic) d.coverPic = finalCoverPic;
+
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), d, { merge: true });
+                currentUserName = newName || currentUser.email.split('@')[0];
+                
+                // UPDATE ALL POSTS
+                const q = query(postsRef, where("uid", "==", currentUser.uid));
+                const querySnapshot = await getDocs(q);
+                const updatePromises = [];
+                querySnapshot.forEach((doc) => {
+                    const postUpdate = { username: currentUserName, userBio: newNick || "Member" };
+                    if (finalProfilePic) postUpdate.userPic = finalProfilePic;
+                    updatePromises.push(updateDoc(doc.ref, postUpdate));
+                });
+                await Promise.all(updatePromises);
+
+                applyTheme(t); b.innerText = "✅ Saved";
+            } catch (e) { console.error(e); b.innerText = "❌ Error"; }
+            setTimeout(() => b.innerText = "💾 Save Changes", 2000);
+        });
+
         document.getElementById("sendBtn").addEventListener("click", async () => { const i=document.getElementById("postInput"); if(!i.value&&!finalPostImage)return; document.getElementById("sendBtn").innerText="..."; try { let n=currentUserName; let pic=null; let bio="Member"; const d=await getDoc(doc(db,"users",currentUser.uid)); if(d.exists()){const dd=d.data();n=dd.name||n;pic=dd.pic;bio=dd.nickname||bio} await addDoc(postsRef,{text:i.value, imageUrl: finalPostImage, userEmail:currentUser.email, uid:currentUser.uid, username:n, userPic:pic, userBio:bio, createdAt:serverTimestamp(), likes:0, likedBy:[], commentCount:0, shareCount:0}); i.value=""; finalPostImage=null; document.getElementById("filePreview").innerHTML=""; document.getElementById("sendBtn").innerText="Post"; } catch (err) { alert("Error: " + err.message); document.getElementById("sendBtn").innerText="Post"; } });
         
         // --- CHAT ---
@@ -304,7 +335,7 @@ document.getElementById("saveProfileBtn").addEventListener("click", async () => 
         window.closeChat = () => { document.getElementById("chat-room").classList.add("hidden"); currentChatId=null; }
         function loadChatList() { const q=query(collection(db,"chats"),where("participants","array-contains",currentUser.uid)); onSnapshot(q,async(s)=>{const l=document.getElementById("chat-list");l.innerHTML="";if(s.empty)return l.innerHTML="<div style='text-align:center;padding:20px;color:#555;'>No messages</div>"; for(const d of s.docs){const c=d.data();const oid=c.participants.find(i=>i!==currentUser.uid);let on="User";let op="";const u=await getDoc(doc(db,"users",oid));if(u.exists()){on=u.data().name;op=u.data().pic} const isUnread = !c.isRead && c.lastSenderId !== currentUser.uid; const elClass = isUnread ? "chat-list-item unread-chat" : "chat-list-item"; const e=document.createElement("div");e.className=elClass;e.onclick=()=>openChatWindow(d.id,oid);e.innerHTML=`<div class="avatar" style="width:40px;height:40px;background-image:url('${op||''}')"></div><div class="chat-preview"><p class="chat-name">${on}</p><p class="chat-last-msg">${c.lastMessage}</p></div>${isUnread ? '<div class="unread-dot"></div>' : ''}`;l.appendChild(e)}}) }
 
-        // --- NOTIFS & BADGES (FIXED CLICK HANDLER) ---
+        // --- NOTIFS & FEED ---
         function listenForNotifications() { 
             const q=query(collection(db,"notifications"),where("recipient","==",currentUser.uid)); 
             onSnapshot(q,(s)=>{
@@ -316,62 +347,26 @@ document.getElementById("saveProfileBtn").addEventListener("click", async () => 
                     const e=document.createElement("div");e.className=`notif-item ${x.read?'':'unread'}`;
                     let i="🔔";if(x.type==='like')i="❤️";if(x.type==='comment')i="💬";if(x.type==='share')i="🔄";if(x.type==='friend_req')i="👥";
                     e.innerHTML=`<div class="notif-icon">${i}</div><div class="notif-text"><b>${x.sender}</b> ${x.text}</div>`;
-                    
-                    // --- SMART CLICK HANDLER ---
-                    e.addEventListener('click', async () => {
-                        if(x.senderUid) {
-                            await openUserProfile(x.senderUid); // New data works perfectly
-                        } else {
-                            // FALLBACK: Search by Name for Old Data
-                            const q = query(collection(db, "users"), where("name", "==", x.sender));
-                            const sn = await getDocs(q);
-                            if(!sn.empty) {
-                                await openUserProfile(sn.docs[0].id);
-                            } else {
-                                alert("Profile not found (Old notification)");
-                            }
-                        }
-                    });
-                    
+                    e.addEventListener('click', async () => { if(x.senderUid) { await openUserProfile(x.senderUid); } else { const q = query(collection(db, "users"), where("name", "==", x.sender)); const sn = await getDocs(q); if(!sn.empty) { await openUserProfile(sn.docs[0].id); } } });
                     l.appendChild(e);
                 });
                 const b=document.getElementById("notif-badge");
                 if(u>0){b.style.display="flex";b.innerText=u}else{b.style.display="none"}
             }) 
         }
-        async function createNotification(t,y,pid) { 
-            if(!t||t===currentUser.uid)return; 
-            let txt="interacted."; if(y==='like')txt="liked your post."; if(y==='comment')txt="commented."; if(y==='share')txt="shared your post."; if(y==='friend_req')txt="sent a friend request."; if(y==='friend_accept')txt="accepted your friend request."; 
-            await addDoc(collection(db,"notifications"),{recipient:t,sender:currentUserName, senderUid: currentUser.uid, type:y,text:txt,postId:pid,read:false,time:serverTimestamp()}); 
-        }
+        async function createNotification(t,y,pid) { if(!t||t===currentUser.uid)return; let txt="interacted."; if(y==='like')txt="liked your post."; if(y==='comment')txt="commented."; if(y==='share')txt="shared your post."; if(y==='friend_req')txt="sent a friend request."; if(y==='friend_accept')txt="accepted your friend request."; await addDoc(collection(db,"notifications"),{recipient:t,sender:currentUserName, senderUid: currentUser.uid, type:y,text:txt,postId:pid,read:false,time:serverTimestamp()}); }
         window.likePost = async (id,oid) => { const r=doc(db,"posts",id); const d=await getDoc(r); if(d.exists()){const p=d.data();const u=currentUser.uid;let l=p.likedBy||[];let c=p.likes||0;if(l.includes(u)){l=l.filter(x=>x!==u);c--}else{l.push(u);c++;createNotification(oid,'like',id)} await updateDoc(r,{likedBy:l,likes:c})} };
-        window.sharePost = async (id,u,oid) => { updateDoc(doc(db,"posts",id),{shareCount:increment(1)}); createNotification(oid,'share',id); const d={title:`Post by ${u}`,text:"Check this out",url:window.location.href}; if(navigator.share)try{await navigator.share(d)}catch(e){}else {
-    navigator.clipboard.writeText(window.location.href);
-    alert("Link copied to clipboard!");
-} };
+        window.sharePost = async (id,u,oid) => { updateDoc(doc(db,"posts",id),{shareCount:increment(1)}); createNotification(oid,'share',id); const d={title:`Post by ${u}`,text:"Check this out",url:window.location.href}; if(navigator.share)try{await navigator.share(d)}catch(e){}else{ navigator.clipboard.writeText(window.location.href); alert("Link copied to clipboard!"); } };
         window.sendComment = async (id,oid) => { const i=document.getElementById(`input-${id}`); const t=i.value.trim(); if(!t)return; await addDoc(collection(db,"posts",id,"comments"),{text:t,username:currentUserName,createdAt:serverTimestamp()}); updateDoc(doc(db,"posts",id),{commentCount:increment(1)}); createNotification(oid,'comment',id); i.value="" };
         
         window.toggleFriend = async (targetUid) => {
             const btn = document.getElementById("friend-user-btn");
-            const myRef = doc(db, "users", currentUser.uid);
-            const targetRef = doc(db, "users", targetUid);
+            const myRef = doc(db, "users", currentUser.uid); const targetRef = doc(db, "users", targetUid);
             const state = btn.innerText;
-            if (state === "Add Friend") {
-                await updateDoc(myRef, { requestsSent: arrayUnion(targetUid) });
-                await updateDoc(targetRef, { requestsReceived: arrayUnion(currentUser.uid) });
-                createNotification(targetUid, 'friend_req', null);
-            } else if (state === "Request Sent") {
-                await updateDoc(myRef, { requestsSent: arrayRemove(targetUid) });
-                await updateDoc(targetRef, { requestsReceived: arrayRemove(currentUser.uid) });
-            } else if (state === "Accept Request") {
-                await updateDoc(myRef, { friends: arrayUnion(targetUid), requestsReceived: arrayRemove(targetUid) });
-                await updateDoc(targetRef, { friends: arrayUnion(currentUser.uid), requestsSent: arrayRemove(currentUser.uid) });
-                createNotification(targetUid, 'friend_accept', null);
-            } else if (state === "Friends") {
-                if(!confirm("Unfriend this user?")) return;
-                await updateDoc(myRef, { friends: arrayRemove(targetUid) });
-                await updateDoc(targetRef, { friends: arrayRemove(currentUser.uid) });
-            }
+            if (state === "Add Friend") { await updateDoc(myRef, { requestsSent: arrayUnion(targetUid) }); await updateDoc(targetRef, { requestsReceived: arrayUnion(currentUser.uid) }); createNotification(targetUid, 'friend_req', null); }
+            else if (state === "Request Sent") { await updateDoc(myRef, { requestsSent: arrayRemove(targetUid) }); await updateDoc(targetRef, { requestsReceived: arrayRemove(currentUser.uid) }); }
+            else if (state === "Accept Request") { await updateDoc(myRef, { friends: arrayUnion(targetUid), requestsReceived: arrayRemove(targetUid) }); await updateDoc(targetRef, { friends: arrayUnion(currentUser.uid), requestsSent: arrayRemove(currentUser.uid) }); createNotification(targetUid, 'friend_accept', null); }
+            else if (state === "Friends") { if(!confirm("Unfriend this user?")) return; await updateDoc(myRef, { friends: arrayRemove(targetUid) }); await updateDoc(targetRef, { friends: arrayRemove(currentUser.uid) }); }
         }
 
         // --- NAV & HELPERS ---
@@ -383,64 +378,13 @@ document.getElementById("saveProfileBtn").addEventListener("click", async () => 
         window.switchTab = async (t) => { if(t!=='user-view') previousTab=t; document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active')); if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active'); if(t==='chats')document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); if(t==='search')document.querySelectorAll('.nav-item')[2].classList.add('nav-active'); if(t==='notifs'){const q=query(collection(db,"notifications"),where("recipient","==",currentUser.uid),where("read","==",false));const s=await getDocs(q);s.forEach(d=>updateDoc(doc(db,"notifications",d.id),{read:true}));document.querySelectorAll('.nav-item')[3].classList.add('nav-active')} if(t==='profile')document.querySelectorAll('.nav-item')[4].classList.add('nav-active') };
         
         window.openUserProfile = async (uid) => { 
-            if(!uid) return; // Prevent crashes if ID is missing
-            window.switchTab('user-view'); 
-            
-            // RESET UI
-            document.getElementById("view-name").innerText = "Loading...";
-            document.getElementById("view-nick").innerText = "";
-            document.getElementById("view-bio").innerText = "";
-            document.getElementById("view-pic").style.backgroundImage = "none";
-            document.getElementById("view-cover").style.backgroundImage = "none";
-            document.getElementById("friend-user-btn").className = "friend-btn add";
-            document.getElementById("friend-user-btn").innerText = "Add Friend";
-
-            document.getElementById("message-user-btn").onclick=()=>startChat(uid); 
-            document.getElementById("friend-user-btn").onclick=()=>toggleFriend(uid);
-            
-            const btn = document.getElementById("friend-user-btn");
-            if(friendListener) friendListener(); // Kill old listener
-            
-            // FRIEND STATUS LISTENER
-            friendListener = onSnapshot(doc(db, "users", currentUser.uid), (doc) => {
-                if(doc.exists()) {
-                    const me = doc.data();
-                    if(me.friends && me.friends.includes(uid)) { btn.innerText = "Friends"; btn.className = "friend-btn friends"; }
-                    else if(me.requestsSent && me.requestsSent.includes(uid)) { btn.innerText = "Request Sent"; btn.className = "friend-btn requested"; }
-                    else if(me.requestsReceived && me.requestsReceived.includes(uid)) { btn.innerText = "Accept Request"; btn.className = "friend-btn accept"; }
-                    else { btn.innerText = "Add Friend"; btn.className = "friend-btn add"; }
-                }
-            });
-
-            // LOAD USER DATA
-            try {
-                const d=await getDoc(doc(db,"users",uid)); 
-                if(d.exists()){
-                    const u=d.data();
-                    document.getElementById("view-name").innerText = u.name || "Anonymous User";
-                    document.getElementById("view-nick").innerText = u.nickname || "@unknown";
-                    document.getElementById("view-bio").innerText = u.bio || "No bio available.";
-                    document.getElementById("view-country").innerText = u.country ? "🏳️ " + u.country : "🏳️ Earth";
-                    
-                    if(u.pic) document.getElementById("view-pic").style.backgroundImage = `url('${u.pic}')`;
-                    if(u.coverPic) document.getElementById("view-cover").style.backgroundImage = `url('${u.coverPic}')`;
-                    
-                    if(u.themeColor) applyUserViewTheme(u.themeColor);
-                    else applyUserViewTheme("#bf00ff");
-                } else {
-                    document.getElementById("view-name").innerText = "User Not Found";
-                }
-            } catch(e) {
-                console.log(e);
-                document.getElementById("view-name").innerText = "Error Loading Profile";
-            }
-
-            // LOAD POSTS
-            const q=query(postsRef,orderBy("createdAt","desc")); 
-            const s=await getDocs(q); 
-            const p=document.getElementById("user-posts-feed"); 
-            p.innerHTML=""; 
-            s.forEach(d=>{const x=d.data();if(x.uid===uid){const e=document.createElement("div");e.className="post";e.innerHTML=`<div class="content">${x.text}</div>${x.imageUrl?`<img src="${x.imageUrl}" class="post-img">`:""}`;p.appendChild(e)}}) 
+            if(!uid) return; window.switchTab('user-view'); 
+            document.getElementById("view-name").innerText = "Loading..."; document.getElementById("view-nick").innerText = ""; document.getElementById("view-bio").innerText = ""; document.getElementById("view-pic").style.backgroundImage = "none"; document.getElementById("view-cover").style.backgroundImage = "none"; document.getElementById("friend-user-btn").className = "friend-btn add"; document.getElementById("friend-user-btn").innerText = "Add Friend";
+            document.getElementById("message-user-btn").onclick=()=>startChat(uid); document.getElementById("friend-user-btn").onclick=()=>toggleFriend(uid);
+            if(friendListener) friendListener(); 
+            friendListener = onSnapshot(doc(db, "users", currentUser.uid), (doc) => { if(doc.exists()) { const me = doc.data(); if(me.friends && me.friends.includes(uid)) { document.getElementById("friend-user-btn").innerText = "Friends"; document.getElementById("friend-user-btn").className = "friend-btn friends"; } else if(me.requestsSent && me.requestsSent.includes(uid)) { document.getElementById("friend-user-btn").innerText = "Request Sent"; document.getElementById("friend-user-btn").className = "friend-btn requested"; } else if(me.requestsReceived && me.requestsReceived.includes(uid)) { document.getElementById("friend-user-btn").innerText = "Accept Request"; document.getElementById("friend-user-btn").className = "friend-btn accept"; } else { document.getElementById("friend-user-btn").innerText = "Add Friend"; document.getElementById("friend-user-btn").className = "friend-btn add"; } } });
+            try { const d=await getDoc(doc(db,"users",uid)); if(d.exists()){ const u=d.data(); document.getElementById("view-name").innerText = u.name || "Anonymous User"; document.getElementById("view-nick").innerText = u.nickname || "@unknown"; document.getElementById("view-bio").innerText = u.bio || "No bio available."; document.getElementById("view-country").innerText = u.country ? "🏳️ " + u.country : "🏳️ Earth"; if(u.pic) document.getElementById("view-pic").style.backgroundImage = `url('${u.pic}')`; if(u.coverPic) document.getElementById("view-cover").style.backgroundImage = `url('${u.coverPic}')`; applyUserViewTheme(u.themeColor || "#bf00ff"); } else { document.getElementById("view-name").innerText = "User Not Found"; } } catch(e) { console.log(e); document.getElementById("view-name").innerText = "Error Loading Profile"; }
+            const q=query(postsRef,orderBy("createdAt","desc")); const s=await getDocs(q); const p=document.getElementById("user-posts-feed"); p.innerHTML=""; s.forEach(d=>{const x=d.data();if(x.uid===uid){const e=document.createElement("div");e.className="post";e.innerHTML=`<div class="content">${x.text}</div>${x.imageUrl?`<img src="${x.imageUrl}" class="post-img">`:""}`;p.appendChild(e)}}) 
         };
         
         window.goBack = () => window.switchTab('home');
