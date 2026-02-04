@@ -392,7 +392,7 @@ document.getElementById("saveProfileBtn").addEventListener("click", async () => 
         document.getElementById("searchInput").addEventListener("input", async (e) => { const t=e.target.value.trim().toLowerCase(); const r=document.getElementById("searchResults"); r.innerHTML=""; if(t.length<2)return; const s=await getDocs(collection(db,"users")); s.forEach(d=>{const u=d.data();if((u.name&&u.name.toLowerCase().includes(t))||(u.nickname&&u.nickname.toLowerCase().includes(t))){const v=document.createElement("div");v.className="user-result";v.onclick=()=>openUserProfile(d.id);v.innerHTML=`<div class="avatar" style="background-image:url('${u.pic||''}')">${u.pic?'':u.name[0]}</div><div><h4 style="margin:0;color:#fff;">${u.name}</h4></div>`;r.appendChild(v)}}) });
         window.logout = () => signOut(auth);
         document.getElementById("auth-action-btn").addEventListener("click", () => { const e=document.getElementById("email").value; const p=document.getElementById("password").value; if(document.getElementById("auth-action-btn").innerText.includes("Enter")) signInWithEmailAndPassword(auth,e,p).catch(alert); else createUserWithEmailAndPassword(auth,e,p).catch(alert); });
-        document.getElementById("toggle-auth-btn").addEventListener("click", function() { const s=this.innerText.includes("Create"); this.innerText=s?"Have an account? Login":"New here? Create Account"; document.getElementById("auth-action-btn").innerText=s?"Sign Up":"Enter Network"; });
-    </script>
+       document.getElementById("toggle-auth-btn").addEventListener("click", function() { const s=this.innerText.includes("Create"); this.innerText=s?"Have an account? Login":"New here? Create Account"; document.getElementById("auth-action-btn").innerText=s?"Sign Up":"Enter Network"; });
+</script>
 </body>
 </html>
