@@ -239,7 +239,7 @@ function escapeHtml(text) {
 // return `... <div class="content">${p.text}</div> ...`;
 
 // To this:
-return `... <div class="content">${escapeHtml(p.text)}</div> ...`;
+
         const applyTheme = (color) => { const c = color || "#bf00ff"; document.documentElement.style.setProperty('--app-color', c); };
         const applyUserViewTheme = (color) => { const c = color || "#bf00ff"; document.getElementById('view-cover').style.borderBottomColor = c; document.getElementById('view-nick').style.color = c; document.getElementById('message-user-btn').style.background = c; };
 
