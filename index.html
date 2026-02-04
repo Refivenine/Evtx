@@ -286,7 +286,10 @@
             await addDoc(collection(db,"notifications"),{recipient:t,sender:currentUserName, senderUid: currentUser.uid, type:y,text:txt,postId:pid,read:false,time:serverTimestamp()}); 
         }
         window.likePost = async (id,oid) => { const r=doc(db,"posts",id); const d=await getDoc(r); if(d.exists()){const p=d.data();const u=currentUser.uid;let l=p.likedBy||[];let c=p.likes||0;if(l.includes(u)){l=l.filter(x=>x!==u);c--}else{l.push(u);c++;createNotification(oid,'like',id)} await updateDoc(r,{likedBy:l,likes:c})} };
-        window.sharePost = async (id,u,oid) => { updateDoc(doc(db,"posts",id),{shareCount:increment(1)}); createNotification(oid,'share',id); const d={title:`Post by ${u}`,text:"Check this out",url:window.location.href}; if(navigator.share)try{await navigator.share(d)}catch(e){}else alert("Link copied") };
+        window.sharePost = async (id,u,oid) => { updateDoc(doc(db,"posts",id),{shareCount:increment(1)}); createNotification(oid,'share',id); const d={title:`Post by ${u}`,text:"Check this out",url:window.location.href}; if(navigator.share)try{await navigator.share(d)}catch(e){}else {
+    navigator.clipboard.writeText(window.location.href);
+    alert("Link copied to clipboard!");
+} };
         window.sendComment = async (id,oid) => { const i=document.getElementById(`input-${id}`); const t=i.value.trim(); if(!t)return; await addDoc(collection(db,"posts",id,"comments"),{text:t,username:currentUserName,createdAt:serverTimestamp()}); updateDoc(doc(db,"posts",id),{commentCount:increment(1)}); createNotification(oid,'comment',id); i.value="" };
         
         window.toggleFriend = async (targetUid) => {
