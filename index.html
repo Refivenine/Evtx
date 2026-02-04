@@ -19,6 +19,7 @@
             color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; padding-bottom: 80px;
             overscroll-behavior: none;
         }
+
         .icon { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
         .hidden { display: none !important; }
         .btn { border: none; outline: none; cursor: pointer; background: none; }
@@ -49,10 +50,10 @@
             border-bottom: 1px solid #222; cursor: pointer; transition: background 0.1s;
             user-select: none; -webkit-tap-highlight-color: transparent;
         }
-        .notif-item:active { background: #2a2a2a; transform: scale(0.99); }
+        .notif-item:active { background: #2a2a2a; transform: scale(0.99); } /* CLICK FEEDBACK */
         .notif-item.unread { background: #1a1a2e; border-left: 3px solid var(--app-color); }
         .notif-icon { margin-right: 15px; color: var(--app-color); font-size: 20px; }
-        .notif-text { font-size: 14px; color: #ddd; flex: 1; pointer-events: none; }
+        .notif-text { font-size: 14px; color: #ddd; flex: 1; pointer-events: none; } /* Clicks pass through text */
 
         /* BADGES */
         .nav-item { position: relative; color: #555; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -78,23 +79,19 @@
 
         /* HEADER */
         .header { background: rgba(10, 10, 10, 0.95); padding: 15px; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; }
-        .logo { font-weight: 900; color: #fff; font-size: 22px; letter-spacing: 1px; }
-        .logo span { color: var(--app-color); }
+        .logo { font-weight: 900; color: #fff; font-size: 22px; letter-spacing: 1px; } .logo span { color: var(--app-color); }
         .container { max-width: 600px; margin: 0 auto; padding: 0; }
 
         /* CHAT */
         .chat-list-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; background: #151515; transition: 0.2s; }
         .chat-list-item.unread-chat { background: #1a1a2e; border-left: 3px solid var(--app-color); }
-        .chat-preview { margin-left: 15px; flex: 1; }
-        .chat-name { font-weight: bold; color: #fff; margin: 0; }
-        .chat-last-msg { color: #777; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-preview { margin-left: 15px; flex: 1; } .chat-name { font-weight: bold; color: #fff; margin: 0; } .chat-last-msg { color: #777; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .unread-dot { width: 8px; height: 8px; background: var(--app-color); border-radius: 50%; margin-left: 10px; display: none; }
         #chat-room { position: fixed; inset: 0; background: #000; z-index: 5000; display: flex; flex-direction: column; }
         .chat-header { padding: 15px; background: #151515; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 15px; }
         .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .message-bubble { max-width: 70%; padding: 10px 15px; border-radius: 20px; font-size: 14px; word-wrap: break-word; }
-        .msg-me { align-self: flex-end; background: var(--app-color); color: #fff; border-bottom-right-radius: 2px; }
-        .msg-them { align-self: flex-start; background: #222; color: #ddd; border-bottom-left-radius: 2px; }
+        .msg-me { align-self: flex-end; background: var(--app-color); color: #fff; border-bottom-right-radius: 2px; } .msg-them { align-self: flex-start; background: #222; color: #ddd; border-bottom-left-radius: 2px; }
         .chat-input-area { padding: 15px; background: #151515; border-top: 1px solid #333; display: flex; gap: 10px; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
 
         /* POSTS & FEED */
@@ -103,21 +100,17 @@
         .post { background: #151515; border-radius: 15px; padding: 15px; margin: 15px; margin-bottom: 15px; border: 1px solid #222; }
         .user-header { display: flex; align-items: center; margin-bottom: 12px; }
         .avatar { width: 40px; height: 40px; background: #333; border-radius: 50%; margin-right: 12px; border: 2px solid #333; background-size: cover; background-position: center; display: block; }
-        .user-meta h4 { margin: 0; color: #fff; font-size: 15px; cursor: pointer; }
-        .user-meta span { font-size: 12px; color: #777; }
+        .user-meta h4 { margin: 0; color: #fff; font-size: 15px; cursor: pointer; } .user-meta span { font-size: 12px; color: #777; }
         .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 10px; white-space: pre-wrap; }
         .post-img { width: 100%; border-radius: 12px; margin-top: 5px; border: 1px solid #333; }
         .actions { border-top: 1px solid #222; padding-top: 12px; margin-top: 10px; display: flex; justify-content: space-between; padding-right: 10px; }
         .act-btn { background: none; color: #888; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-        .act-btn:hover { color: var(--app-color); }
-        .liked { color: #e0245e !important; }
-        .liked svg { fill: #e0245e; stroke: none; }
+        .act-btn:hover { color: var(--app-color); } .liked { color: #e0245e !important; } .liked svg { fill: #e0245e; stroke: none; }
         .comments-section { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; }
         .comment-input-row { display: flex; gap: 10px; margin-top: 10px; }
         .mini-input { width: 100%; background: #000; border: 1px solid #333; padding: 8px; border-radius: 20px; color: #fff; outline: none; }
         .mini-btn { background: #333; color: #fff; border-radius: 20px; padding: 5px 15px; font-size: 12px; }
-        .single-comment { font-size: 13px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #222; }
-        .c-user { color: var(--app-color); font-weight: bold; margin-right: 5px; }
+        .single-comment { font-size: 13px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #222; } .c-user { color: var(--app-color); font-weight: bold; margin-right: 5px; }
         #edit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .edit-modal { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #333; }
 
@@ -150,7 +143,6 @@
 </head>
 <body>
     <div id="splash-screen"><div class="pulse-logo">EV<span>TX</span></div><div style="color:#777; margin-top:10px; font-size:12px;">ESTABLISHING UPLINK...</div></div>
-    
     <div id="auth-screen" class="hidden"><div class="logo" style="margin-bottom: 20px; font-size: 40px;">EV<span>TX</span></div><div class="auth-box"><h2 id="auth-title" style="color:#fff;">Login</h2><input type="email" id="email" class="auth-input" placeholder="Email"><input type="password" id="password" class="auth-input" placeholder="Password"><button id="auth-action-btn" class="main-btn">Login</button><p id="toggle-auth-btn" style="color:#777; font-size:12px; margin-top:15px; cursor:pointer;">New here? Create Account</p></div></div>
 
     <div id="cropper-modal" class="hidden"><div class="crop-area"><img id="image-to-crop" src=""></div><div class="crop-controls"><button onclick="cancelCrop()" class="btn" style="color:#ddd">Cancel</button><button onclick="performCrop()" class="btn" style="color:var(--app-color); font-weight:bold;">Done</button></div></div>
@@ -158,7 +150,6 @@
     <div id="app-screen" class="hidden">
         <div class="header"><div class="logo">EV<span>TX</span></div><button onclick="logout()" class="btn" style="color:#777; font-size:12px;">Log Out</button></div>
         <div id="chat-room" class="hidden"><div class="chat-header"><button onclick="closeChat()" class="btn" style="color:#fff;">&#10094;</button><div id="chat-with-pic" class="avatar" style="width:30px;height:30px;"></div><h4 id="chat-with-name" style="color:#fff; margin:0;">User</h4></div><div id="chat-msgs" class="chat-messages"></div><div class="chat-input-area"><input id="msg-input" class="mini-input" placeholder="Message..."><button onclick="sendMessage()" class="mini-btn">Send</button></div></div>
-
         <div id="edit-overlay" class="hidden"><div class="edit-modal"><h3 style="color:var(--app-color); margin-top:0;">&#9999;&#65039; Edit Post</h3><textarea id="edit-text-input" class="form-input" rows="4"></textarea><div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px;"><button onclick="closeEditMode()" class="btn" style="color:#777;">Cancel</button><button onclick="saveEditedPost()" class="main-btn" style="width:auto;">Save</button></div></div></div>
 
         <div class="container">
@@ -176,9 +167,7 @@
             </div>
 
             <div id="tab-chats" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Messages</h3><div id="chat-list"></div></div>
-            
             <div id="tab-search" class="tab-content hidden"><input type="text" id="searchInput" class="search-bar" placeholder="&#128269; Search users..."><div id="searchResults"></div></div>
-            
             <div id="tab-notifs" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Activity</h3><div id="notif-list"></div></div>
 
             <div id="tab-profile" class="tab-content hidden">
@@ -201,16 +190,12 @@
                              <input type="color" id="themeColor" value="#bf00ff" onchange="applyTheme(this.value)">
                              <span style="font-size:13px; color:#777;">Pick a color that represents you.</span>
                         </div>
-
                         <label class="form-label">DISPLAY NAME</label>
                         <input id="p-name" class="form-input" placeholder="Your Name">
-
                         <label class="form-label">NICKNAME</label>
                         <input id="p-nickname" class="form-input" placeholder="@nickname">
-
                         <label class="form-label">BIO</label>
                         <textarea id="p-bio" class="form-input" rows="3" placeholder="Tell us about yourself..."></textarea>
-
                         <button id="saveProfileBtn" class="main-btn" style="margin-top:25px;">Save Profile</button>
                     </div>
                 </div>
@@ -262,7 +247,7 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const ADMIN_EMAIL = "hrangategamer@gmail.com";
-        const firebaseConfig = { apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8", authDomain: "evtx-social.firebaseapp.com", projectId: "evtx-social", storageBucket: "evtx-social.firebaseapp.com", messagingSenderId: "542777804477", appId: "1:542777804477:web:2a30d55e7178c714341b6c" };
+        const firebaseConfig = { apiKey: "AIzaSyAiakBfUC4QScczQq6wARW7KC0-gKcomg8", authDomain: "evtx-social.firebaseapp.com", projectId: "evtx-social", storageBucket: "evtx-social.firebaseapp.com", messagingSenderId: "542777804477", appId: "1:542777804477:web:2a30d55e7178c714341b6c" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app); const postsRef = collection(db, "posts");
         let currentUser = null; let currentEditPostId = null; let previousTab = 'home'; let currentUserName = "User"; let currentChatId = null;
         let cropper = null; let cropTarget = null; let finalPostImage = null; let finalProfilePic = null; let finalCoverPic = null;
@@ -305,7 +290,7 @@
         document.getElementById("profilePicInput").addEventListener('change', function() { if(this.files[0]) initCrop(this.files[0], 'pic'); });
         document.getElementById("coverPicInput").addEventListener('change', function() { if(this.files[0]) initCrop(this.files[0], 'cover'); });
 
-        // --- CORE SAVE PROFILE (IMPROVED) ---
+        // --- CORE SAVE PROFILE (WITH INSTANT UPDATE) ---
         document.getElementById("saveProfileBtn").addEventListener("click", async () => {
             const btn = document.getElementById("saveProfileBtn");
             const originalText = btn.innerText;
@@ -319,12 +304,12 @@
                 const userRef = doc(db, "users", currentUser.uid);
                 await updateDoc(userRef, { name: newName, nickname: newNick, bio: newBio, themeColor: newColor });
                 
-                // INSTANT DOM UPDATE
+                // --- INSTANT UPDATE LOGIC ---
                 const oldName = currentUserName;
                 currentUserName = newName;
                 applyTheme(newColor);
                 
-                // Fix names on existing posts in the Feed immediately
+                // Update Feed Names Instantly
                 document.querySelectorAll('.user-meta h4').forEach(header => {
                     if (header.innerText.trim() === oldName.trim()) { header.innerText = newName; }
                 });
@@ -402,7 +387,6 @@
                     const x = ds.data(); const id = ds.id; 
                     const liked = x.likes && x.likes.includes(currentUser.uid);
                     const isMe = x.uid === currentUser.uid;
-                    // IF IT'S ME, USE GLOBAL NAME, ELSE USE POST NAME
                     const dName = isMe ? currentUserName : (x.name || "User");
                     
                     const el = document.createElement("div"); el.className = "post";
@@ -425,7 +409,6 @@
                     </div>`;
                     f.appendChild(el);
                     
-                    // LOAD COMMENTS FOR THIS POST
                     onSnapshot(collection(db,"posts",id,"comments"), csn => {
                         const cl = document.getElementById(`comment-list-${id}`); cl.innerHTML="";
                         csn.forEach(c => { const cd=c.data(); cl.innerHTML+=`<div class="single-comment"><span class="c-user">${cd.user}</span>${cd.text}</div>`; });
@@ -442,15 +425,12 @@
         window.openUserProfile = async (uid) => {
             if(!uid) return;
             window.switchTab('user-view');
-            // Reset UI
             document.getElementById("view-name").innerText = "Loading..."; document.getElementById("view-nick").innerText = ""; document.getElementById("view-bio").innerText = ""; document.getElementById("view-pic").style.backgroundImage = "none"; document.getElementById("view-cover").style.backgroundImage = "none";
             document.getElementById("friend-user-btn").className = "friend-btn add"; document.getElementById("friend-user-btn").innerText = "Add Friend";
             
-            // Buttons logic
             document.getElementById("message-user-btn").onclick=()=>startChat(uid);
             document.getElementById("friend-user-btn").onclick=()=>toggleFriend(uid);
             
-            // Listener for Friend Status
             if(friendListener) friendListener();
             friendListener = onSnapshot(doc(db,"users",currentUser.uid), (doc) => {
                 if(doc.exists()) {
@@ -463,7 +443,6 @@
                 }
             });
 
-            // Load Data
             try {
                 const d=await getDoc(doc(db,"users",uid));
                 if(d.exists()){
@@ -478,7 +457,6 @@
                 } else { document.getElementById("view-name").innerText = "User Not Found"; }
             } catch(e) { console.log(e); document.getElementById("view-name").innerText = "Error Loading Profile"; }
 
-            // Load User Posts
             const q=query(postsRef, orderBy("createdAt","desc"));
             const s=await getDocs(q);
             const p=document.getElementById("user-posts-feed"); p.innerHTML="";
