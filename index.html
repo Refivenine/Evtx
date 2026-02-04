@@ -235,7 +235,56 @@
         document.getElementById("edit-file-input").addEventListener('change', function() { if(this.files[0]) initCrop(this.files[0], 'edit-post'); });
 
         // --- CORE ---
-        document.getElementById("saveProfileBtn").addEventListener("click", async () => { const b=document.getElementById("saveProfileBtn"); b.innerText="Saving..."; const t = document.getElementById('p-theme').value; const d={name:document.getElementById('p-name').value, nickname:document.getElementById('p-nickname').value, bio:document.getElementById('p-bio').value, country:document.getElementById('p-country').value, themeColor: t}; if(finalProfilePic) d.pic = finalProfilePic; if(finalCoverPic) d.coverPic = finalCoverPic; try { await setDoc(doc(db,"users",currentUser.uid),d,{merge:true}); applyTheme(t); b.innerText="✅ Saved"; } catch(e) { b.innerText="❌ Error"; } setTimeout(()=>b.innerText="Save Changes",2000); });
+        // --- NEW SAVE PROFILE LOGIC (Place this at Line 237) ---
+document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("saveProfileBtn");
+    const originalText = btn.innerText;
+    btn.innerText = "Saving...";
+
+    // 1. Get the new values you typed
+    const newName = document.getElementById("p-name").value;
+    const newNick = document.getElementById("p-nickname").value;
+    const newBio = document.getElementById("p-bio").value;
+
+    try {
+        // 2. Send to Firebase Database
+        const userRef = doc(db, "users", currentUser.uid);
+        await updateDoc(userRef, {
+            name: newName,
+            nickname: newNick,
+            bio: newBio
+        });
+
+        // 3. INSTANT UPDATE: Update the global variable
+        const oldName = currentUserName; // Remember old name to find your posts
+        currentUserName = newName; 
+
+        // 4. INSTANT UPDATE: Update the Profile View immediately
+        document.getElementById("view-name").innerText = newName;
+        document.getElementById("view-nick").innerText = newNick;
+        document.getElementById("view-bio").innerText = newBio;
+
+        // 5. INSTANT UPDATE: Find your posts on the Home Page and rename them
+        // We look for any post where the name matches your OLD name
+        const allPosts = document.querySelectorAll('.post');
+        allPosts.forEach(post => {
+            const nameHeader = post.querySelector('.user-meta h4');
+            // If the post has a name and it matches your old name, update it!
+            if (nameHeader && nameHeader.innerText === oldName) {
+                nameHeader.innerText = newName;
+            }
+        });
+
+        alert("Profile updated successfully!");
+
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        alert("Failed to save profile. Check console.");
+    }
+
+    // Reset button text
+    btn.innerText = originalText;
+});
         document.getElementById("sendBtn").addEventListener("click", async () => { const i=document.getElementById("postInput"); if(!i.value&&!finalPostImage)return; document.getElementById("sendBtn").innerText="..."; try { let n=currentUserName; let pic=null; let bio="Member"; const d=await getDoc(doc(db,"users",currentUser.uid)); if(d.exists()){const dd=d.data();n=dd.name||n;pic=dd.pic;bio=dd.nickname||bio} await addDoc(postsRef,{text:i.value, imageUrl: finalPostImage, userEmail:currentUser.email, uid:currentUser.uid, username:n, userPic:pic, userBio:bio, createdAt:serverTimestamp(), likes:0, likedBy:[], commentCount:0, shareCount:0}); i.value=""; finalPostImage=null; document.getElementById("filePreview").innerHTML=""; document.getElementById("sendBtn").innerText="Post"; } catch (err) { alert("Error: " + err.message); document.getElementById("sendBtn").innerText="Post"; } });
         
         // --- CHAT ---
