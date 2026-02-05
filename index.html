@@ -35,7 +35,7 @@
         .pulse-logo span { color: var(--app-color); }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
 
-        /* FRIEND BUTTON */
+        /* BUTTONS & BADGES */
         .friend-btn {
             background: #333; color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 13px;
             font-weight: bold; margin-right: 10px; transition: 0.2s; border: 1px solid #444; cursor: pointer;
@@ -44,6 +44,13 @@
         .friend-btn.requested { background: #222; color: #888; }
         .friend-btn.accept { background: #00c853; border-color: #00c853; } 
         .friend-btn.friends { background: #111; color: var(--app-color); border-color: var(--app-color); }
+        
+        .badge {
+            position: absolute; top: -5px; right: -5px; background: #ff0000; color: #fff;
+            font-size: 10px; font-weight: 900; min-width: 16px; height: 16px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; border: 2px solid #000;
+            z-index: 10; display: none;
+        }
 
         /* NOTIFICATIONS */
         .notif-item { 
@@ -55,17 +62,7 @@
         .notif-item.unread { background: #1a1a2e; border-left: 3px solid var(--app-color); }
         .notif-icon { margin-right: 15px; color: var(--app-color); font-size: 20px; } 
         .notif-text { font-size: 14px; color: #ddd; flex: 1; pointer-events: none; }
-        .notif-user-link { font-weight: bold; color: #fff; cursor: pointer; z-index: 10; position: relative; } /* Username style */
-
-        /* BADGES */
-        .nav-item { position: relative; color: #555; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .nav-active { color: var(--app-color); }
-        .badge {
-            position: absolute; top: -5px; right: -5px; background: #ff0000; color: #fff;
-            font-size: 10px; font-weight: 900; min-width: 16px; height: 16px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; border: 2px solid #000;
-            z-index: 10; display: none;
-        }
+        .notif-user-link { font-weight: bold; color: #fff; cursor: pointer; z-index: 10; position: relative; }
 
         /* CROPPER */
         #cropper-modal { position: fixed; inset: 0; background: #000; z-index: 6000; display: flex; flex-direction: column; }
@@ -313,24 +310,48 @@
             } catch (err) { alert("Error: " + err.message); btn.innerText="Post"; } 
         });
 
-        document.getElementById("saveProfileBtn").addEventListener("click", async () => { const b=document.getElementById("saveProfileBtn"); b.innerText="Saving..."; const t=document.getElementById('p-theme').value; const d={ name:document.getElementById('p-name').value, nickname:document.getElementById('p-nickname').value, bio:document.getElementById('p-bio').value, country:document.getElementById('p-country').value, themeColor:t }; 
-            if(finalProfilePic) d.pic = await uploadToCloudinary(finalProfilePic);
-            if(finalCoverPic) d.coverPic = await uploadToCloudinary(finalCoverPic);
+        // --- SAVE PROFILE (BATCH UPDATE) ---
+        document.getElementById("saveProfileBtn").addEventListener("click", async () => { 
+            const b = document.getElementById("saveProfileBtn"); 
+            b.innerText = "Saving...";
+            const t = document.getElementById('p-theme').value;
+            const newName = document.getElementById('p-name').value;
+            const newNick = document.getElementById('p-nickname').value;
             
-            await setDoc(doc(db,"users",currentUser.uid),d,{merge:true}); 
-            currentUserName = d.name; // Update local immediately
+            const d = { 
+                name: newName, 
+                nickname: newNick, 
+                bio: document.getElementById('p-bio').value, 
+                country: document.getElementById('p-country').value, 
+                themeColor: t 
+            };
+            
+            if (finalProfilePic) d.pic = await uploadToCloudinary(finalProfilePic);
+            if (finalCoverPic) d.coverPic = await uploadToCloudinary(finalCoverPic);
 
+            // 1. Update User Profile
+            await setDoc(doc(db, "users", currentUser.uid), d, { merge: true });
+            currentUserName = newName; 
+
+            // 2. BATCH UPDATE ALL OLD POSTS
             const q = query(postsRef, where("uid", "==", currentUser.uid));
             const querySnapshot = await getDocs(q);
             const updatePromises = [];
+            
             querySnapshot.forEach((doc) => {
-                const postUpdate = { username: d.name, userBio: d.nickname || "Member" };
-                if(d.pic) postUpdate.userPic = d.pic;
+                const postUpdate = { 
+                    username: newName, 
+                    userBio: newNick || "Member" 
+                };
+                if (d.pic) postUpdate.userPic = d.pic;
                 updatePromises.push(updateDoc(doc.ref, postUpdate));
             });
+            
             await Promise.all(updatePromises);
 
-            applyTheme(t); b.innerText="✅ Saved & Updated"; setTimeout(()=>b.innerText="Save Changes",2000); 
+            applyTheme(t); 
+            b.innerText = "✅ Saved & Updated"; 
+            setTimeout(() => b.innerText = "💾 Save Changes", 2000); 
         });
 
         // --- INTERACTIONS & FEED ---
@@ -398,8 +419,15 @@
                             el.querySelector(".share-btn span").innerText = p.shareCount || 0;
                             el.querySelector(".content").innerText = p.text;
                             
+                            // Check if username updated
                             const header = el.querySelector(".user-meta h4");
                             if(header.innerText.split(' ')[0] !== p.username) header.innerText = p.username + (p.userEmail===ADMIN_EMAIL ? " 👑" : "");
+                            
+                            // Check if picture updated
+                            const ava = el.querySelector(".avatar");
+                            if (p.userPic && !ava.style.backgroundImage.includes(p.userPic)) {
+                                ava.style.backgroundImage = `url('${p.userPic}')`;
+                            }
                         }
                     }
                     if (change.type === "removed") {
