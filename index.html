@@ -35,7 +35,7 @@
         .pulse-logo span { color: var(--app-color); }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
 
-        /* BUTTONS & BADGES */
+        /* FRIEND BUTTON */
         .friend-btn {
             background: #333; color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 13px;
             font-weight: bold; margin-right: 10px; transition: 0.2s; border: 1px solid #444; cursor: pointer;
@@ -44,13 +44,6 @@
         .friend-btn.requested { background: #222; color: #888; }
         .friend-btn.accept { background: #00c853; border-color: #00c853; } 
         .friend-btn.friends { background: #111; color: var(--app-color); border-color: var(--app-color); }
-        
-        .badge {
-            position: absolute; top: -5px; right: -5px; background: #ff0000; color: #fff;
-            font-size: 10px; font-weight: 900; min-width: 16px; height: 16px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; border: 2px solid #000;
-            z-index: 10; display: none;
-        }
 
         /* NOTIFICATIONS */
         .notif-item { 
@@ -63,6 +56,16 @@
         .notif-icon { margin-right: 15px; color: var(--app-color); font-size: 20px; } 
         .notif-text { font-size: 14px; color: #ddd; flex: 1; pointer-events: none; }
         .notif-user-link { font-weight: bold; color: #fff; cursor: pointer; z-index: 10; position: relative; }
+
+        /* BADGES */
+        .nav-item { position: relative; color: #555; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .nav-active { color: var(--app-color); }
+        .badge {
+            position: absolute; top: -5px; right: -5px; background: #ff0000; color: #fff;
+            font-size: 10px; font-weight: 900; min-width: 16px; height: 16px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; border: 2px solid #000;
+            z-index: 10; display: none;
+        }
 
         /* CROPPER */
         #cropper-modal { position: fixed; inset: 0; background: #000; z-index: 6000; display: flex; flex-direction: column; }
@@ -390,7 +393,7 @@
             createNotification(oid,'comment',id); i.value=""; 
         };
 
-        // --- SMART FEED SYSTEM (VIDEO FIX) ---
+        // --- SMART FEED SYSTEM (VIDEO FIX + NICKNAME FIX) ---
         function loadFeed() { 
             const q = query(postsRef, orderBy("createdAt", "desc"));
             onSnapshot(q, (snapshot) => { 
@@ -428,6 +431,10 @@
                             if (p.userPic && !ava.style.backgroundImage.includes(p.userPic)) {
                                 ava.style.backgroundImage = `url('${p.userPic}')`;
                             }
+
+                            // **FIX: Update Nickname (Bio) Live**
+                            const bioSpan = el.querySelector(".user-meta span");
+                            if (bioSpan) bioSpan.innerText = p.userBio || "Member";
                         }
                     }
                     if (change.type === "removed") {
