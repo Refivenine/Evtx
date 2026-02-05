@@ -528,7 +528,7 @@
         window.closeChat=()=>{document.getElementById("chat-room").classList.add("hidden");currentChatId=null};
         function listenForChatBadges(){onSnapshot(query(collection(db,"chats"),where("participants","array-contains",currentUser.uid)),s=>{let c=0;s.forEach(d=>{const x=d.data();if(!x.isRead&&x.lastSenderId!==currentUser.uid)c++});const b=document.getElementById("chat-badge");b.style.display=c>0?"flex":"none";b.innerText=c})};
         
-        // --- NOTIFICATIONS FIX (SIMPLIFIED LOGIC) ---
+        // --- NOTIFICATIONS FIX (EXPLICIT) ---
         function listenForNotifications(){
             onSnapshot(query(collection(db,"notifications"),where("recipient","==",currentUser.uid)), s=>{
                 let c=0; const l=document.getElementById("notif-list"); l.innerHTML="";
@@ -553,15 +553,16 @@
                         if(x.senderUid) openUserProfile(x.senderUid);
                     });
 
-                    // --- SIMPLIFIED LOGIC HERE ---
                     e.addEventListener('click', () => {
                         if(!x.read) updateDoc(doc(db,"notifications",x.id),{read:true});
                         
-                        if(x.postId) {
-                            // If it has a post ID (Like, Comment, Share), open the post
+                        // EXPLICIT CHECK: Friend Requests = Profile, Everything Else = Post
+                        if (x.type === 'friend_req' || x.type === 'friend_accept') {
+                            openUserProfile(x.senderUid);
+                        } else if (x.postId) {
                             openSinglePost(x.postId);
-                        } else if (x.senderUid) {
-                            // If it DOESN'T have a post ID (Friend Request/Accept), open the profile
+                        } else {
+                            // Fallback if data is missing, just go to profile
                             openUserProfile(x.senderUid);
                         }
                     });
