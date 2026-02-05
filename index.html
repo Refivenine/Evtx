@@ -548,19 +548,19 @@
                             <span class="notif-user-link"><b>${x.sender}</b></span> ${x.text}
                         </div>`;
                     
-                    // 1. Click Username -> Go to Profile (Stop bubbling)
                     e.querySelector('.notif-user-link').addEventListener('click', (ev) => {
                         ev.stopPropagation();
                         if(x.senderUid) openUserProfile(x.senderUid);
                     });
 
-                    // 2. Click Notification -> Open Post (or Profile if Friend Req)
                     e.addEventListener('click', () => {
                         if(!x.read) updateDoc(doc(db,"notifications",x.id),{read:true});
-                        if(x.postId) {
+                        if(x.type === 'friend_req' || x.type === 'friend_accept') {
+                            openUserProfile(x.senderUid);
+                        } else if(x.postId) {
                             openSinglePost(x.postId);
                         } else if(x.senderUid) {
-                            openUserProfile(x.senderUid); // Fallback for friend reqs
+                            openUserProfile(x.senderUid);
                         }
                     });
                     
