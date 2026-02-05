@@ -57,6 +57,18 @@
         .notif-text { font-size: 14px; color: #ddd; flex: 1; pointer-events: none; }
         .notif-user-link { font-weight: bold; color: #fff; cursor: pointer; z-index: 10; position: relative; text-decoration: underline; }
 
+        /* NEWS TAB */
+        .news-header { padding: 15px; background: rgba(20,20,20,0.9); border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(5px); }
+        .news-badge { background: linear-gradient(45deg, #ff0055, #ff5500); padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; color: #fff; }
+        .news-card { background: #151515; margin: 15px; border-radius: 15px; overflow: hidden; border: 1px solid #333; animation: fadeIn 0.5s; }
+        .news-img { width: 100%; height: 180px; object-fit: cover; background: #222; }
+        .news-content { padding: 15px; }
+        .news-ai-tag { display: inline-block; background: #222; color: var(--app-color); border: 1px solid var(--app-color); font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; text-transform: uppercase; font-weight: bold; }
+        .news-title { margin: 0 0 10px 0; font-size: 16px; line-height: 1.4; color: #fff; }
+        .news-desc { font-size: 13px; color: #888; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #555; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         /* BADGES */
         .nav-item { position: relative; color: #555; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .nav-active { color: var(--app-color); }
@@ -197,6 +209,14 @@
 
             <div id="tab-chats" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Messages</h3><div id="chat-list"><div style="text-align:center; padding:20px; color:#555;">No conversations yet.</div></div></div>
 
+            <div id="tab-news" class="tab-content hidden">
+                <div class="news-header">
+                    <h3 style="margin:0;color:#fff;">AI Brief</h3>
+                    <div class="news-badge">LIVE</div>
+                </div>
+                <div id="news-feed" style="padding-bottom:20px;">Loading global intelligence...</div>
+            </div>
+
             <div id="tab-search" class="tab-content hidden"><input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search users..."><div id="searchResults"></div></div>
 
             <div id="tab-notifs" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Activity</h3><div id="notif-list"><div style="text-align:center; padding:20px; color:#555;">No notifications yet.</div></div></div>
@@ -208,6 +228,7 @@
 
         <div class="bottom-nav">
             <div class="nav-item nav-active" onclick="switchTab('home')"><svg class="icon" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg></div>
+            <div class="nav-item" onclick="switchTab('news')"><svg class="icon" viewBox="0 0 24 24"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
             <div class="nav-item" onclick="switchTab('chats')"><svg class="icon" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg><div id="chat-badge" class="badge">0</div></div>
             <div class="nav-item" onclick="switchTab('search')"><svg class="icon" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
             <div class="nav-item" onclick="switchTab('notifs')"><svg class="icon" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg><div id="notif-badge" class="badge">0</div></div>
@@ -356,6 +377,49 @@
             b.innerText = "✅ Saved & Updated"; 
             setTimeout(() => b.innerText = "💾 Save Changes", 2000); 
         });
+
+        // --- AI NEWS AGENT ---
+        window.loadNews = async () => {
+            const feed = document.getElementById('news-feed');
+            feed.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">📡 AI Scanning Global Frequencies...</div>';
+            
+            try {
+                const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml');
+                const data = await res.json();
+                
+                if(data.status !== 'ok') throw new Error('Signal lost');
+                
+                feed.innerHTML = '';
+                data.items.forEach(item => {
+                    // AI Keyword Categorization
+                    let tag = "General";
+                    const txt = item.title + item.description;
+                    if(txt.match(/war|conflict|attack|military/i)) tag = "Conflict";
+                    else if(txt.match(/tech|ai|cyber|data/i)) tag = "Technology";
+                    else if(txt.match(/money|market|economy/i)) tag = "Finance";
+                    else if(txt.match(/climate|storm|earth/i)) tag = "Environment";
+                    else if(txt.match(/politics|election|law/i)) tag = "Politics";
+
+                    const card = document.createElement('div');
+                    card.className = 'news-card';
+                    card.innerHTML = `
+                        <img src="${item.thumbnail || 'https://refivenine.github.io/Evtx/logo.png'}" class="news-img" onerror="this.style.display='none'">
+                        <div class="news-content">
+                            <span class="news-ai-tag">${tag}</span>
+                            <h4 class="news-title"><a href="${item.link}" target="_blank" style="color:#fff;text-decoration:none;">${item.title}</a></h4>
+                            <div class="news-desc">${item.description.replace(/<[^>]*>?/gm, '')}</div>
+                            <div class="news-meta">
+                                <span>Source: BBC World</span>
+                                <span>${item.pubDate.split(' ')[0]}</span>
+                            </div>
+                        </div>
+                    `;
+                    feed.appendChild(card);
+                });
+            } catch(e) {
+                feed.innerHTML = '<div style="padding:20px;text-align:center;color:#cc0000;">⚠️ Uplink Failed. Retrying...</div>';
+            }
+        };
 
         // --- INTERACTIONS & FEED ---
         async function createNotification(t,y,pid) { 
@@ -521,7 +585,7 @@
         window.toggleComments=(id)=>{const s=document.getElementById(`comments-${id}`);if(s.style.display==="block")s.style.display="none";else{s.style.display="block";const l=document.getElementById(`list-${id}`);onSnapshot(collection(db,"posts",id,"comments"),sn=>{l.innerHTML="";sn.forEach(d=>{const c=d.data();const e=document.createElement("div");e.className="single-comment";e.innerHTML=`<span class="c-user">${c.username}:</span> ${c.text}`;l.appendChild(e)})})}};
 
         // --- HELPERS ---
-        window.switchTab=(t)=>{document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden'));document.getElementById('tab-'+t).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active'));if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active');if(t==='chats')document.querySelectorAll('.nav-item')[1].classList.add('nav-active');if(t==='search')document.querySelectorAll('.nav-item')[2].classList.add('nav-active');if(t==='notifs')document.querySelectorAll('.nav-item')[3].classList.add('nav-active');if(t==='profile')document.querySelectorAll('.nav-item')[4].classList.add('nav-active');};
+        window.switchTab=(t)=>{document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden'));document.getElementById('tab-'+t).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active'));if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active');if(t==='chats')document.querySelectorAll('.nav-item')[1].classList.add('nav-active');if(t==='search')document.querySelectorAll('.nav-item')[2].classList.add('nav-active');if(t==='notifs')document.querySelectorAll('.nav-item')[3].classList.add('nav-active');if(t==='profile')document.querySelectorAll('.nav-item')[4].classList.add('nav-active');if(t==='news'){document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); loadNews();}};
         window.startChat=async(tid)=>{const q=query(collection(db,"chats"),where("participants","array-contains",currentUser.uid));const s=await getDocs(q);let eid=null;s.forEach(d=>{if(d.data().participants.includes(tid))eid=d.id});if(eid)openChatWindow(eid,tid);else{const d=await addDoc(collection(db,"chats"),{participants:[currentUser.uid,tid],lastMessage:"",lastUpdated:serverTimestamp(),isRead:true,lastSenderId:currentUser.uid});openChatWindow(d.id,tid)}};
         window.openChatWindow=async(cid,tid)=>{currentChatId=cid;document.getElementById("chat-room").classList.remove("hidden");const u=await getDoc(doc(db,"users",tid));if(u.exists())document.getElementById("chat-with-name").innerText=u.data().name;onSnapshot(query(collection(db,"chats",cid,"messages"),orderBy("createdAt","asc")),s=>{const d=document.getElementById("chat-messages");d.innerHTML="";s.forEach(o=>{const m=o.data();const e=document.createElement("div");e.className=`message-bubble ${m.senderId===currentUser.uid?'msg-me':'msg-them'}`;e.innerText=m.text;d.appendChild(e)});d.scrollTop=d.scrollHeight})};
         window.sendMessage=async()=>{const i=document.getElementById("msg-input");if(i.value&&currentChatId){await addDoc(collection(db,"chats",currentChatId,"messages"),{text:i.value,senderId:currentUser.uid,createdAt:serverTimestamp()});await updateDoc(doc(db,"chats",currentChatId),{lastMessage:i.value,lastUpdated:serverTimestamp(),isRead:false,lastSenderId:currentUser.uid});i.value=""}};
