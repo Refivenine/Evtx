@@ -55,7 +55,7 @@
         .notif-item.unread { background: #1a1a2e; border-left: 3px solid var(--app-color); }
         .notif-icon { margin-right: 15px; color: var(--app-color); font-size: 20px; } 
         .notif-text { font-size: 14px; color: #ddd; flex: 1; pointer-events: none; }
-        .notif-user-link { font-weight: bold; color: #fff; cursor: pointer; z-index: 10; position: relative; }
+        .notif-user-link { font-weight: bold; color: #fff; cursor: pointer; z-index: 10; position: relative; text-decoration: underline; }
 
         /* BADGES */
         .nav-item { position: relative; color: #555; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -528,7 +528,7 @@
         window.closeChat=()=>{document.getElementById("chat-room").classList.add("hidden");currentChatId=null};
         function listenForChatBadges(){onSnapshot(query(collection(db,"chats"),where("participants","array-contains",currentUser.uid)),s=>{let c=0;s.forEach(d=>{const x=d.data();if(!x.isRead&&x.lastSenderId!==currentUser.uid)c++});const b=document.getElementById("chat-badge");b.style.display=c>0?"flex":"none";b.innerText=c})};
         
-        // --- NOTIFICATIONS FIX ---
+        // --- NOTIFICATIONS FIX (SIMPLIFIED LOGIC) ---
         function listenForNotifications(){
             onSnapshot(query(collection(db,"notifications"),where("recipient","==",currentUser.uid)), s=>{
                 let c=0; const l=document.getElementById("notif-list"); l.innerHTML="";
@@ -553,13 +553,15 @@
                         if(x.senderUid) openUserProfile(x.senderUid);
                     });
 
+                    // --- SIMPLIFIED LOGIC HERE ---
                     e.addEventListener('click', () => {
                         if(!x.read) updateDoc(doc(db,"notifications",x.id),{read:true});
-                        if(x.type === 'friend_req' || x.type === 'friend_accept') {
-                            openUserProfile(x.senderUid);
-                        } else if(x.postId) {
+                        
+                        if(x.postId) {
+                            // If it has a post ID (Like, Comment, Share), open the post
                             openSinglePost(x.postId);
-                        } else if(x.senderUid) {
+                        } else if (x.senderUid) {
+                            // If it DOESN'T have a post ID (Friend Request/Accept), open the profile
                             openUserProfile(x.senderUid);
                         }
                     });
