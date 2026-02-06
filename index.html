@@ -207,8 +207,6 @@
                 <div id="feed">Loading...</div>
             </div>
 
-            <div id="tab-chats" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Messages</h3><div id="chat-list"><div style="text-align:center; padding:20px; color:#555;">No conversations yet.</div></div></div>
-
             <div id="tab-news" class="tab-content hidden">
                 <div class="news-header">
                     <h3 style="margin:0;color:#fff;">AI Brief</h3>
@@ -216,6 +214,8 @@
                 </div>
                 <div id="news-feed" style="padding-bottom:20px;">Loading global intelligence...</div>
             </div>
+
+            <div id="tab-chats" class="tab-content hidden"><h3 style="padding:15px; margin:0; border-bottom:1px solid #222;">Messages</h3><div id="chat-list"><div style="text-align:center; padding:20px; color:#555;">No conversations yet.</div></div></div>
 
             <div id="tab-search" class="tab-content hidden"><input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search users..."><div id="searchResults"></div></div>
 
@@ -382,16 +382,12 @@
         window.loadNews = async () => {
             const feed = document.getElementById('news-feed');
             feed.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">📡 AI Scanning Global Frequencies...</div>';
-            
             try {
                 const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml');
                 const data = await res.json();
-                
                 if(data.status !== 'ok') throw new Error('Signal lost');
-                
                 feed.innerHTML = '';
                 data.items.forEach(item => {
-                    // AI Keyword Categorization
                     let tag = "General";
                     const txt = item.title + item.description;
                     if(txt.match(/war|conflict|attack|military/i)) tag = "Conflict";
@@ -402,23 +398,10 @@
 
                     const card = document.createElement('div');
                     card.className = 'news-card';
-                    card.innerHTML = `
-                        <img src="${item.thumbnail || 'https://refivenine.github.io/Evtx/logo.png'}" class="news-img" onerror="this.style.display='none'">
-                        <div class="news-content">
-                            <span class="news-ai-tag">${tag}</span>
-                            <h4 class="news-title"><a href="${item.link}" target="_blank" style="color:#fff;text-decoration:none;">${item.title}</a></h4>
-                            <div class="news-desc">${item.description.replace(/<[^>]*>?/gm, '')}</div>
-                            <div class="news-meta">
-                                <span>Source: BBC World</span>
-                                <span>${item.pubDate.split(' ')[0]}</span>
-                            </div>
-                        </div>
-                    `;
+                    card.innerHTML = `<img src="${item.thumbnail || 'https://refivenine.github.io/Evtx/logo.png'}" class="news-img" onerror="this.style.display='none'"><div class="news-content"><span class="news-ai-tag">${tag}</span><h4 class="news-title"><a href="${item.link}" target="_blank" style="color:#fff;text-decoration:none;">${item.title}</a></h4><div class="news-desc">${item.description.replace(/<[^>]*>?/gm, '')}</div><div class="news-meta"><span>Source: BBC World</span><span>${item.pubDate.split(' ')[0]}</span></div></div>`;
                     feed.appendChild(card);
                 });
-            } catch(e) {
-                feed.innerHTML = '<div style="padding:20px;text-align:center;color:#cc0000;">⚠️ Uplink Failed. Retrying...</div>';
-            }
+            } catch(e) { feed.innerHTML = '<div style="padding:20px;text-align:center;color:#cc0000;">⚠️ Uplink Failed. Retrying...</div>'; }
         };
 
         // --- INTERACTIONS & FEED ---
@@ -585,14 +568,14 @@
         window.toggleComments=(id)=>{const s=document.getElementById(`comments-${id}`);if(s.style.display==="block")s.style.display="none";else{s.style.display="block";const l=document.getElementById(`list-${id}`);onSnapshot(collection(db,"posts",id,"comments"),sn=>{l.innerHTML="";sn.forEach(d=>{const c=d.data();const e=document.createElement("div");e.className="single-comment";e.innerHTML=`<span class="c-user">${c.username}:</span> ${c.text}`;l.appendChild(e)})})}};
 
         // --- HELPERS ---
-        window.switchTab=(t)=>{document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden'));document.getElementById('tab-'+t).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active'));if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active');if(t==='chats')document.querySelectorAll('.nav-item')[1].classList.add('nav-active');if(t==='search')document.querySelectorAll('.nav-item')[2].classList.add('nav-active');if(t==='notifs')document.querySelectorAll('.nav-item')[3].classList.add('nav-active');if(t==='profile')document.querySelectorAll('.nav-item')[4].classList.add('nav-active');if(t==='news'){document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); loadNews();}};
+        window.switchTab=(t)=>{document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden'));document.getElementById('tab-'+t).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active'));if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active');if(t==='news'){document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); loadNews();}if(t==='chats')document.querySelectorAll('.nav-item')[2].classList.add('nav-active');if(t==='search')document.querySelectorAll('.nav-item')[3].classList.add('nav-active');if(t==='notifs')document.querySelectorAll('.nav-item')[4].classList.add('nav-active');if(t==='profile')document.querySelectorAll('.nav-item')[5].classList.add('nav-active');};
         window.startChat=async(tid)=>{const q=query(collection(db,"chats"),where("participants","array-contains",currentUser.uid));const s=await getDocs(q);let eid=null;s.forEach(d=>{if(d.data().participants.includes(tid))eid=d.id});if(eid)openChatWindow(eid,tid);else{const d=await addDoc(collection(db,"chats"),{participants:[currentUser.uid,tid],lastMessage:"",lastUpdated:serverTimestamp(),isRead:true,lastSenderId:currentUser.uid});openChatWindow(d.id,tid)}};
         window.openChatWindow=async(cid,tid)=>{currentChatId=cid;document.getElementById("chat-room").classList.remove("hidden");const u=await getDoc(doc(db,"users",tid));if(u.exists())document.getElementById("chat-with-name").innerText=u.data().name;onSnapshot(query(collection(db,"chats",cid,"messages"),orderBy("createdAt","asc")),s=>{const d=document.getElementById("chat-messages");d.innerHTML="";s.forEach(o=>{const m=o.data();const e=document.createElement("div");e.className=`message-bubble ${m.senderId===currentUser.uid?'msg-me':'msg-them'}`;e.innerText=m.text;d.appendChild(e)});d.scrollTop=d.scrollHeight})};
         window.sendMessage=async()=>{const i=document.getElementById("msg-input");if(i.value&&currentChatId){await addDoc(collection(db,"chats",currentChatId,"messages"),{text:i.value,senderId:currentUser.uid,createdAt:serverTimestamp()});await updateDoc(doc(db,"chats",currentChatId),{lastMessage:i.value,lastUpdated:serverTimestamp(),isRead:false,lastSenderId:currentUser.uid});i.value=""}};
         window.closeChat=()=>{document.getElementById("chat-room").classList.add("hidden");currentChatId=null};
         function listenForChatBadges(){onSnapshot(query(collection(db,"chats"),where("participants","array-contains",currentUser.uid)),s=>{let c=0;s.forEach(d=>{const x=d.data();if(!x.isRead&&x.lastSenderId!==currentUser.uid)c++});const b=document.getElementById("chat-badge");b.style.display=c>0?"flex":"none";b.innerText=c})};
         
-        // --- NOTIFICATIONS FIX (EXPLICIT) ---
+        // --- NOTIFICATIONS FIX (FORCE PROFILE) ---
         function listenForNotifications(){
             onSnapshot(query(collection(db,"notifications"),where("recipient","==",currentUser.uid)), s=>{
                 let c=0; const l=document.getElementById("notif-list"); l.innerHTML="";
@@ -606,28 +589,24 @@
                     e.className=`notif-item ${x.read?'':'unread'}`;
                     let icon="🔔"; if(x.type==='like') icon="❤️"; else if(x.type==='comment') icon="💬"; else if(x.type==='friend_req') icon="👥";
                     
-                    e.innerHTML=`
-                        <div class="notif-icon" style="font-size:20px;margin-right:15px;">${icon}</div>
-                        <div class="notif-text">
-                            <span class="notif-user-link"><b>${x.sender}</b></span> ${x.text}
-                        </div>`;
+                    e.innerHTML=`<div class="notif-icon" style="font-size:20px;margin-right:15px;">${icon}</div><div class="notif-text"><span class="notif-user-link"><b>${x.sender}</b></span> ${x.text}</div>`;
                     
+                    // Force Profile Open on Username Click
                     e.querySelector('.notif-user-link').addEventListener('click', (ev) => {
                         ev.stopPropagation();
                         if(x.senderUid) openUserProfile(x.senderUid);
                     });
 
+                    // Logic Split: Friend Stuff -> Profile, Everything Else -> Post
                     e.addEventListener('click', () => {
                         if(!x.read) updateDoc(doc(db,"notifications",x.id),{read:true});
                         
-                        // EXPLICIT CHECK: Friend Requests = Profile, Everything Else = Post
-                        if (x.type === 'friend_req' || x.type === 'friend_accept') {
+                        if(x.type === 'friend_req' || x.type === 'friend_accept') {
                             openUserProfile(x.senderUid);
-                        } else if (x.postId) {
+                        } else if(x.postId) {
                             openSinglePost(x.postId);
                         } else {
-                            // Fallback if data is missing, just go to profile
-                            openUserProfile(x.senderUid);
+                            openUserProfile(x.senderUid); // Final Fallback
                         }
                     });
                     
