@@ -669,13 +669,87 @@
         // --- SYSTEM FUNCTIONS ---
         document.getElementById("viewMyProfileBtn").addEventListener("click", () => openUserProfile(currentUser.uid));
         
-        window.openUserProfile = async (uid) => { 
-            if(!uid) return; currentUserViewing = uid; window.switchTab('user-view'); window.switchProfileTab('posts');
-            document.getElementById("view-name").innerText="Loading..."; document.getElementById("view-pic").style.backgroundImage="none";
-            document.getElementById("message-user-btn").onclick=()=>startChat(uid); document.getElementById("friend-user-btn").onclick=()=>toggleFriend(uid);
-            if(friendListener) friendListener(); friendListener = onSnapshot(doc(db,"users",currentUser.uid),(doc)=>{if(doc.exists()){const me=doc.data(); const btn=document.getElementById("friend-user-btn"); if(me.friends?.includes(uid)){btn.innerText="Friends";btn.className="friend-btn friends"}else if(me.requestsSent?.includes(uid)){btn.innerText="Request Sent";btn.className="friend-btn requested"}else if(me.requestsReceived?.includes(uid)){btn.innerText="Accept Request";btn.className="friend-btn accept"}else{btn.innerText="Add Friend";btn.className="friend-btn add"}}});
-            const d=await getDoc(doc(db,"users",uid)); if(d.exists()){const u=d.data(); document.getElementById("view-name").innerText=u.name; document.getElementById("view-nick").innerText=u.nickname; document.getElementById("view-bio").innerText=u.bio; document.getElementById("view-country").innerText="🏳️ "+(u.country||"Earth"); if(u.pic)document.getElementById("view-pic").style.backgroundImage=`url('${u.pic}')`; if(u.coverPic)document.getElementById("view-cover").style.backgroundImage=`url('${u.coverPic}')`; applyUserViewTheme(u.themeColor||"#bf00ff");}
-            const p=document.getElementById("user-posts-feed"); p.innerHTML=""; const s=await getDocs(query(postsRef,orderBy("createdAt","desc"))); let c=0; s.forEach(d=>{const x=d.data();if(x.uid===uid){c++; const e=document.createElement("div");e.className="post"; let m=""; if(x.videoUrl)m=`<video src="${x.videoUrl}" controls class="post-video-frame"></video>`;else if(x.imageUrl)m=`<img src="${x.imageUrl}" class="post-img">`; e.innerHTML=`<div class="content">${x.text}</div>${m}`;p.appendChild(e)}}); if(c===0)p.innerHTML="<div style='text-align:center;padding:20px;color:#555;'>No posts.</div>";
+       window.openUserProfile = async (uid) => { 
+            if(!uid) return; 
+            currentUserViewing = uid; 
+            window.switchTab('user-view'); 
+            window.switchProfileTab('posts');
+
+            // --- 1. CHECK IF IT IS ME (THE FIX) ---
+            const isMe = (uid === currentUser.uid);
+            
+            const msgBtn = document.getElementById("message-user-btn");
+            const frndBtn = document.getElementById("friend-user-btn");
+
+            // If it's me, HIDE the buttons. If not, SHOW them.
+            if (isMe) {
+                msgBtn.style.display = "none";
+                frndBtn.style.display = "none";
+            } else {
+                msgBtn.style.display = "inline-block"; 
+                frndBtn.style.display = "inline-block";
+                
+                // Only attach clicks if it's NOT me
+                msgBtn.onclick = () => startChat(uid); 
+                frndBtn.onclick = () => toggleFriend(uid);
+            }
+
+            // Reset View
+            document.getElementById("view-name").innerText="Loading..."; 
+            document.getElementById("view-pic").style.backgroundImage="none";
+            
+            // --- 2. FRIEND STATUS (Only check if it's not me) ---
+            if(friendListener) friendListener(); 
+            if (!isMe) {
+                friendListener = onSnapshot(doc(db,"users",currentUser.uid),(doc)=>{
+                    if(doc.exists()){
+                        const me=doc.data(); 
+                        const btn=document.getElementById("friend-user-btn"); 
+                        if(me.friends?.includes(uid)){btn.innerText="Friends";btn.className="friend-btn friends"}
+                        else if(me.requestsSent?.includes(uid)){btn.innerText="Request Sent";btn.className="friend-btn requested"}
+                        else if(me.requestsReceived?.includes(uid)){btn.innerText="Accept Request";btn.className="friend-btn accept"}
+                        else{btn.innerText="Add Friend";btn.className="friend-btn add"}
+                    }
+                });
+            }
+
+            // --- 3. LOAD USER DATA ---
+            const d=await getDoc(doc(db,"users",uid)); 
+            if(d.exists()){
+                const u=d.data(); 
+                document.getElementById("view-name").innerText=u.name; 
+                document.getElementById("view-nick").innerText=u.nickname; 
+                document.getElementById("view-bio").innerText=u.bio; 
+                document.getElementById("view-country").innerText="🏳️ "+(u.country||"Earth"); 
+                if(u.pic)document.getElementById("view-pic").style.backgroundImage=`url('${u.pic}')`; 
+                if(u.coverPic)document.getElementById("view-cover").style.backgroundImage=`url('${u.coverPic}')`; 
+                // Helper to apply theme safely
+                const c = u.themeColor || "#bf00ff";
+                document.getElementById('view-cover').style.borderBottomColor = c; 
+                document.getElementById('view-nick').style.color = c; 
+                document.getElementById('message-user-btn').style.background = c;
+            }
+
+            // --- 4. LOAD POSTS ---
+            const p=document.getElementById("user-posts-feed"); 
+            p.innerHTML=""; 
+            const s=await getDocs(query(postsRef, orderBy("createdAt", "desc"))); 
+            let count=0; 
+            s.forEach(d=>{
+                const x=d.data();
+                // Check against author OR uid to be safe
+                if(x.uid === uid){
+                    count++; 
+                    const e=document.createElement("div");
+                    e.className="post"; 
+                    let m=""; 
+                    if(x.videoUrl)m=`<video src="${x.videoUrl}" controls class="post-video-frame"></video>`;
+                    else if(x.imageUrl)m=`<img src="${x.imageUrl}" class="post-img">`; 
+                    e.innerHTML=`<div class="content">${x.text}</div>${m}`;
+                    p.appendChild(e)
+                }
+            }); 
+            if(count===0)p.innerHTML="<div style='text-align:center;padding:20px;color:#888;'>No posts yet.</div>";
         };
 
         window.toggleFriend=async(tid)=>{ const my=doc(db,"users",currentUser.uid); const tr=doc(db,"users",tid); const s=document.getElementById("friend-user-btn").innerText; if(s==="Add Friend"){await updateDoc(my,{requestsSent:arrayUnion(tid)});await updateDoc(tr,{requestsReceived:arrayUnion(currentUser.uid)}); createNotification(tid, 'friend_req', null); }else if(s==="Accept Request"){await updateDoc(my,{friends:arrayUnion(tid),requestsReceived:arrayRemove(tid)});await updateDoc(tr,{friends:arrayUnion(currentUser.uid),requestsSent:arrayRemove(currentUser.uid)}); createNotification(tid, 'friend_accept', null); } };
