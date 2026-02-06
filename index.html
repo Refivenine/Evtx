@@ -130,9 +130,54 @@
         .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 10px; white-space: pre-wrap; }
         .post-img { width: 100%; border-radius: 12px; margin-top: 5px; border: 1px solid #333; max-height: 500px; object-fit: contain; background: #000; }
         .post-video-frame { width: 100%; aspect-ratio: 16/9; border-radius: 12px; margin-top: 5px; border: none; background: #000; }
-        .actions { border-top: 1px solid #222; padding-top: 12px; margin-top: 10px; display: flex; justify-content: space-between; padding-right: 10px; }
-        .act-btn { background: none; color: #888; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-        .act-btn:hover { color: var(--app-color); } .liked { color: #e0245e !important; } .liked svg { fill: #e0245e; stroke: none; }
+        /* --- PRO NEON BUTTONS --- */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 15px;
+    margin-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.act-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #aaa;
+    padding: 8px 16px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.act-btn svg {
+    width: 18px; 
+    height: 18px;
+    fill: currentColor;
+    transition: transform 0.2s;
+}
+
+.act-btn:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.act-btn:hover svg { transform: scale(1.15); }
+
+/* COLOR GLOWS */
+.actions button:nth-child(1):hover, .liked { color: #ff0055 !important; border-color: rgba(255, 0, 85, 0.3); box-shadow: 0 5px 15px rgba(255, 0, 85, 0.2); }
+.liked svg { fill: #ff0055; stroke: none; }
+
+.actions button:nth-child(2):hover { color: #00e5ff !important; border-color: rgba(0, 229, 255, 0.3); box-shadow: 0 5px 15px rgba(0, 229, 255, 0.2); }
+
+.actions button:nth-child(3):hover { color: #00ff99 !important; border-color: rgba(0, 255, 153, 0.3); box-shadow: 0 5px 15px rgba(0, 255, 153, 0.2); }
+
+.actions button:nth-child(4):hover { color: #ff3300 !important; border-color: rgba(255, 51, 0, 0.3); box-shadow: 0 5px 15px rgba(255, 51, 0, 0.2); }
         .comments-section { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; }
         .comment-input-row { display: flex; gap: 10px; margin-top: 10px; }
         .mini-input { width: 100%; background: #000; border: 1px solid #333; padding: 8px; border-radius: 20px; color: #fff; outline: none; }
