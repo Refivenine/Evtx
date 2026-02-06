@@ -173,7 +173,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getAuth, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
         
         // --- YOUR CONFIG ---
@@ -197,7 +197,7 @@
         let finalPostImage = null;
 
         const provider = new GoogleAuthProvider();
-        window.signInGoogle = () => signInWithPopup(auth, provider);
+        window.signInGoogle = () => signInWithRedirect(auth, provider);
         window.logout = () => signOut(auth);
 
         onAuthStateChanged(auth, async (user) => {
