@@ -170,22 +170,14 @@
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
         
       const firebaseConfig = {
-
-  apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
-
-  authDomain: "evtx-social.firebaseapp.com",
-
-  projectId: "evtx-social",
-
-  storageBucket: "evtx-social.firebasestorage.app",
-
-  messagingSenderId: "24242683037",
-
-  appId: "1:24242683037:web:48dcc74fe3d241cfb76874"
-
+apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8",
+authDomain: "evtx-social.firebaseapp.com",
+projectId: "evtx-social",
+storageBucket: "evtx-social.firebasestorage.app",
+messagingSenderId: "24242683037",
+appId: "1:24242683037:web:48dcc74fe3d241cfb76874"
 };
-
-
+        
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
