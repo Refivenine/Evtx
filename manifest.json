@@ -2,55 +2,44 @@
   "name": "EVTX Network",
   "short_name": "EVTX",
   "description": "The next-generation social network for sharing video links, photos, and connecting with friends globally.",
-  "id": "/index.html",
-  "start_url": "/index.html",
-  "scope": "/",
+  "id": "./index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "tabbed", "standalone"],
+  "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#000000",
   "theme_color": "#bf00ff",
   "orientation": "portrait-primary",
   "lang": "en-US",
   "dir": "ltr",
-  "categories": ["social", "entertainment", "lifestyle"],
+  "categories": ["social", "entertainment"],
   "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
   "prefer_related_applications": false,
+  "related_applications": [],
   "icons": [
     {
-      "src": "https://refivenine.github.io/Evtx/logo.png",
+      "src": "logo.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "https://refivenine.github.io/Evtx/logo.png",
+      "src": "logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://refivenine.github.io/Evtx/logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "https://refivenine.github.io/Evtx/logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
   "screenshots": [
     {
-      "src": "https://refivenine.github.io/Evtx/logo.png",
+      "src": "logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Home Feed"
+      "label": "Mobile Feed"
     },
     {
-      "src": "https://refivenine.github.io/Evtx/logo.png",
+      "src": "logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
@@ -60,65 +49,26 @@
   "shortcuts": [
     {
       "name": "Open Chat",
-      "short_name": "Chat",
-      "url": "/index.html#chat",
-      "icons": [{ "src": "https://refivenine.github.io/Evtx/logo.png", "sizes": "192x192", "type": "image/png" }]
-    },
-    {
-      "name": "My Profile",
-      "short_name": "Profile",
-      "url": "/index.html#profile",
-      "icons": [{ "src": "https://refivenine.github.io/Evtx/logo.png", "sizes": "192x192", "type": "image/png" }]
+      "url": "./index.html#chat",
+      "icons": [{ "src": "logo.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
   "share_target": {
-    "action": "/index.html",
+    "action": "./index.html",
     "method": "GET",
-    "enctype": "application/x-www-form-urlencoded",
     "params": {
       "title": "title",
       "text": "text",
       "url": "url"
     }
   },
-  "protocol_handlers": [
-    {
-      "protocol": "web+evtx",
-      "url": "/index.html?type=%s"
-    }
-  ],
   "file_handlers": [
     {
-      "action": "/index.html",
+      "action": "./index.html",
       "accept": {
         "image/jpeg": [".jpg", ".jpeg"],
         "image/png": [".png"]
       }
-    }
-  ],
-  "widgets": [
-    {
-      "name": "EVTX Quick Post",
-      "short_name": "Post",
-      "description": "Quickly create a new post on EVTX",
-      "tag": "evtx-post",
-      "template": "widgets/post-widget.json",
-      "ms_ac_template": "widgets/post-widget.json",
-      "data": "widgets/post-data.json",
-      "type": "application/json",
-      "screenshots": [
-        {
-          "src": "https://refivenine.github.io/Evtx/logo.png",
-          "sizes": "512x512",
-          "label": "Widget Preview"
-        }
-      ],
-      "icons": [
-        {
-          "src": "https://refivenine.github.io/Evtx/logo.png",
-          "sizes": "192x192"
-        }
-      ]
     }
   ],
   "launch_handler": {
@@ -127,7 +77,13 @@
   "edge_side_panel": {
     "preferred_width": 400
   },
-  "note_taking": {
-    "new_note_url": "/index.html#create"
-  }
+  "widgets": [
+    {
+      "name": "EVTX Status",
+      "description": "See latest updates",
+      "tag": "evtx_status",
+      "template": "logo.png",
+      "screenshots": []
+    }
+  ]
 }
