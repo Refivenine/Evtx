@@ -1,13 +1,14 @@
-const CACHE_NAME = 'evtx-v3-ultra';
+const CACHE_NAME = 'evtx-v4-final';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  'https://refivenine.github.io/Evtx/logo.png',
+  './logo.png',
   'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js'
 ];
 
+// Install Event
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
@@ -15,6 +16,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
+// Activate Event
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -28,6 +30,7 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
+// Fetch Event
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((res) => {
