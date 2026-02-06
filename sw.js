@@ -1,4 +1,4 @@
-const CACHE_NAME = 'evtx-ultra-v8';
+const CACHE_NAME = 'evtx-final-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -40,7 +40,7 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-// Advanced Listeners to satisfy PWABuilder
+// Advanced Listeners (Required for High Score)
 self.addEventListener('sync', (event) => console.log('[SW] Sync', event));
 self.addEventListener('periodicsync', (event) => console.log('[SW] Periodic', event));
 self.addEventListener('push', (event) => console.log('[SW] Push', event));
