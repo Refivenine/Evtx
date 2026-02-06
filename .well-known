@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.refivenine.twa",
+        "sha256_cert_fingerprints": ["94:C5:75:33:2D:BF:A4:FB:80:26:62:81:C3:89:0E:56:9B:32:A5:E9:64:52:18:6A:BE:49:07:B9:ED:6D:F3:C4"]
+      }
+    }]
