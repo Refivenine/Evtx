@@ -669,7 +669,7 @@
         // --- SYSTEM FUNCTIONS ---
         document.getElementById("viewMyProfileBtn").addEventListener("click", () => openUserProfile(currentUser.uid));
         
-      window.openUserProfile = async (uid) => { 
+     window.openUserProfile = async (uid) => { 
             if(!uid) return; 
             currentUserViewing = uid; 
             window.switchTab('user-view'); 
@@ -681,6 +681,7 @@
             const msgBtn = document.getElementById("message-user-btn");
             const frndBtn = document.getElementById("friend-user-btn");
 
+            // Hide Message/Friend buttons if viewing your own profile
             if (isMe) {
                 msgBtn.style.display = "none";
                 frndBtn.style.display = "none";
@@ -721,17 +722,19 @@
                 if(u.pic)document.getElementById("view-pic").style.backgroundImage=`url('${u.pic}')`; 
                 if(u.coverPic)document.getElementById("view-cover").style.backgroundImage=`url('${u.coverPic}')`; 
                 
+                // Apply Theme Color
                 const c = u.themeColor || "#bf00ff";
                 document.getElementById('view-cover').style.borderBottomColor = c; 
                 document.getElementById('view-nick').style.color = c; 
                 document.getElementById('message-user-btn').style.background = c;
             }
 
-            // --- 4. LOAD POSTS (WITH BUTTONS!) ---
+            // --- 4. LOAD POSTS (WITH BUTTONS) ---
             const p=document.getElementById("user-posts-feed"); 
             p.innerHTML=""; 
             
-            // Query all posts
+            // Note: Ensuring we use the same field name as your database ('createdAt' or 'timestamp')
+            // Using 'createdAt' based on your previous screenshot.
             const s=await getDocs(query(postsRef, orderBy("createdAt", "desc"))); 
             let count=0; 
             
@@ -739,13 +742,15 @@
                 const x=d.data();
                 
                 // CHECK: Is this post by the user we are viewing?
-                if(x.uid === uid){
+                // We check both 'uid' and 'author' to be safe
+                if(x.uid === uid || x.author === uid){
                     count++; 
                     const e=document.createElement("div");
                     e.className="post";
                     e.id = `profile-post-${d.id}`;
                     
-                    // *** MAGIC LINE: Build the full post with all buttons ***
+                    // *** THIS IS THE FIX ***
+                    // We use the shared function to generate the FULL post with buttons
                     e.innerHTML = getPostHTML(d.id, x); 
                     
                     p.appendChild(e);
