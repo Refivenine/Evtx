@@ -1,5 +1,5 @@
-const CACHE_NAME = 'evtx-v2-pro';
-const urlsToCache = [
+const CACHE_NAME = 'evtx-v3-ultra';
+const ASSETS = [
   './',
   './index.html',
   './manifest.json',
@@ -8,39 +8,30 @@ const urlsToCache = [
   'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js'
 ];
 
-// Install Service Worker
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
-      })
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
 
-// Fetch Assets
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        return response || fetch(event.request);
-      })
-  );
-});
-
-// Update Service Worker
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
+        keys.map((key) => {
+          if (key !== CACHE_NAME) return caches.delete(key);
         })
       );
     })
   );
   self.clients.claim();
+});
+
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((res) => {
+      return res || fetch(e.request).catch(() => caches.match('./index.html'));
+    })
+  );
 });
