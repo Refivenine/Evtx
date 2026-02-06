@@ -470,7 +470,32 @@
                         const el = document.createElement("div");
                         el.className = "post";
                         el.id = `post-${id}`;
-                        el.innerHTML = getPostHTML(id, p);
+                     // --- TIME CAPSULE SECURITY CHECK ---
+        const now = new Date().getTime();
+        
+        // Check if the post has an unlock date AND if we are still before that date
+        if (p.unlockAt && now < p.unlockAt) {
+            // IT IS LOCKED: Show the lock screen instead of the post
+            const unlockDateString = new Date(p.unlockAt).toLocaleDateString();
+            el.innerHTML = `
+                <div class="post-header" style="padding:10px; display:flex; align-items:center;">
+                    <div class="avatar" style="background-image:url('${p.authorPic || 'logo.png'}')"></div>
+                    <div style="margin-left:10px;">
+                        <div class="username">${p.authorName || 'User'}</div>
+                        <div class="timestamp">Future Post 🔒</div>
+                    </div>
+                </div>
+                <div style="padding: 30px; text-align: center; border: 1px dashed #bf00ff; margin: 10px; border-radius: 10px; background: rgba(191, 0, 255, 0.05);">
+                    <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
+                    <h3 style="color: #bf00ff; margin: 0;">Time Capsule</h3>
+                    <p style="color: #aaa; font-size: 12px; margin-top: 5px;">This memory opens on<br><b style="color:white; font-size:14px;">${unlockDateString}</b></p>
+                </div>
+            `;
+        } else {
+            // IT IS UNLOCKED: Show the post normally
+            el.innerHTML = getPostHTML(id, p);
+        }
+        // --- END SECURITY CHECK ---
                         if (change.newIndex >= f.children.length) { f.appendChild(el); } else { f.insertBefore(el, f.children[change.newIndex]); }
                     }
                     if (change.type === "modified") {
