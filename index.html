@@ -669,19 +669,23 @@
         // --- SYSTEM FUNCTIONS ---
         document.getElementById("viewMyProfileBtn").addEventListener("click", () => openUserProfile(currentUser.uid));
         
-     window.openUserProfile = async (uid) => { 
+  // 1. Create a variable to track the live connection
+        let profileUnsub = null;
+
+        window.openUserProfile = async (uid) => { 
             if(!uid) return; 
             currentUserViewing = uid; 
             window.switchTab('user-view'); 
             window.switchProfileTab('posts');
 
-            // --- 1. CHECK IF IT IS ME ---
+            // Stop any previous profile listeners to prevent glitches
+            if (profileUnsub) profileUnsub();
+
+            // --- CHECK IF IT IS ME ---
             const isMe = (uid === currentUser.uid);
-            
             const msgBtn = document.getElementById("message-user-btn");
             const frndBtn = document.getElementById("friend-user-btn");
 
-            // Hide Message/Friend buttons if viewing your own profile
             if (isMe) {
                 msgBtn.style.display = "none";
                 frndBtn.style.display = "none";
@@ -692,11 +696,11 @@
                 frndBtn.onclick = () => toggleFriend(uid);
             }
 
-            // Reset View
+            // --- LOAD USER INFO (Static) ---
             document.getElementById("view-name").innerText="Loading..."; 
             document.getElementById("view-pic").style.backgroundImage="none";
             
-            // --- 2. FRIEND STATUS ---
+            // Friend Status Listener
             if(friendListener) friendListener(); 
             if (!isMe) {
                 friendListener = onSnapshot(doc(db,"users",currentUser.uid),(doc)=>{
@@ -711,7 +715,6 @@
                 });
             }
 
-            // --- 3. LOAD USER DATA ---
             const d=await getDoc(doc(db,"users",uid)); 
             if(d.exists()){
                 const u=d.data(); 
@@ -722,41 +725,43 @@
                 if(u.pic)document.getElementById("view-pic").style.backgroundImage=`url('${u.pic}')`; 
                 if(u.coverPic)document.getElementById("view-cover").style.backgroundImage=`url('${u.coverPic}')`; 
                 
-                // Apply Theme Color
                 const c = u.themeColor || "#bf00ff";
                 document.getElementById('view-cover').style.borderBottomColor = c; 
                 document.getElementById('view-nick').style.color = c; 
                 document.getElementById('message-user-btn').style.background = c;
             }
 
-            // --- 4. LOAD POSTS (WITH BUTTONS) ---
-            const p=document.getElementById("user-posts-feed"); 
-            p.innerHTML=""; 
+            // --- LOAD POSTS (LIVE!) ---
+            const p = document.getElementById("user-posts-feed"); 
+            p.innerHTML = "<div style='padding:20px; text-align:center;'>Loading posts...</div>"; 
             
-            // Note: Ensuring we use the same field name as your database ('createdAt' or 'timestamp')
-            // Using 'createdAt' based on your previous screenshot.
-            const s=await getDocs(query(postsRef, orderBy("createdAt", "desc"))); 
-            let count=0; 
+            // We use 'onSnapshot' now (Real-time listener) instead of 'getDocs'
+            // Note: We query ALL posts and filter in JS to avoid index errors for now
+            const q = query(postsRef, orderBy("timestamp", "desc")); 
             
-            s.forEach(d=>{
-                const x=d.data();
+            profileUnsub = onSnapshot(q, (snapshot) => {
+                p.innerHTML = ""; 
+                let count = 0; 
                 
-                // CHECK: Is this post by the user we are viewing?
-                // We check both 'uid' and 'author' to be safe
-                if(x.uid === uid || x.author === uid){
-                    count++; 
-                    const e=document.createElement("div");
-                    e.className="post";
-                    e.id = `profile-post-${d.id}`;
+                snapshot.forEach(docSnap => {
+                    const x = docSnap.data();
+                    const id = docSnap.id;
                     
-                    // *** THIS IS THE FIX ***
-                    // We use the shared function to generate the FULL post with buttons
-                    e.innerHTML = getPostHTML(d.id, x); 
-                    
-                    p.appendChild(e);
-                }
-            }); 
-            if(count===0)p.innerHTML="<div style='text-align:center;padding:20px;color:#888;'>No posts yet.</div>";
+                    // Filter: Is this post by the user we are viewing?
+                    if(x.uid === uid || x.author === uid){
+                        count++; 
+                        const e = document.createElement("div");
+                        e.className = "post";
+                        e.id = `profile-post-${id}`;
+                        
+                        // Use the shared HTML builder to get BUTTONS
+                        e.innerHTML = getPostHTML(id, x); 
+                        
+                        p.appendChild(e);
+                    }
+                }); 
+                if(count === 0) p.innerHTML = "<div style='text-align:center;padding:20px;color:#888;'>No posts yet.</div>";
+            });
         };
         window.toggleFriend=async(tid)=>{ const my=doc(db,"users",currentUser.uid); const tr=doc(db,"users",tid); const s=document.getElementById("friend-user-btn").innerText; if(s==="Add Friend"){await updateDoc(my,{requestsSent:arrayUnion(tid)});await updateDoc(tr,{requestsReceived:arrayUnion(currentUser.uid)}); createNotification(tid, 'friend_req', null); }else if(s==="Accept Request"){await updateDoc(my,{friends:arrayUnion(tid),requestsReceived:arrayRemove(tid)});await updateDoc(tr,{friends:arrayUnion(currentUser.uid),requestsSent:arrayRemove(currentUser.uid)}); createNotification(tid, 'friend_accept', null); } };
         async function loadUserFriends(uid){const c=document.getElementById('user-friends-list'); c.innerHTML="Loading..."; const u=await getDoc(doc(db,"users",uid)); const f=u.data().friends||[]; c.innerHTML=""; if(f.length===0)c.innerHTML="No friends."; for(const fid of f){const fd=await getDoc(doc(db,"users",fid)); if(fd.exists()){const ff=fd.data(); const d=document.createElement("div"); d.className="friend-item"; d.innerHTML=`<div class="avatar" style="background-image:url('${ff.pic||''}')"></div><div style="flex:1;margin-left:10px;color:#fff;"><b>${ff.name}</b></div><button class="btn" style="color:var(--app-color);" onclick="openUserProfile('${fid}')">View</button>`; c.appendChild(d);}}}
