@@ -1,12 +1,12 @@
 {
   "name": "EVTX Network",
   "short_name": "EVTX",
-  "description": "The next-generation social network for sharing video links, photos, and connecting with friends globally. Join the revolution.",
+  "description": "The next-generation social network for sharing video links, photos, and connecting with friends globally.",
   "id": "/index.html",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "display_override": ["window-controls-overlay", "tabbed", "standalone"],
   "background_color": "#000000",
   "theme_color": "#bf00ff",
   "orientation": "portrait-primary",
@@ -81,10 +81,53 @@
       "url": "url"
     }
   },
+  "protocol_handlers": [
+    {
+      "protocol": "web+evtx",
+      "url": "/index.html?type=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/index.html",
+      "accept": {
+        "image/jpeg": [".jpg", ".jpeg"],
+        "image/png": [".png"]
+      }
+    }
+  ],
+  "widgets": [
+    {
+      "name": "EVTX Quick Post",
+      "short_name": "Post",
+      "description": "Quickly create a new post on EVTX",
+      "tag": "evtx-post",
+      "template": "widgets/post-widget.json",
+      "ms_ac_template": "widgets/post-widget.json",
+      "data": "widgets/post-data.json",
+      "type": "application/json",
+      "screenshots": [
+        {
+          "src": "https://refivenine.github.io/Evtx/logo.png",
+          "sizes": "512x512",
+          "label": "Widget Preview"
+        }
+      ],
+      "icons": [
+        {
+          "src": "https://refivenine.github.io/Evtx/logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
   "launch_handler": {
     "client_mode": "auto"
   },
   "edge_side_panel": {
     "preferred_width": 400
+  },
+  "note_taking": {
+    "new_note_url": "/index.html#create"
   }
 }
