@@ -533,28 +533,172 @@
             await addDoc(collection(db,"notifications"),{recipient:t,sender:currentUserName, senderUid: currentUser.uid, type:y,text:txt,postId:pid,read:false,time:serverTimestamp()}); 
         }
 
-        window.likePost = async (id,oid) => { 
-            const r=doc(db,"posts",id); const d=await getDoc(r); 
-            if(d.exists()){
-                const p=d.data(); let l=p.likedBy||[]; let c=p.likes||0;
-                if(l.includes(currentUser.uid)){ l=l.filter(x=>x!==currentUser.uid); c--; }
-                else { l.push(currentUser.uid); c++; createNotification(oid,'like',id); }
-                await updateDoc(r,{likedBy:l,likes:c});
+        // --- MASTER POST BUILDER (Fixed: With Voice, Comments, Share, Delete) ---
+        window.getPostHTML = (id, p, suffix = "") => {
+            // 1. Check if it's my post (Add Delete Button)
+            const isMe = currentUser && (p.uid === currentUser.uid || p.author === currentUser.uid);
+            const delBtn = isMe ? `<button onclick="deletePost('${id}')" class="act-btn" style="color:#ff3300;">🗑️</button>` : "";
+            
+            // 2. Admin Badge
+            const isA = p.userEmail === "refivenine@gmail.com"; 
+            const b = isA ? `<span style="color:#ffd700; margin-left:4px;">👑</span>` : "";
+            
+            // 3. Avatar & Media
+            let as = ""; 
+            if(isA) as = "background-image:url('https://refivenine.github.io/Evtx/logo.png'); border-color:#ffd700;"; 
+            else if(p.userPic) as = `background-image:url('${p.userPic}')`;
+
+            let media = "";
+            if (p.videoUrl) media = `<video src="${p.videoUrl}" controls class="post-video-frame"></video>`;
+            else if (p.imageUrl) media = `<img src="${p.imageUrl}" class="post-img">`;
+
+            // 4. Voice Notes
+            let voiceHTML = "";
+            if (p.voiceNotes && p.voiceNotes.length > 0) {
+                voiceHTML = `<div style="margin-top:10px; padding:8px; background:rgba(0,0,0,0.3); border-radius:10px;">`;
+                p.voiceNotes.forEach(note => {
+                    voiceHTML += `
+                        <div style="display:flex; align-items:center; margin-bottom:5px;">
+                            <span style="font-size:10px; color:#bf00ff; margin-right:5px;">${note.name}:</span>
+                            <audio controls src="${note.url}" style="height:25px; width:180px;"></audio>
+                        </div>`;
+                });
+                voiceHTML += `</div>`;
+            }
+
+            // 5. Interaction States
+            const iL = p.likes && p.likes.includes(currentUser.uid); 
+            const lc = iL ? "act-btn liked" : "act-btn";
+            
+            // 6. Unique IDs
+            const commentSectionId = `comments-${id}${suffix}`;
+            const inputId = `comment-input-${id}${suffix}`;
+
+            return `
+                <div class="user-header">
+                    <div class="avatar" style="${as}"></div>
+                    <div class="user-meta"><h4>${p.username} ${b}</h4><span>${new Date(p.timestamp?.toDate()).toLocaleDateString()}</span></div>
+                </div>
+                <div class="content">${p.text}</div>
+                ${media}
+                ${voiceHTML}
+                
+                <div class="actions">
+                    <button class="${lc}" onclick="likePost('${id}')">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        <span>${p.likes ? p.likes.length : 0}</span>
+                    </button>
+                    <button class="act-btn" onclick="toggleComments('${commentSectionId}')">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <span>${p.comments ? p.comments.length : 0}</span>
+                    </button>
+                    <button class="act-btn" onclick="sharePost('${id}')">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                    </button>
+                    <button onclick="toggleVoiceRecording('${id}')" class="act-btn" id="mic-btn-${id}">
+                        🎤 <span id="mic-status-${id}" style="font-size:12px;">Voice</span>
+                    </button>
+                    ${delBtn}
+                </div>
+
+                <div id="${commentSectionId}" style="display:none; margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <input id="${inputId}" type="text" placeholder="Write a comment..." style="width:100%; background:rgba(0,0,0,0.2); border:1px solid #333; padding:10px; border-radius:20px; color:white;">
+                        <button onclick="addComment('${id}', '${inputId}')" class="main-btn" style="padding:5px 15px; font-size:12px;">Send</button>
+                    </div>
+                    <div style="max-height:200px; overflow-y:auto; font-size:13px; color:#ccc;">
+                        ${p.comments ? p.comments.map(c => `
+                            <div style="margin-bottom:8px; padding:8px; background:rgba(255,255,255,0.05); border-radius:10px;">
+                                <b style="color:#bf00ff;">${c.username}:</b> ${c.text}
+                            </div>
+                        `).join('') : '<div style="opacity:0.5;">No comments yet.</div>'}
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- NEW ACTION FUNCTIONS ---
+        let mediaRecorder; let audioChunks = []; let activeRecordingId = null;
+        
+        window.toggleVoiceRecording = async (postId) => {
+            const btn = document.getElementById(`mic-btn-${postId}`);
+            const status = document.getElementById(`mic-status-${postId}`);
+            if (activeRecordingId === postId && mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                btn.style.color = ""; status.innerText = "Sending..."; activeRecordingId = null; return;
+            }
+            if (activeRecordingId) { alert("Already recording!"); return; }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                activeRecordingId = postId;
+                btn.style.color = "red"; status.innerText = "Recording...";
+                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    // Mock upload (Replace with Cloudinary if needed)
+                    const audioUrl = URL.createObjectURL(audioBlob); 
+                    
+                    const postRef = doc(db, "posts", postId);
+                    await updateDoc(postRef, {
+                        voiceNotes: arrayUnion({ url: audioUrl, name: currentUserName, timestamp: Date.now() })
+                    });
+                    status.innerText = "Sent!"; setTimeout(() => status.innerText = "Voice", 2000);
+                };
+                mediaRecorder.start();
+            } catch (err) { console.error(err); alert("Mic error!"); }
+        };
+
+        window.toggleComments = (elemId) => {
+            const el = document.getElementById(elemId);
+            if(el) el.style.display = (el.style.display === "none") ? "block" : "none";
+        };
+
+        window.addComment = async (postId, inputId) => {
+            const input = document.getElementById(inputId);
+            const text = input.value;
+            if(!text) return;
+            input.value = "Sending...";
+            
+            await updateDoc(doc(db, "posts", postId), {
+                comments: arrayUnion({
+                    text: text,
+                    username: currentUser.displayName || "User",
+                    uid: currentUser.uid,
+                    timestamp: Date.now()
+                })
+            });
+            input.value = "";
+        };
+
+        window.likePost = async (postId) => {
+            if(!currentUser) return;
+            const postRef = doc(db, "posts", postId);
+            const pDoc = await getDoc(postRef);
+            if(pDoc.exists()) {
+                const likes = pDoc.data().likes || [];
+                if(!likes.includes(currentUser.uid)) {
+                    await updateDoc(postRef, { likes: arrayUnion(currentUser.uid) });
+                }
+            }
+        };
+        
+        import { deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        window.deletePost = async (postId) => {
+            if(confirm("Are you sure you want to delete this post?")) {
+                await deleteDoc(doc(db, "posts", postId));
+                const el1 = document.getElementById(`post-${postId}`);
+                const el2 = document.getElementById(`profile-post-${postId}`);
+                if(el1) el1.remove();
+                if(el2) el2.remove();
             }
         };
 
-        window.sharePost = async (id,u,oid) => { 
-            updateDoc(doc(db,"posts",id),{shareCount:increment(1)}); 
-            createNotification(oid,'share',id); 
-            const d={title:`Post by ${u}`,text:"Check this out",url:window.location.href}; 
-            if(navigator.share) try{await navigator.share(d)}catch(e){} else { navigator.clipboard.writeText(window.location.href); alert("Link copied to clipboard!"); } 
-        };
-
-        window.sendComment = async (id,oid) => { 
-            const i=document.getElementById(`input-${id}`); const t=i.value.trim(); if(!t)return; 
-            await addDoc(collection(db,"posts",id,"comments"),{text:t,username:currentUserName,createdAt:serverTimestamp()}); 
-            updateDoc(doc(db,"posts",id),{commentCount:increment(1)}); 
-            createNotification(oid,'comment',id); i.value=""; 
+        window.sharePost = (id) => {
+            const url = window.location.href; 
+            navigator.clipboard.writeText(url).then(() => alert("Link copied to clipboard!"));
         };
 
         // --- SMART FEED SYSTEM (VIDEO FIX + NICKNAME FIX) ---
@@ -775,8 +919,7 @@ let profileUnsub = null;
         window.toggleFriend=async(tid)=>{ const my=doc(db,"users",currentUser.uid); const tr=doc(db,"users",tid); const s=document.getElementById("friend-user-btn").innerText; if(s==="Add Friend"){await updateDoc(my,{requestsSent:arrayUnion(tid)});await updateDoc(tr,{requestsReceived:arrayUnion(currentUser.uid)}); createNotification(tid, 'friend_req', null); }else if(s==="Accept Request"){await updateDoc(my,{friends:arrayUnion(tid),requestsReceived:arrayRemove(tid)});await updateDoc(tr,{friends:arrayUnion(currentUser.uid),requestsSent:arrayRemove(currentUser.uid)}); createNotification(tid, 'friend_accept', null); } };
         async function loadUserFriends(uid){const c=document.getElementById('user-friends-list'); c.innerHTML="Loading..."; const u=await getDoc(doc(db,"users",uid)); const f=u.data().friends||[]; c.innerHTML=""; if(f.length===0)c.innerHTML="No friends."; for(const fid of f){const fd=await getDoc(doc(db,"users",fid)); if(fd.exists()){const ff=fd.data(); const d=document.createElement("div"); d.className="friend-item"; d.innerHTML=`<div class="avatar" style="background-image:url('${ff.pic||''}')"></div><div style="flex:1;margin-left:10px;color:#fff;"><b>${ff.name}</b></div><button class="btn" style="color:var(--app-color);" onclick="openUserProfile('${fid}')">View</button>`; c.appendChild(d);}}}
 
-        window.deletePost=async(id,uid)=>{if(uid===currentUser.uid || currentUser.email===ADMIN_EMAIL) if(confirm("Delete?")) await deleteDoc(doc(db,"posts",id));};
-        window.toggleComments=(id)=>{const s=document.getElementById(`comments-${id}`);if(s.style.display==="block")s.style.display="none";else{s.style.display="block";const l=document.getElementById(`list-${id}`);onSnapshot(collection(db,"posts",id,"comments"),sn=>{l.innerHTML="";sn.forEach(d=>{const c=d.data();const e=document.createElement("div");e.className="single-comment";e.innerHTML=`<span class="c-user">${c.username}:</span> ${c.text}`;l.appendChild(e)})})}};
+       
 
         // --- HELPERS ---
         window.switchTab=(t)=>{document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden'));document.getElementById('tab-'+t).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active'));if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active');if(t==='news'){document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); loadNews();}if(t==='chats')document.querySelectorAll('.nav-item')[2].classList.add('nav-active');if(t==='search')document.querySelectorAll('.nav-item')[3].classList.add('nav-active');if(t==='notifs')document.querySelectorAll('.nav-item')[4].classList.add('nav-active');if(t==='profile')document.querySelectorAll('.nav-item')[5].classList.add('nav-active');};
