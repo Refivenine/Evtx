@@ -730,18 +730,22 @@
             // --- 4. LOAD POSTS (WITH BUTTONS!) ---
             const p=document.getElementById("user-posts-feed"); 
             p.innerHTML=""; 
+            
+            // Query all posts
             const s=await getDocs(query(postsRef, orderBy("createdAt", "desc"))); 
             let count=0; 
+            
             s.forEach(d=>{
                 const x=d.data();
-                // Check if this post belongs to the user we are viewing
+                
+                // CHECK: Is this post by the user we are viewing?
                 if(x.uid === uid){
                     count++; 
                     const e=document.createElement("div");
                     e.className="post";
                     e.id = `profile-post-${d.id}`;
                     
-                    // *** THIS LINE ADDS THE BUTTONS ***
+                    // *** MAGIC LINE: Build the full post with all buttons ***
                     e.innerHTML = getPostHTML(d.id, x); 
                     
                     p.appendChild(e);
