@@ -1,12 +1,12 @@
 {
   "name": "EVTX Network",
   "short_name": "EVTX",
-  "description": "The next-generation social network for sharing video links, photos, and connecting with friends globally.",
+  "description": "The next-generation social network for connecting globally.",
   "id": "./index.html",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
+  "display_override": ["tabbed", "window-controls-overlay", "standalone"],
   "background_color": "#000000",
   "theme_color": "#bf00ff",
   "orientation": "portrait-primary",
@@ -15,31 +15,13 @@
   "categories": ["social", "entertainment"],
   "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
   "prefer_related_applications": false,
-  "related_applications": [
-    {
-      "platform": "webapp",
-      "url": "https://refivenine.github.io/Evtx/manifest.json",
-      "id": "evtx-web-app"
-    }
-  ],
+  "related_applications": [],
   "icons": [
-    {
-      "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
     {
       "src": "logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
     },
     {
       "src": "logo.png",
@@ -53,22 +35,13 @@
       "src": "logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Mobile Feed"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Desktop View"
+      "label": "App Home Screen"
     }
   ],
   "shortcuts": [
     {
       "name": "Open Chat",
-      "url": "./index.html#chat",
-      "icons": [{ "src": "logo.png", "sizes": "512x512", "type": "image/png" }]
+      "url": "./index.html#chat"
     }
   ],
   "share_target": {
@@ -95,21 +68,17 @@
       }
     }
   ],
-  "widgets": [
-    {
-      "name": "EVTX Shortcut",
-      "description": "Quick launch",
-      "tag": "evtx_widget",
-      "template": "logo.png",
-      "screenshots": []
-    }
-  ],
   "launch_handler": {
     "client_mode": "auto"
   },
   "edge_side_panel": {
     "preferred_width": 400
   },
+  "scope_extensions": [
+    {
+      "origin": "https://refivenine.github.io"
+    }
+  ],
   "note_taking": {
     "new_note_url": "./index.html#note"
   }
