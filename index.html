@@ -334,7 +334,17 @@
                     postData.imageUrl = url;
                 }
 
-                await addDoc(postsRef, postData); 
+                 // --- TIME CAPSULE LOGIC (START) ---
+          const dateInput = document.getElementById("capsule-date");
+          // Add the 'unlockAt' date to your postData variable
+          postData.unlockAt = dateInput && dateInput.value ? new Date(dateInput.value).getTime() : null;
+
+          // --- UPLOAD THE POST ---
+          await addDoc(postsRef, postData);
+
+          // --- CLEAR THE DATE INPUT ---
+          if (dateInput) dateInput.value = "";
+          // --- TIME CAPSULE LOGIC (END) ---
                 i.value=""; finalPostImage=null; selectedVideoFile=null; document.getElementById("fileInput").value=""; document.getElementById("mediaPreview").innerHTML=""; btn.innerText="Post"; 
             } catch (err) { alert("Error: " + err.message); btn.innerText="Post"; } 
         });
