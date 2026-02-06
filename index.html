@@ -470,41 +470,56 @@
                         const el = document.createElement("div");
                         el.className = "post";
                         el.id = `post-${id}`;
-                 // --- TIME CAPSULE SECURITY CHECK (DEBUG VERSION) ---
+              // --- SMART TIME CAPSULE (AUTO-UNLOCK VERSION) ---
         const now = new Date().getTime();
         
-        // Check if the post has an unlock date AND if we are still before that date
+        // 1. Check if the post is locked
         if (p.unlockAt && now < p.unlockAt) {
-            // Convert numbers to readable dates so we can see what is wrong
-            const unlockDateString = new Date(p.unlockAt).toLocaleString();
-            const serverDateString = new Date(now).toLocaleString();
-
-            // IT IS LOCKED: Show the lock screen with Debug Info
+            
+            // A. Render the LOCK SCREEN
+            const unlockDateString = new Date(p.unlockAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             el.innerHTML = `
                 <div class="post-header" style="padding:10px; display:flex; align-items:center;">
                     <div class="avatar" style="background-image:url('${p.authorPic || 'logo.png'}')"></div>
                     <div style="margin-left:10px;">
                         <div class="username">${p.authorName || 'User'}</div>
-                        <div class="timestamp">Future Post 🔒</div>
+                        <div class="timestamp">Locked 🔒</div>
                     </div>
                 </div>
-                <div style="padding: 30px; text-align: center; border: 1px dashed #bf00ff; margin: 10px; border-radius: 10px; background: rgba(191, 0, 255, 0.05);">
-                    <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
+                <div id="lock-card-${id}" style="padding: 30px; text-align: center; border: 1px dashed #bf00ff; margin: 10px; border-radius: 10px; background: rgba(191, 0, 255, 0.05); transition: all 0.5s ease;">
+                    <div style="font-size: 40px; margin-bottom: 10px; animation: pulse 2s infinite;">🔒</div>
                     <h3 style="color: #bf00ff; margin: 0;">Time Capsule</h3>
-                    <p style="color: #aaa; font-size: 12px; margin-top: 5px;">Unlocks: <b style="color:white;">${unlockDateString}</b></p>
-                    
-                    <div style="margin-top:15px; padding:10px; background:black; border-radius:5px; font-size:10px; color:yellow; text-align:left;">
-                        DEBUG MODE:<br>
-                        Your Time: ${serverDateString}<br>
-                        Unlock Time: ${unlockDateString}
-                    </div>
+                    <p style="color: #aaa; font-size: 12px; margin-top: 5px;">Unlocks automatically at <b style="color:white;">${unlockDateString}</b></p>
                 </div>
             `;
+
+            // B. Set a Timer to UNLOCK it automatically when time is up
+            const timeToWait = p.unlockAt - now;
+            
+            // Only set timer if it's less than 24 days (max limit for setTimeout)
+            if (timeToWait > 0 && timeToWait < 2000000000) {
+                setTimeout(() => {
+                    // Check if the post is still on the screen
+                    const lockCard = document.getElementById(`lock-card-${id}`);
+                    if (lockCard) {
+                        // Fun Effect: Flash green before unlocking
+                        lockCard.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
+                        lockCard.style.borderColor = "#00ff00";
+                        lockCard.innerHTML = `<h3 style="color:#00ff00;">🔓 Unlocking...</h3>`;
+                        
+                        // Wait 1 second for effect, then show actual content
+                        setTimeout(() => {
+                            el.innerHTML = getPostHTML(id, p);
+                        }, 1000);
+                    }
+                }, timeToWait);
+            }
+
         } else {
-            // IT IS UNLOCKED: Show the post normally
+            // 2. It is already unlocked, show normally
             el.innerHTML = getPostHTML(id, p);
         }
-        // --- END SECURITY CHECK ---
+        // --- END SMART TIME CAPSULE ---
                         if (change.newIndex >= f.children.length) { f.appendChild(el); } else { f.insertBefore(el, f.children[change.newIndex]); }
                     }
                     if (change.type === "modified") {
