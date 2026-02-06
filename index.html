@@ -669,8 +669,7 @@
         // --- SYSTEM FUNCTIONS ---
         document.getElementById("viewMyProfileBtn").addEventListener("click", () => openUserProfile(currentUser.uid));
         
-// 1. Create a variable to track the live connection
-        let profileUnsub = null;
+let profileUnsub = null;
 
         window.openUserProfile = async (uid) => { 
             if(!uid) return; 
@@ -678,10 +677,10 @@
             window.switchTab('user-view'); 
             window.switchProfileTab('posts');
 
-            // Stop any previous profile listeners to prevent glitches
+            // 1. Stop old listeners
             if (profileUnsub) profileUnsub();
 
-            // --- CHECK IF IT IS ME ---
+            // 2. Hide/Show Buttons based on if it's YOU
             const isMe = (uid === currentUser.uid);
             const msgBtn = document.getElementById("message-user-btn");
             const frndBtn = document.getElementById("friend-user-btn");
@@ -696,11 +695,11 @@
                 frndBtn.onclick = () => toggleFriend(uid);
             }
 
-            // --- LOAD USER INFO (Static) ---
+            // 3. Load User Details
             document.getElementById("view-name").innerText="Loading..."; 
             document.getElementById("view-pic").style.backgroundImage="none";
             
-            // Friend Status Listener
+            // Friend Status
             if(friendListener) friendListener(); 
             if (!isMe) {
                 friendListener = onSnapshot(doc(db,"users",currentUser.uid),(doc)=>{
@@ -731,35 +730,46 @@
                 document.getElementById('message-user-btn').style.background = c;
             }
 
-            // --- LOAD POSTS (LIVE!) ---
+            // 4. LOAD POSTS (The Super-Check Version)
             const p = document.getElementById("user-posts-feed"); 
             p.innerHTML = "<div style='padding:20px; text-align:center;'>Loading posts...</div>"; 
             
-            // *** CORRECTION: Using 'timestamp' instead of 'createdAt' ***
-            const q = query(postsRef, orderBy("timestamp", "desc")); 
+            // We ask for ALL posts (no sorting) to prevent database errors
+            const q = query(postsRef); 
             
             profileUnsub = onSnapshot(q, (snapshot) => {
                 p.innerHTML = ""; 
                 let count = 0; 
-                
+                let allPosts = [];
+
                 snapshot.forEach(docSnap => {
                     const x = docSnap.data();
                     const id = docSnap.id;
                     
-                    // Filter: Is this post by the user we are viewing?
-                    if(x.uid === uid || x.author === uid){
-                        count++; 
-                        const e = document.createElement("div");
-                        e.className = "post";
-                        e.id = `profile-post-${id}`;
-                        
-                        // Use the shared HTML builder so BUTTONS WORK
-                        e.innerHTML = getPostHTML(id, x); 
-                        
-                        p.appendChild(e);
+                    // *** SUPER CHECK: Checks every possible field name ***
+                    if(x.uid === uid || x.author === uid || x.userId === uid || x.user === uid){
+                        allPosts.push({id: id, data: x});
                     }
                 }); 
-                if(count === 0) p.innerHTML = "<div style='text-align:center;padding:20px;color:#888;'>No posts yet.</div>";
+                
+                // Sort them manually in Javascript (Newest first)
+                allPosts.sort((a, b) => {
+                    const timeA = a.data.timestamp ? a.data.timestamp.toMillis() : 0;
+                    const timeB = b.data.timestamp ? b.data.timestamp.toMillis() : 0;
+                    return timeB - timeA;
+                });
+
+                // Display them
+                allPosts.forEach(post => {
+                    count++;
+                    const e = document.createElement("div");
+                    e.className = "post";
+                    e.id = `profile-post-${post.id}`;
+                    e.innerHTML = getPostHTML(post.id, post.data); 
+                    p.appendChild(e);
+                });
+
+                if(count === 0) p.innerHTML = "<div style='text-align:center;padding:20px;color:#888;'>No posts found for this user.</div>";
             });
         };
         window.toggleFriend=async(tid)=>{ const my=doc(db,"users",currentUser.uid); const tr=doc(db,"users",tid); const s=document.getElementById("friend-user-btn").innerText; if(s==="Add Friend"){await updateDoc(my,{requestsSent:arrayUnion(tid)});await updateDoc(tr,{requestsReceived:arrayUnion(currentUser.uid)}); createNotification(tid, 'friend_req', null); }else if(s==="Accept Request"){await updateDoc(my,{friends:arrayUnion(tid),requestsReceived:arrayRemove(tid)});await updateDoc(tr,{friends:arrayUnion(currentUser.uid),requestsSent:arrayRemove(currentUser.uid)}); createNotification(tid, 'friend_accept', null); } };
