@@ -112,6 +112,18 @@
         .create-box { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin: 15px; margin-bottom: 25px; }
         textarea#postInput { width: 100%; background: #080808; color: #fff; border: 1px solid #333; padding: 15px; border-radius: 10px; resize: none; box-sizing: border-box; outline: none; }
         .post { background: #151515; border-radius: 15px; padding: 15px; margin: 15px; margin-bottom: 15px; border: 1px solid #222; }
+        /* --- GLASSY PRO CARD EFFECT --- */
+.post, .create-box, .profile-container, .auth-box, .news-card {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+    padding: 20px;
+    margin-bottom: 20px;
+}
         .user-header { display: flex; align-items: center; margin-bottom: 12px; }
         .avatar { width: 40px; height: 40px; background: #333; border-radius: 50%; margin-right: 12px; border: 2px solid #333; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
         .user-meta h4 { margin: 0; color: #fff; font-size: 15px; cursor: pointer; } .user-meta span { font-size: 12px; color: #777; }
