@@ -634,17 +634,13 @@
         document.getElementById("searchInput").addEventListener("input",async(e)=>{const t=e.target.value.toLowerCase();const r=document.getElementById("searchResults");r.innerHTML="";if(t.length<2)return;const s=await getDocs(collection(db,"users"));s.forEach(d=>{const u=d.data();if(u.name?.toLowerCase().includes(t)){const e=document.createElement("div");e.className="user-result";e.onclick=()=>openUserProfile(d.id);e.innerHTML=`<div class="avatar" style="background-image:url('${u.pic||''}')"></div><div style="color:#fff;">${u.name}</div>`;r.appendChild(e)}})});
         document.getElementById("auth-action-btn").addEventListener("click",()=>{const e=document.getElementById("email").value;const p=document.getElementById("password").value;if(document.getElementById("auth-action-btn").innerText.includes("Enter"))signInWithEmailAndPassword(auth,e,p).catch(alert);else createUserWithEmailAndPassword(auth,e,p).catch(alert)});
         document.getElementById("toggle-auth-btn").addEventListener("click",function(){const s=this.innerText.includes("Create");this.innerText=s?"Have an account? Login":"New here? Create Account";document.getElementById("auth-action-btn").innerText=s?"Sign Up":"Enter Network"});
-   // --- PWA INSTALLER ---
+ // --- PWA INSTALLER ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Using a relative path './sw.js' is crucial for GitHub Pages
+                // The './' is critical for GitHub Pages
                 navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('Service Worker registration failed:', error);
-                    });
+                    .then(registration => console.log('SW Registered'))
+                    .catch(err => console.log('SW Failed:', err));
             });
         }
     </script>
