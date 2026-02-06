@@ -12,7 +12,7 @@
         body {
             /* Deep Space Gradient Background */
             background: radial-gradient(circle at top left, #1a0b2e, #000000);
-            background-attachment: fixed; /* Keeps bg still while scrolling */
+            background-attachment: fixed;
             color: #e0e0e0;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 0; padding-bottom: 80px;
@@ -26,10 +26,9 @@
         .icon { width: 24px; height: 24px; fill: currentColor; }
 
         /* --- 3. THE "GLASS" CARDS (Pro Look) --- */
-        /* This replaces the boring gray boxes with Frosted Glass */
         .post, .create-box, .profile-container, .auth-box, .news-card {
-            background: rgba(22, 22, 22, 0.7) !important; /* Semi-transparent */
-            backdrop-filter: blur(12px) !important;       /* The Blur Magic */
+            background: rgba(22, 22, 22, 0.7) !important;
+            backdrop-filter: blur(12px) !important;
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
@@ -40,7 +39,6 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        /* Hover Effect */
         .post:hover {
             transform: translateY(-3px);
             box-shadow: 0 12px 40px 0 rgba(191, 0, 255, 0.15) !important;
@@ -49,29 +47,26 @@
 
         /* --- 4. THE "JELLY" BUTTONS (Cute Look) --- */
         .btn, .main-btn, .friend-btn {
-            border-radius: 50px !important; /* Pill Shape */
+            border-radius: 50px !important;
             font-weight: 800 !important;
             letter-spacing: 0.5px;
             text-transform: uppercase;
             font-size: 11px !important;
             border: none !important;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; /* Bouncy */
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
             padding: 10px 20px;
         }
 
-        /* Purple Gradient Button */
         .main-btn, .btn {
             background: linear-gradient(135deg, #bf00ff, #ff00cc) !important;
             color: white;
             box-shadow: 0 4px 15px rgba(191, 0, 255, 0.4);
         }
 
-        /* Button Interactions */
         .main-btn:hover, .btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(191, 0, 255, 0.6); }
         .main-btn:active, .btn:active { transform: scale(0.90) !important; }
 
-        /* Secondary/Gray Buttons */
         .act-btn, .vid-btn {
             background: rgba(255,255,255,0.05);
             border-radius: 20px;
@@ -102,15 +97,12 @@
         textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 15px; border-radius: 15px; resize: none; outline: none; box-sizing: border-box; font-family: inherit; font-size: 16px; margin-bottom: 10px; }
         input { width: 100%; padding: 12px; margin: 5px 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; box-sizing: border-box; }
 
-        /* NAV BAR */
         .nav-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(30,30,30,0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; display: flex; justify-content: space-around; padding: 15px 0; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         .nav-item { color: #888; font-size: 22px; cursor: pointer; transition: 0.2s; position: relative; }
         .nav-item.active { color: var(--app-color); transform: translateY(-3px); }
         
-        /* AUTH SCREEN */
         #auth-screen { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; background-image: radial-gradient(circle at center, #1a0b2e, #000); }
         
-        /* SPLASH SCREEN */
         #splash-screen { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         .pulse-logo { font-size: 60px; font-weight: 900; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
@@ -172,11 +164,11 @@
     </div>
 
     <script type="module">
+        // *** KEY CHANGE 1: Imported 'signInWithRedirect' instead of Popup ***
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getAuth, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
         
-        // --- YOUR CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAiaKBFUc4QScczQq6wARW7KC0-gkcomg8",
             authDomain: "evtx-social.firebaseapp.com",
@@ -197,6 +189,8 @@
         let finalPostImage = null;
 
         const provider = new GoogleAuthProvider();
+        
+        // *** KEY CHANGE 2: Using Redirect instead of Popup ***
         window.signInGoogle = () => signInWithRedirect(auth, provider);
         window.logout = () => signOut(auth);
 
@@ -215,10 +209,7 @@
             setTimeout(() => splash.classList.add("hidden"), 1500);
         });
 
-        // --- MOCK UPLOAD (Replace with your Cloudinary if you have it) ---
         window.uploadToCloudinary = async (file) => {
-             // FOR DEMO: This just creates a fake local URL so you can see it working immediately.
-             // If you have real Cloudinary code, paste it here instead!
              return URL.createObjectURL(file);
         };
 
@@ -270,7 +261,6 @@
                     el.className = "post";
                     el.id = `post-${id}`;
 
-                    // TIME CAPSULE LOGIC
                     const now = new Date().getTime();
                     if (p.unlockAt && now < p.unlockAt) {
                          const timeToWait = p.unlockAt - now;
@@ -286,7 +276,6 @@
                                 <p style="color: #aaa; font-size: 12px;">Unlocks at <b style="color:white;">${unlockDateString}</b></p>
                             </div>
                         `;
-                        // Auto-unlock timer
                         if (timeToWait > 0 && timeToWait < 2000000000) {
                             setTimeout(() => {
                                 const card = document.getElementById(`lock-card-${id}`);
@@ -315,7 +304,6 @@
             if (p.videoUrl) media = `<video src="${p.videoUrl}" controls class="post-video-frame"></video>`;
             else if (p.imageUrl) media = `<img src="${p.imageUrl}" class="post-img">`;
 
-            // Voice Player
             let voiceHTML = "";
             if (p.voiceNotes && p.voiceNotes.length > 0) {
                 voiceHTML = `<div style="margin-top:10px; padding:8px; background:rgba(0,0,0,0.3); border-radius:10px;">`;
@@ -350,7 +338,6 @@
                     </div>`;
         }
 
-        // --- VOICE LOGIC ---
         let mediaRecorder; let audioChunks = []; let activeRecordingId = null;
         window.toggleVoiceRecording = async (postId) => {
             const btn = document.getElementById(`mic-btn-${postId}`);
@@ -369,7 +356,6 @@
                 mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
                 mediaRecorder.onstop = async () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    // Using the mock upload for now - Replace with Cloudinary if you have it
                     const audioUrl = URL.createObjectURL(audioBlob); 
                     
                     const postRef = doc(db, "posts", postId);
@@ -382,7 +368,6 @@
             } catch (err) { console.error(err); alert("Mic error!"); }
         };
 
-        // --- LIKE LOGIC ---
         window.likePost = async (postId) => {
             if(!currentUser) return;
             const postRef = doc(db, "posts", postId);
@@ -395,7 +380,6 @@
             }
         };
 
-        // --- FILE INPUT ---
         document.getElementById("fileInput").addEventListener("change", async (e) => {
              const file = e.target.files[0];
              if(file) {
