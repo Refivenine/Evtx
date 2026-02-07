@@ -1145,6 +1145,151 @@ let profileUnsub = null;
 
     // Force start the feed if we are already logged in
     if(window.currentUser) window.loadFeed();
+// --- 1. RESTORE FEED (Your Posts) ---
+    window.loadFeed = () => {
+        const feed = document.getElementById("feed");
+        if(!feed) return;
+        
+        // 1. Clear and Show Loading
+        feed.innerHTML = "<div style='text-align:center; padding:20px; color:#666;'>Loading posts...</div>";
+        
+        // 2. Query Database (Safe Version)
+        // Note: If you see an error about 'indexes', check your console
+        const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const feed = document.getElementById("feed");
+            feed.innerHTML = ""; // Clear loading text
+            
+            if (snapshot.empty) {
+                feed.innerHTML = "<div style='text-align:center; padding:40px; color:#888;'>No posts yet. Be the first!</div>";
+                return;
+            }
+
+            snapshot.forEach((docSnap) => {
+                const post = docSnap.data();
+                const id = docSnap.id;
+                
+                const div = document.createElement("div");
+                div.className = "post";
+                div.id = `post-${id}`;
+                
+                // Use your fancy post builder if it exists, otherwise use simple mode
+                if(window.getPostHTML) {
+                    div.innerHTML = window.getPostHTML(id, post);
+                } else {
+                    div.innerHTML = `
+                        <div class="user-header"><b>${post.username}</b></div>
+                        <div class="content">${post.text}</div>
+                    `;
+                }
+                feed.appendChild(div);
+            });
+        }, (error) => {
+            console.error("Feed Error:", error);
+            // Fallback: If sorting fails, try loading without sort
+            if(error.code === 'failed-precondition') {
+                console.log("Retrying feed without sort...");
+                loadFeedFallback();
+            }
+        });
+    };
+
+    window.loadFeedFallback = () => {
+        onSnapshot(collection(db, "posts"), (snapshot) => {
+            const feed = document.getElementById("feed");
+            feed.innerHTML = "";
+            snapshot.forEach((docSnap) => {
+                const post = docSnap.data();
+                const div = document.createElement("div");
+                div.className = "post";
+                div.innerHTML = window.getPostHTML ? window.getPostHTML(docSnap.id, post) : post.text;
+                feed.appendChild(div);
+            });
+        });
+    };
+
+    // --- 2. RESTORE CHATS ---
+    window.loadChatList = () => {
+        const list = document.getElementById("chat-list");
+        if(!list || !currentUser) return;
+        
+        const q = query(collection(db, "chats"), where("participants", "array-contains", currentUser.uid));
+        
+        onSnapshot(q, (snapshot) => {
+            list.innerHTML = "";
+            if (snapshot.empty) {
+                list.innerHTML = "<div style='padding:20px; text-align:center; color:#666;'>No active chats</div>";
+                return;
+            }
+            
+            snapshot.forEach(async (docSnap) => {
+                const chat = docSnap.data();
+                const otherId = chat.participants.find(id => id !== currentUser.uid);
+                
+                // Get other user's name
+                let otherName = "User";
+                let otherPic = "";
+                const uDoc = await getDoc(doc(db, "users", otherId));
+                if(uDoc.exists()) {
+                    otherName = uDoc.data().name;
+                    otherPic = uDoc.data().pic;
+                }
+
+                const div = document.createElement("div");
+                div.className = "chat-item";
+                div.onclick = () => window.openChatWindow(docSnap.id, otherId);
+                div.innerHTML = `
+                    <div class="avatar" style="background-image:url('${otherPic}'); width:40px; height:40px;"></div>
+                    <div class="chat-info">
+                        <h4>${otherName}</h4>
+                        <span>Open Chat</span>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        });
+    };
+
+    // --- 3. RESTORE NOTIFICATIONS ---
+    window.listenForNotifications = () => {
+        if(!currentUser) return;
+        const notifList = document.getElementById("notifications-list");
+        const badge = document.getElementById("notif-badge");
+        
+        const q = query(collection(db, "users", currentUser.uid, "notifications"), orderBy("timestamp", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            if(notifList) notifList.innerHTML = "";
+            let unread = 0;
+            
+            snapshot.forEach(d => {
+                const n = d.data();
+                if(!n.read) unread++;
+                if(notifList) {
+                    const item = document.createElement("div");
+                    item.className = "notif-item";
+                    item.innerHTML = `
+                        <div style="font-weight:bold;">${n.text}</div>
+                        <div style="font-size:10px; opacity:0.7;">${new Date(n.timestamp).toLocaleTimeString()}</div>
+                    `;
+                    notifList.appendChild(item);
+                }
+            });
+            
+            if(badge) {
+                badge.innerText = unread;
+                badge.style.display = unread > 0 ? "block" : "none";
+            }
+        });
+    };
+    
+    // --- 4. START EVERYTHING IF LOGGED IN ---
+    if(window.currentUser) {
+        window.loadFeed();
+        window.loadChatList();
+        window.listenForNotifications();
+    }
  </script>
 </body>
 </html>
