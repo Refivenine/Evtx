@@ -370,7 +370,9 @@
 
     const CLOUD_NAME = "dcuhf22ke";
     const UPLOAD_PRESET = "evtx_preset";
-    const ADMIN_EMAIL = "refivenine@gmail.com";
+    
+    // *** ADMIN CONFIGURATION ***
+    const ADMIN_EMAIL = "hrangategamer@gmail.com"; // <--- MAKE SURE THIS IS YOUR EMAIL
 
     // --- 3. INITIALIZE APP ---
     const app = initializeApp(firebaseConfig);
@@ -459,13 +461,23 @@
         });
     };
 
-    // --- 9. POST HTML BUILDER ---
+    // --- 9. POST HTML BUILDER (ADMIN FIXED) ---
     window.getPostHTML = (id, p, suffix = "") => {
+        // 1. Identify User & Admin
         const isMe = currentUser && (p.uid === currentUser.uid);
-        const delBtn = isMe ? `<button onclick="deletePost('${id}')" class="act-btn" style="color:#ff3300;">🗑️</button>` : "";
-        const isA = p.userEmail === ADMIN_EMAIL; 
-        const b = isA ? `<span style="color:#ffd700; margin-left:4px;">👑</span>` : "";
-        let as = ""; if(isA) as = "background-image:url('https://refivenine.github.io/Evtx/logo.png'); border-color:#ffd700;"; else if(p.userPic) as = `background-image:url('${p.userPic}')`;
+        const isA = currentUser && (currentUser.email === ADMIN_EMAIL); // Check if YOU are admin
+        
+        // 2. Delete Button Logic (Show if it's YOUR post OR you are ADMIN)
+        const delBtn = (isMe || isA) ? `<button onclick="deletePost('${id}')" class="act-btn" style="color:#ff3300;">🗑️</button>` : "";
+        
+        // 3. Admin Badge (Check if the POST AUTHOR is admin)
+        const postIsAdmin = p.userEmail === ADMIN_EMAIL;
+        const b = postIsAdmin ? `<span title="Verified Admin" style="color:#888; margin-left:4px; font-size:14px; vertical-align:middle;">☑️</span>` : "";
+        
+        let as = ""; 
+        if(postIsAdmin) as = "background-image:url('https://refivenine.github.io/Evtx/logo.png'); border-color:#888;"; 
+        else if(p.userPic) as = `background-image:url('${p.userPic}')`;
+
         let media = ""; if (p.videoUrl) media = `<video src="${p.videoUrl}" controls class="post-video-frame"></video>`; else if (p.imageUrl) media = `<img src="${p.imageUrl}" class="post-img">`;
         let voiceHTML = ""; if (p.voiceNotes && Array.isArray(p.voiceNotes)) { voiceHTML = `<div style="margin-top:10px; padding:8px; background:rgba(0,0,0,0.3); border-radius:10px;">`; p.voiceNotes.forEach(note => { voiceHTML += `<div style="display:flex; align-items:center; margin-bottom:5px;"><span style="font-size:10px; color:#bf00ff; margin-right:5px;">${note.name}:</span><audio controls src="${note.url}" style="height:25px; width:180px;"></audio></div>`; }); voiceHTML += `</div>`; }
         const safeLikes = Array.isArray(p.likes) ? p.likes : [];
@@ -476,18 +488,14 @@
         return `<div class="user-header"><div class="avatar" style="${as}" onclick="openUserProfile('${p.uid}')"></div><div class="user-meta" onclick="openUserProfile('${p.uid}')"><h4>${p.username} ${b}</h4><span>${p.userBio || "Member"}</span></div></div><div class="content">${p.text}</div>${media}${voiceHTML}<div class="actions"><button class="${lc}" onclick="likePost('${id}')"><svg class="icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>${safeLikes.length}</span></button><button class="act-btn" onclick="toggleComments('${commentSectionId}')"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${safeComments.length}</span></button><button class="act-btn" onclick="sharePost('${id}', '${p.username}', '${p.uid}')"><svg class="icon" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg></button>${delBtn}</div><div id="${commentSectionId}" class="comments-section" style="display:none;"><div style="display:flex; gap:10px; margin-bottom:10px;"><input id="${inputId}" type="text" class="mini-input" placeholder="Write a comment..."><button onclick="addComment('${id}', '${inputId}')" class="main-btn" style="padding:5px 15px; font-size:12px;">Send</button></div><div style="max-height:200px; overflow-y:auto; font-size:13px; color:#ccc;">${safeComments.map(c => `<div style="margin-bottom:8px; padding:8px; background:rgba(255,255,255,0.05); border-radius:10px;"><b style="color:#bf00ff;">${c.username}:</b> ${c.text}</div>`).join('')}${safeComments.length === 0 ? '<div style="opacity:0.5;">No comments yet.</div>' : ''}</div></div>`;
     };
 
-    // --- 10. NOTIFICATIONS (SMART ROUTER FIXED) ---
+    // --- 10. NOTIFICATIONS ---
     window.listenForNotifications = () => {
         if(!currentUser) return;
-        const notifList = document.getElementById("notif-list"); 
-        const badge = document.getElementById("notif-badge");
-        
+        const notifList = document.getElementById("notif-list"); const badge = document.getElementById("notif-badge");
         const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid));
         
         onSnapshot(q, (snapshot) => {
-            if(notifList) notifList.innerHTML = ""; 
-            let unread = 0;
-            
+            if(notifList) notifList.innerHTML = ""; let unread = 0;
             let allNotifs = [];
             snapshot.forEach(d => allNotifs.push({id: d.id, ...d.data()}));
             allNotifs.sort((a, b) => (b.time ? b.time.toMillis() : 0) - (a.time ? a.time.toMillis() : 0));
@@ -507,29 +515,17 @@
                             <span class="notif-user-link"><b>${n.sender}</b></span> ${n.text}
                         </div>`;
                     
-                    // *** THE SMART ROUTER ***
                     item.onclick = async () => { 
-                        // 1. Mark Read
                         if(!n.read) try { await updateDoc(doc(db,"notifications",n.id),{read:true}); } catch(e){}
-                        
-                        // 2. Route Logic
                         if (n.type === 'friend_req' || n.type === 'friend_accept') {
-                            // FRIEND: Go to Profile
-                            if(n.senderUid) {
-                                openUserProfile(n.senderUid);
-                            } else {
-                                // Fallback: Search user by name if ID is missing (Legacy data fix)
+                            if(n.senderUid) { openUserProfile(n.senderUid); } 
+                            else {
                                 const uq = query(collection(db, "users"), where("name", "==", n.sender));
                                 const usnap = await getDocs(uq);
                                 if (!usnap.empty) openUserProfile(usnap.docs[0].id);
                             }
-                        } else if (n.postId) {
-                            // POST: Go to Post
-                            openSinglePost(n.postId); 
-                        } else {
-                            // DEFAULT: Try to go to sender profile
-                            if(n.senderUid) openUserProfile(n.senderUid);
-                        }
+                        } else if (n.postId) { openSinglePost(n.postId); } 
+                        else { if(n.senderUid) openUserProfile(n.senderUid); }
                     };
                     notifList.appendChild(item);
                 }
@@ -648,7 +644,7 @@
 
     window.closeChat=()=>{document.getElementById("chat-room").classList.add("hidden");currentChatId=null; selectedChatFile=null;};
 
-    // --- 13. INTERACTIONS (FIXED SENDER UID) ---
+    // --- 13. INTERACTIONS ---
     window.createNotification = async (t,y,pid) => { 
         if(!t||t===currentUser.uid)return; 
         let txt="interacted."; 
@@ -661,7 +657,7 @@
         await addDoc(collection(db,"notifications"),{
             recipient:t, 
             sender:currentUserName, 
-            senderUid:currentUser.uid, // Ensuring this is saved!
+            senderUid:currentUser.uid, 
             type:y, 
             text:txt, 
             postId:pid, 
@@ -752,24 +748,7 @@
     let profileUnsub = null;
     window.openUserProfile = async (uid) => { if(!uid) return; currentUserViewing = uid; window.switchTab('user-view'); window.switchProfileTab('posts'); if (profileUnsub) profileUnsub(); const isMe = (uid === currentUser.uid); const msgBtn = document.getElementById("message-user-btn"); const frndBtn = document.getElementById("friend-user-btn"); if (isMe) { msgBtn.style.display = "none"; frndBtn.style.display = "none"; } else { msgBtn.style.display = "inline-block"; frndBtn.style.display = "inline-block"; msgBtn.onclick = () => startChat(uid); frndBtn.onclick = () => toggleFriend(uid); } document.getElementById("view-name").innerText="Loading..."; document.getElementById("view-pic").style.backgroundImage="none"; if(friendListener) friendListener(); if (!isMe) { friendListener = onSnapshot(doc(db,"users",currentUser.uid),(doc)=>{ if(doc.exists()){ const me=doc.data(); const btn=document.getElementById("friend-user-btn"); if(me.friends?.includes(uid)){btn.innerText="Friends";btn.className="friend-btn friends"} else if(me.requestsSent?.includes(uid)){btn.innerText="Request Sent";btn.className="friend-btn requested"} else if(me.requestsReceived?.includes(uid)){btn.innerText="Accept Request";btn.className="friend-btn accept"} else{btn.innerText="Add Friend";btn.className="friend-btn add"} } }); } const d=await getDoc(doc(db,"users",uid)); if(d.exists()){ const u=d.data(); document.getElementById("view-name").innerText=u.name; document.getElementById("view-nick").innerText=u.nickname; document.getElementById("view-bio").innerText=u.bio; document.getElementById("view-country").innerText="🏳️ "+(u.country||"Earth"); if(u.pic)document.getElementById("view-pic").style.backgroundImage=`url('${u.pic}')`; if(u.coverPic)document.getElementById("view-cover").style.backgroundImage=`url('${u.coverPic}')`; const c = u.themeColor || "#bf00ff"; document.getElementById('view-cover').style.borderBottomColor = c; document.getElementById('view-nick').style.color = c; document.getElementById('message-user-btn').style.background = c; } const p = document.getElementById("user-posts-feed"); p.innerHTML = "<div style='padding:20px; text-align:center;'>Loading posts...</div>"; const q = query(postsRef); profileUnsub = onSnapshot(q, (snapshot) => { p.innerHTML = ""; let count = 0; let allPosts = []; snapshot.forEach(docSnap => { const x = docSnap.data(); const id = docSnap.id; if(x.uid === uid || x.author === uid || x.userId === uid || x.user === uid){ allPosts.push({id: id, data: x}); } }); allPosts.sort((a, b) => { const timeA = a.data.createdAt ? a.data.createdAt.toMillis() : 0; const timeB = b.data.createdAt ? b.data.createdAt.toMillis() : 0; return timeB - timeA; }); allPosts.forEach(post => { count++; const e = document.createElement("div"); e.className = "post"; e.id = `profile-post-${post.id}`; e.innerHTML = getPostHTML(post.id, post.data, '-profile'); p.appendChild(e); }); if(count === 0) p.innerHTML = "<div style='text-align:center;padding:20px;color:#888;'>No posts found for this user.</div>"; }); };
     window.switchProfileTab = (tab) => { document.querySelectorAll('.p-tab-btn').forEach(b => b.classList.remove('p-tab-active')); document.getElementById('pt-'+tab).classList.add('p-tab-active'); document.querySelectorAll('.p-content-box').forEach(b => b.classList.add('hidden')); if(tab === 'posts') document.getElementById('user-posts-feed').classList.remove('hidden'); if(tab === 'images') { document.getElementById('user-images-feed').classList.remove('hidden'); loadUserMedia(currentUserViewing); } if(tab === 'friends') { document.getElementById('user-friends-list').classList.remove('hidden'); loadUserFriends(currentUserViewing); } };
-    
-    // *** EXPANDED FRIEND LOGIC ***
-    window.toggleFriend=async(tid)=>{ 
-        const my=doc(db,"users",currentUser.uid); 
-        const tr=doc(db,"users",tid); 
-        const s=document.getElementById("friend-user-btn").innerText; 
-        
-        if(s==="Add Friend"){
-            await updateDoc(my,{requestsSent:arrayUnion(tid)});
-            await updateDoc(tr,{requestsReceived:arrayUnion(currentUser.uid)}); 
-            createNotification(tid, 'friend_req', null); 
-        } else if(s==="Accept Request"){
-            await updateDoc(my,{friends:arrayUnion(tid),requestsReceived:arrayRemove(tid)});
-            await updateDoc(tr,{friends:arrayUnion(currentUser.uid),requestsSent:arrayRemove(currentUser.uid)}); 
-            createNotification(tid, 'friend_accept', null); 
-        } 
-    };
-    
+    window.toggleFriend=async(tid)=>{ const my=doc(db,"users",currentUser.uid); const tr=doc(db,"users",tid); const s=document.getElementById("friend-user-btn").innerText; if(s==="Add Friend"){await updateDoc(my,{requestsSent:arrayUnion(tid)});await updateDoc(tr,{requestsReceived:arrayUnion(currentUser.uid)}); createNotification(tid, 'friend_req', null); }else if(s==="Accept Request"){await updateDoc(my,{friends:arrayUnion(tid),requestsReceived:arrayRemove(tid)});await updateDoc(tr,{friends:arrayUnion(currentUser.uid),requestsSent:arrayRemove(currentUser.uid)}); createNotification(tid, 'friend_accept', null); } };
     async function loadUserFriends(uid){const c=document.getElementById('user-friends-list'); c.innerHTML="Loading..."; const u=await getDoc(doc(db,"users",uid)); const f=u.data().friends||[]; c.innerHTML=""; if(f.length===0)c.innerHTML="No friends."; for(const fid of f){const fd=await getDoc(doc(db,"users",fid)); if(fd.exists()){const ff=fd.data(); const d=document.createElement("div"); d.className="friend-item"; d.innerHTML=`<div class="avatar" style="background-image:url('${ff.pic||''}')"></div><div style="flex:1;margin-left:10px;color:#fff;"><b>${ff.name}</b></div><button class="btn" style="color:var(--app-color);" onclick="openUserProfile('${fid}')">View</button>`; c.appendChild(d);}}}
     async function loadUserMedia(uid) { const container = document.getElementById('user-images-feed'); container.innerHTML = "<div style='grid-column:1/-1;text-align:center;padding:20px;color:#555;'>Loading...</div>"; const s = await getDocs(query(postsRef, orderBy("createdAt", "desc"))); container.innerHTML = ""; let count = 0; s.forEach(d => { const x = d.data(); if(x.uid === uid && (x.imageUrl || x.videoUrl)) { count++; if(x.imageUrl) { const i=document.createElement("img"); i.className="grid-img"; i.src=x.imageUrl; i.onclick=()=>window.open(x.imageUrl,'_blank'); container.appendChild(i); } else if(x.videoUrl) { const v=document.createElement("div"); v.className="grid-img"; v.style.display="flex"; v.style.alignItems="center"; v.style.justifyContent="center"; v.innerHTML="📹"; v.onclick=()=>window.open(x.videoUrl,'_blank'); container.appendChild(v); } }}); if(count === 0) container.innerHTML = "<div style='grid-column:1/-1;text-align:center;padding:20px;color:#555;'>No media shared.</div>"; }
     window.loadNews = async () => { const feed = document.getElementById('news-feed'); feed.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">📡 AI Scanning Global Frequencies...</div>'; try { const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml'); const data = await res.json(); if(data.status !== 'ok') throw new Error('Signal lost'); feed.innerHTML = ''; data.items.forEach(item => { let tag = "General"; const txt = item.title + item.description; if(txt.match(/war|conflict|attack|military/i)) tag = "Conflict"; else if(txt.match(/tech|ai|cyber|data/i)) tag = "Technology"; else if(txt.match(/money|market|economy/i)) tag = "Finance"; else if(txt.match(/climate|storm|earth/i)) tag = "Environment"; else if(txt.match(/politics|election|law/i)) tag = "Politics"; const card = document.createElement('div'); card.className = 'news-card'; card.innerHTML = `<img src="${item.thumbnail || 'https://refivenine.github.io/Evtx/logo.png'}" class="news-img" onerror="this.style.display='none'"><div class="news-content"><span class="news-ai-tag">${tag}</span><h4 class="news-title"><a href="${item.link}" target="_blank" style="color:#fff;text-decoration:none;">${item.title}</a></h4><div class="news-desc">${item.description.replace(/<[^>]*>?/gm, '')}</div><div class="news-meta"><span>Source: BBC World</span><span>${item.pubDate.split(' ')[0]}</span></div></div>`; feed.appendChild(card); }); } catch(e) { feed.innerHTML = '<div style="padding:20px;text-align:center;color:#cc0000;">⚠️ Uplink Failed. Retrying...</div>'; } };
