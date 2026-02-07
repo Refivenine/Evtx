@@ -476,20 +476,57 @@
         return `<div class="user-header"><div class="avatar" style="${as}" onclick="openUserProfile('${p.uid}')"></div><div class="user-meta" onclick="openUserProfile('${p.uid}')"><h4>${p.username} ${b}</h4><span>${p.userBio || "Member"}</span></div></div><div class="content">${p.text}</div>${media}${voiceHTML}<div class="actions"><button class="${lc}" onclick="likePost('${id}')"><svg class="icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>${safeLikes.length}</span></button><button class="act-btn" onclick="toggleComments('${commentSectionId}')"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${safeComments.length}</span></button><button class="act-btn" onclick="sharePost('${id}')"><svg class="icon" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg></button>${delBtn}</div><div id="${commentSectionId}" class="comments-section" style="display:none;"><div style="display:flex; gap:10px; margin-bottom:10px;"><input id="${inputId}" type="text" class="mini-input" placeholder="Write a comment..."><button onclick="addComment('${id}', '${inputId}')" class="main-btn" style="padding:5px 15px; font-size:12px;">Send</button></div><div style="max-height:200px; overflow-y:auto; font-size:13px; color:#ccc;">${safeComments.map(c => `<div style="margin-bottom:8px; padding:8px; background:rgba(255,255,255,0.05); border-radius:10px;"><b style="color:#bf00ff;">${c.username}:</b> ${c.text}</div>`).join('')}${safeComments.length === 0 ? '<div style="opacity:0.5;">No comments yet.</div>' : ''}</div></div>`;
     };
 
-    // --- 10. NOTIFICATIONS ---
+    // --- 10. NOTIFICATIONS (FIXED: INSTANT LOAD + SMART CLICK) ---
     window.listenForNotifications = () => {
         if(!currentUser) return;
-        const notifList = document.getElementById("notif-list"); const badge = document.getElementById("notif-badge");
-        const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid), orderBy("time", "desc"));
+        const notifList = document.getElementById("notif-list"); 
+        const badge = document.getElementById("notif-badge");
+        
+        // Removed 'orderBy' to fix empty screen bug. We sort in JS instead.
+        const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid));
+        
         onSnapshot(q, (snapshot) => {
-            if(notifList) notifList.innerHTML = ""; let unread = 0;
-            if (snapshot.empty && notifList) notifList.innerHTML = "<div style='text-align:center;padding:20px;color:#555;'>No new notifications.</div>";
-            snapshot.forEach(d => {
-                const n = d.data(); if(!n.read) unread++;
+            if(notifList) notifList.innerHTML = ""; 
+            let unread = 0;
+            
+            // Convert to array and sort manually (Newest first)
+            let allNotifs = [];
+            snapshot.forEach(d => allNotifs.push({id: d.id, ...d.data()}));
+            allNotifs.sort((a, b) => {
+                const ta = a.time ? a.time.toMillis() : 0;
+                const tb = b.time ? b.time.toMillis() : 0;
+                return tb - ta;
+            });
+
+            if (allNotifs.length === 0 && notifList) notifList.innerHTML = "<div style='text-align:center;padding:20px;color:#555;'>No new notifications.</div>";
+            
+            allNotifs.forEach(n => {
+                if(!n.read) unread++;
                 if(notifList) {
-                    const item = document.createElement("div"); item.className = `notif-item ${n.read?'':'unread'}`;
-                    item.innerHTML = `<div class="notif-icon" style="font-size:20px;margin-right:15px;">${n.type==='like'?'❤️':n.type==='comment'?'💬':'🔔'}</div><div class="notif-text"><span class="notif-user-link"><b>${n.sender}</b></span> ${n.text}</div>`;
-                    item.onclick = async () => { if(!n.read) updateDoc(doc(db,"notifications",d.id),{read:true}); if(n.postId) openSinglePost(n.postId); };
+                    const item = document.createElement("div"); 
+                    item.className = `notif-item ${n.read?'':'unread'}`;
+                    item.innerHTML = `
+                        <div class="notif-icon" style="font-size:20px;margin-right:15px;">
+                            ${n.type==='like'?'❤️':(n.type==='comment'?'💬':(n.type==='share'?'🔄':'👥'))}
+                        </div>
+                        <div class="notif-text">
+                            <span class="notif-user-link"><b>${n.sender}</b></span> ${n.text}
+                        </div>`;
+                    
+                    // *** SMART ROUTING LOGIC ***
+                    item.onclick = async () => { 
+                        // 1. Mark as read
+                        if(!n.read) try { await updateDoc(doc(db,"notifications",n.id),{read:true}); } catch(e){}
+                        
+                        // 2. Decide where to go
+                        if (n.type === 'friend_req' || n.type === 'friend_accept') {
+                            // Go to User Profile
+                            if(n.senderUid) openUserProfile(n.senderUid);
+                        } else if (n.postId) {
+                            // Go to Post
+                            openSinglePost(n.postId); 
+                        }
+                    };
                     notifList.appendChild(item);
                 }
             });
@@ -608,7 +645,7 @@
     window.closeChat=()=>{document.getElementById("chat-room").classList.add("hidden");currentChatId=null; selectedChatFile=null;};
 
     // --- 13. INTERACTIONS ---
-    window.createNotification = async (t,y,pid) => { if(!t||t===currentUser.uid)return; let txt="interacted."; if(y==='like')txt="liked your post."; if(y==='comment')txt="commented."; await addDoc(collection(db,"notifications"),{recipient:t, sender:currentUserName, senderUid:currentUser.uid, type:y, text:txt, postId:pid, read:false, time:serverTimestamp()}); };
+    window.createNotification = async (t,y,pid) => { if(!t||t===currentUser.uid)return; let txt="interacted."; if(y==='like')txt="liked your post."; if(y==='comment')txt="commented."; if(y==='share')txt="shared your post."; if(y==='friend_req')txt="sent a friend request."; if(y==='friend_accept')txt="accepted your friend request."; await addDoc(collection(db,"notifications"),{recipient:t, sender:currentUserName, senderUid:currentUser.uid, type:y, text:txt, postId:pid, read:false, time:serverTimestamp()}); };
 
     window.likePost = async (postId) => {
         if(!currentUser) return;
@@ -632,10 +669,15 @@
     };
 
     window.deletePost = async (postId) => { if(confirm("Delete this post?")) { await deleteDoc(doc(db, "posts", postId)); } };
-    window.sharePost = () => { navigator.clipboard.writeText(window.location.href); alert("Link copied!"); };
+    window.sharePost = async (id, uname, uid) => { 
+        navigator.clipboard.writeText(window.location.href); 
+        alert("Link copied!");
+        // Optional: Notify the user that their post was shared
+        if(uid) createNotification(uid, 'share', id);
+    };
     window.toggleComments = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display==="none")?"block":"none"; };
 
-    // --- 14. POSTING LOGIC & PROFILE (FIXED SAVE LOGIC) ---
+    // --- 14. POSTING LOGIC & PROFILE ---
     function initCrop(file, target) { const reader = new FileReader(); reader.onload = (e) => { const img = document.getElementById('image-to-crop'); img.src = e.target.result; document.getElementById('cropper-modal').classList.remove('hidden'); cropTarget = target; if(cropper) cropper.destroy(); let ratio = NaN; if(target === 'pic') ratio = 1; if(target === 'cover') ratio = 16/9; cropper = new Cropper(img, { aspectRatio: ratio, viewMode: 1, autoCropArea: 1, background: false }); }; reader.readAsDataURL(file); }
     window.performCrop = () => { if(!cropper) return; const canvas = cropper.getCroppedCanvas({ maxWidth: 800, maxHeight: 800 }); const url = canvas.toDataURL('image/jpeg', 0.8); if(cropTarget === 'post') { finalPostImage = url; selectedVideoFile = null; document.getElementById('mediaPreview').innerHTML = `<img src="${url}" style="height:50px; border-radius:5px;">`; } else if (cropTarget === 'pic') { finalProfilePic = url; document.getElementById('my-pic').style.backgroundImage = `url('${url}')`; } else if (cropTarget === 'cover') { finalCoverPic = url; document.getElementById('my-cover-pic').style.backgroundImage = `url('${url}')`; } cancelCrop(); };
     window.cancelCrop = () => { document.getElementById('cropper-modal').classList.add('hidden'); if(cropper) { cropper.destroy(); cropper = null; } document.getElementById('fileInput').value = ""; document.getElementById('profilePicInput').value = ""; document.getElementById('coverPicInput').value = ""; };
@@ -656,51 +698,25 @@
         } catch (err) { alert("Error: " + err.message); btn.innerText="Post"; } 
     });
 
-    // *** FIX: ROBUST PROFILE SAVE + POST UPDATER ***
     document.getElementById("saveProfileBtn").addEventListener("click", async () => { 
-        const b = document.getElementById("saveProfileBtn"); 
-        b.innerText = "Saving...";
-        
+        const b = document.getElementById("saveProfileBtn"); b.innerText = "Saving...";
         try {
-            const d = { 
-                name: document.getElementById('p-name').value, 
-                nickname: document.getElementById('p-nickname').value, 
-                bio: document.getElementById('p-bio').value, 
-                country: document.getElementById('p-country').value, 
-                themeColor: document.getElementById('p-theme').value 
-            };
-
+            const d = { name: document.getElementById('p-name').value, nickname: document.getElementById('p-nickname').value, bio: document.getElementById('p-bio').value, country: document.getElementById('p-country').value, themeColor: document.getElementById('p-theme').value };
             if (finalProfilePic) d.pic = await uploadToCloudinary(finalProfilePic); 
             if (finalCoverPic) d.coverPic = await uploadToCloudinary(finalCoverPic);
-            
-            // 1. Update User Profile
             await setDoc(doc(db, "users", currentUser.uid), d, { merge: true });
+            currentUserName = d.name; applyTheme(d.themeColor);
             
-            // 2. Update Global Variables
-            currentUserName = d.name; 
-            applyTheme(d.themeColor);
-
-            // 3. Batch Update ALL Old Posts
             const q = query(postsRef, where("uid", "==", currentUser.uid)); 
             const querySnapshot = await getDocs(q); 
-            
             const updatePromises = [];
             const updates = { username: d.name, userBio: d.nickname };
-            if (d.pic) updates.userPic = d.pic; // Only update pic if changed
-
-            querySnapshot.forEach((docSnap) => {
-                updatePromises.push(updateDoc(docSnap.ref, updates));
-            });
-            
+            if (d.pic) updates.userPic = d.pic;
+            querySnapshot.forEach((docSnap) => { updatePromises.push(updateDoc(docSnap.ref, updates)); });
             await Promise.all(updatePromises);
             
-            b.innerText = "✅ Saved"; 
-            setTimeout(() => b.innerText = "💾 Save Changes", 2000);
-        } catch (e) {
-            console.error(e);
-            alert("Save failed: " + e.message);
-            b.innerText = "💾 Save Changes";
-        }
+            b.innerText = "✅ Saved"; setTimeout(() => b.innerText = "💾 Save Changes", 2000);
+        } catch (e) { console.error(e); alert("Save failed: " + e.message); b.innerText = "💾 Save Changes"; }
     });
     
     document.getElementById("viewMyProfileBtn").addEventListener("click", () => openUserProfile(currentUser.uid));
