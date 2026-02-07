@@ -493,7 +493,6 @@
         if (p.videoUrl) media = `<video src="${p.videoUrl}" controls class="post-video-frame"></video>`;
         else if (p.imageUrl) media = `<img src="${p.imageUrl}" class="post-img">`;
 
-        // Voice Notes Display (No button)
         let voiceHTML = "";
         if (p.voiceNotes && Array.isArray(p.voiceNotes)) {
             voiceHTML = `<div style="margin-top:10px; padding:8px; background:rgba(0,0,0,0.3); border-radius:10px;">`;
@@ -599,7 +598,6 @@
     // --- 12. INTERACTIONS ---
     window.createNotification = async (t,y,pid) => { if(!t||t===currentUser.uid)return; let txt="interacted."; if(y==='like')txt="liked your post."; if(y==='comment')txt="commented."; await addDoc(collection(db,"notifications"),{recipient:t, sender:currentUserName, senderUid:currentUser.uid, type:y, text:txt, postId:pid, read:false, time:serverTimestamp()}); };
 
-    // *** LIKE / UNLIKE LOGIC (FIXED) ***
     window.likePost = async (postId) => {
         if(!currentUser) return;
         const postRef = doc(db, "posts", postId);
@@ -609,10 +607,8 @@
             const likes = Array.isArray(d.likes) ? d.likes : [];
             
             if(likes.includes(currentUser.uid)) {
-                // UNLIKE (Remove User)
                 await updateDoc(postRef, { likes: arrayRemove(currentUser.uid) });
             } else {
-                // LIKE (Add User)
                 await updateDoc(postRef, { likes: arrayUnion(currentUser.uid) });
                 createNotification(d.uid, 'like', postId);
             }
@@ -668,6 +664,9 @@
         s.forEach(async doc => await updateDoc(doc.ref, { username: d.name, userPic: d.pic }));
         applyTheme(d.themeColor); b.innerText = "✅ Saved"; setTimeout(() => b.innerText = "💾 Save Changes", 2000); 
     });
+    
+    // *** FIX: ADDED THIS LISTENER BACK SO PROFILE BUTTON WORKS ***
+    document.getElementById("viewMyProfileBtn").addEventListener("click", () => openUserProfile(currentUser.uid));
 
     // Helpers
     window.switchTab=(t)=>{document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden'));document.getElementById('tab-'+t).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('nav-active'));if(t==='home')document.querySelectorAll('.nav-item')[0].classList.add('nav-active');if(t==='news'){document.querySelectorAll('.nav-item')[1].classList.add('nav-active'); loadNews();}if(t==='chats')document.querySelectorAll('.nav-item')[2].classList.add('nav-active');if(t==='search')document.querySelectorAll('.nav-item')[3].classList.add('nav-active');if(t==='notifs')document.querySelectorAll('.nav-item')[4].classList.add('nav-active');if(t==='profile')document.querySelectorAll('.nav-item')[5].classList.add('nav-active');};
@@ -726,6 +725,10 @@
     async function loadUserFriends(uid){const c=document.getElementById('user-friends-list'); c.innerHTML="Loading..."; const u=await getDoc(doc(db,"users",uid)); const f=u.data().friends||[]; c.innerHTML=""; if(f.length===0)c.innerHTML="No friends."; for(const fid of f){const fd=await getDoc(doc(db,"users",fid)); if(fd.exists()){const ff=fd.data(); const d=document.createElement("div"); d.className="friend-item"; d.innerHTML=`<div class="avatar" style="background-image:url('${ff.pic||''}')"></div><div style="flex:1;margin-left:10px;color:#fff;"><b>${ff.name}</b></div><button class="btn" style="color:var(--app-color);" onclick="openUserProfile('${fid}')">View</button>`; c.appendChild(d);}}}
     async function loadUserMedia(uid) { const container = document.getElementById('user-images-feed'); container.innerHTML = "<div style='grid-column:1/-1;text-align:center;padding:20px;color:#555;'>Loading...</div>"; const s = await getDocs(query(postsRef, orderBy("createdAt", "desc"))); container.innerHTML = ""; let count = 0; s.forEach(d => { const x = d.data(); if(x.uid === uid && (x.imageUrl || x.videoUrl)) { count++; if(x.imageUrl) { const i=document.createElement("img"); i.className="grid-img"; i.src=x.imageUrl; i.onclick=()=>window.open(x.imageUrl,'_blank'); container.appendChild(i); } else if(x.videoUrl) { const v=document.createElement("div"); v.className="grid-img"; v.style.display="flex"; v.style.alignItems="center"; v.style.justifyContent="center"; v.innerHTML="📹"; v.onclick=()=>window.open(x.videoUrl,'_blank'); container.appendChild(v); } }}); if(count === 0) container.innerHTML = "<div style='grid-column:1/-1;text-align:center;padding:20px;color:#555;'>No media shared.</div>"; }
     window.loadNews = async () => { const feed = document.getElementById('news-feed'); feed.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">📡 AI Scanning Global Frequencies...</div>'; try { const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml'); const data = await res.json(); if(data.status !== 'ok') throw new Error('Signal lost'); feed.innerHTML = ''; data.items.forEach(item => { let tag = "General"; const txt = item.title + item.description; if(txt.match(/war|conflict|attack|military/i)) tag = "Conflict"; else if(txt.match(/tech|ai|cyber|data/i)) tag = "Technology"; else if(txt.match(/money|market|economy/i)) tag = "Finance"; else if(txt.match(/climate|storm|earth/i)) tag = "Environment"; else if(txt.match(/politics|election|law/i)) tag = "Politics"; const card = document.createElement('div'); card.className = 'news-card'; card.innerHTML = `<img src="${item.thumbnail || 'https://refivenine.github.io/Evtx/logo.png'}" class="news-img" onerror="this.style.display='none'"><div class="news-content"><span class="news-ai-tag">${tag}</span><h4 class="news-title"><a href="${item.link}" target="_blank" style="color:#fff;text-decoration:none;">${item.title}</a></h4><div class="news-desc">${item.description.replace(/<[^>]*>?/gm, '')}</div><div class="news-meta"><span>Source: BBC World</span><span>${item.pubDate.split(' ')[0]}</span></div></div>`; feed.appendChild(card); }); } catch(e) { feed.innerHTML = '<div style="padding:20px;text-align:center;color:#cc0000;">⚠️ Uplink Failed. Retrying...</div>'; } };
+    
+    // Voice
+    let mediaRecorder; let audioChunks = []; let activeRecordingId = null;
+    window.toggleVoiceRecording = async (postId) => { const btn=document.getElementById(`mic-btn-${postId}`); const st=document.getElementById(`mic-status-${postId}`); if(activeRecordingId===postId && mediaRecorder?.state==="recording"){ mediaRecorder.stop(); btn.style.color=""; st.innerText="Sending..."; activeRecordingId=null; return; } if(activeRecordingId){alert("Already recording!");return;} try{ const stream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder=new MediaRecorder(stream); audioChunks=[]; activeRecordingId=postId; btn.style.color="red"; st.innerText="Recording..."; mediaRecorder.ondataavailable=e=>audioChunks.push(e.data); mediaRecorder.onstop=async()=>{ const blob=new Blob(audioChunks,{type:'audio/webm'}); const url=URL.createObjectURL(blob); await updateDoc(doc(db,"posts",postId),{voiceNotes:arrayUnion({url:url,name:currentUserName})}); st.innerText="Voice"; }; mediaRecorder.start(); }catch(e){alert("Mic Error");} };
 </script>
 </body>
 </html>
