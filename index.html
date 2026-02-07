@@ -1139,6 +1139,53 @@ let profileUnsub = null;
         window.sharePost = (id) => {
             navigator.clipboard.writeText(window.location.href).then(() => alert("Link copied to clipboard!"));
         };
-    </script>
+   // --- FEED LOADER (The Engine) ---
+    window.loadFeed = () => {
+        const feed = document.getElementById("feed");
+        if(!feed) return;
+        
+        feed.innerHTML = "<div style='text-align:center; padding:20px; color:#666;'>Refreshing feed...</div>";
+        
+        // Query posts (Newest First)
+        // We use 'db' directly to be 100% sure it connects
+        const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const feed = document.getElementById("feed");
+            feed.innerHTML = ""; // Clear "Loading..." text
+            
+            if (snapshot.empty) {
+                feed.innerHTML = "<div style='text-align:center; padding:40px; color:#888;'>No posts yet. Be the first!</div>";
+                return;
+            }
+
+            snapshot.forEach((docSnap) => {
+                const post = docSnap.data();
+                const id = docSnap.id;
+                
+                // Create Post Element
+                const div = document.createElement("div");
+                div.className = "post";
+                div.id = `post-${id}`;
+                
+                // Use the Master Builder to make it look Pro
+                if(window.getPostHTML) {
+                    div.innerHTML = window.getPostHTML(id, post);
+                } else {
+                    // Backup in case builder is missing
+                    div.innerHTML = `<div class="content">${post.text}</div>`;
+                }
+                feed.appendChild(div);
+            });
+        }, (error) => {
+            console.error("Feed Error:", error);
+            // If it fails, show a friendly message
+            if(feed) feed.innerHTML = "<div style='text-align:center; padding:20px; color:#ff3300;'>Feed unavailable. Check Console.</div>";
+        });
+    };
+
+    // Force start the feed if we are already logged in
+    if(window.currentUser) window.loadFeed();
+ </script>
 </body>
 </html>
