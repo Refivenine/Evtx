@@ -352,9 +352,8 @@
             <div class="nav-item" onclick="switchTab('profile')"><svg class="icon" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>
         </div>
     </div>
-
 <script type="module">
-    // --- 1. IMPORTS ---
+    // --- 1. IMPORTS (Unified & Fixed) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, arrayUnion, getDoc, deleteDoc, setDoc, arrayRemove, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
@@ -391,29 +390,31 @@
     window.applyTheme = (color) => { const c = color || "#bf00ff"; document.documentElement.style.setProperty('--app-color', c); };
     window.applyUserViewTheme = (color) => { const c = color || "#bf00ff"; document.getElementById('view-cover').style.borderBottomColor = c; document.getElementById('view-nick').style.color = c; };
 
-    // --- 6. AUTH LISTENER ---
+    // --- 6. AUTH LISTENER (The Engine Starter) ---
     onAuthStateChanged(auth, async (user) => {
         const splash = document.getElementById("splash-screen");
         if (user) {
+            // User is Logged In
             currentUser = user; 
             window.currentUser = user; 
             
             document.getElementById("auth-screen").classList.add("hidden");
             document.getElementById("app-screen").classList.remove("hidden");
             
-            // Load Everything
+            // Start All Systems
             loadFeed();
             listenForNotifications();
             loadChatList();
             listenForChatBadges();
             
-            // Get User Profile
+            // Get User Profile Data
             const uDoc = await getDoc(doc(db, "users", user.uid));
             if(uDoc.exists()) {
                 const d = uDoc.data();
                 currentUserName = d.name || user.email.split('@')[0];
                 applyTheme(d.themeColor);
                 
+                // Fill Profile Page Inputs
                 const pPic = document.getElementById('p-name');
                 if(pPic) {
                      document.getElementById('p-name').value = d.name || "";
@@ -424,10 +425,12 @@
                 }
             }
         } else {
+            // User is Logged Out
             document.getElementById("auth-screen").classList.remove("hidden");
             document.getElementById("app-screen").classList.add("hidden");
         }
         
+        // Remove Splash Screen
         if(splash) {
             setTimeout(() => { splash.style.opacity = "0"; setTimeout(() => splash.style.display = "none", 500); }, 1000);
         }
@@ -445,16 +448,14 @@
         return data.secure_url;
     }
 
-    // --- 8. FEED SYSTEM (FIXED: Uses 'createdAt') ---
+    // --- 8. FEED SYSTEM ---
     window.loadFeed = () => {
         const feed = document.getElementById("feed");
         if(!feed) return;
         
-        // Use 'createdAt' to match your saved posts
         const q = query(postsRef, orderBy("createdAt", "desc"));
         
         onSnapshot(q, (snapshot) => {
-            const feed = document.getElementById("feed");
             if(feed.innerHTML === "Loading...") feed.innerHTML = "";
             
             snapshot.docChanges().forEach(change => {
@@ -537,13 +538,12 @@
             </div>`;
     };
 
-    // --- 10. NOTIFICATIONS (FIXED: Queries ROOT Collection) ---
+    // --- 10. NOTIFICATIONS ---
     window.listenForNotifications = () => {
         if(!currentUser) return;
-        const notifList = document.getElementById("notif-list"); // Fixed ID
+        const notifList = document.getElementById("notif-list");
         const badge = document.getElementById("notif-badge");
         
-        // Correct Query: Root collection, filtered by recipient
         const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.uid), orderBy("time", "desc"));
         
         onSnapshot(q, (snapshot) => {
@@ -569,7 +569,7 @@
         });
     };
 
-    // --- 11. CHATS (FIXED: Uses correct class name) ---
+    // --- 11. CHATS ---
     window.loadChatList = () => {
         const list = document.getElementById("chat-list");
         if(!list || !currentUser) return;
@@ -587,7 +587,7 @@
                 if(uDoc.exists()) { otherName = uDoc.data().name; otherPic = uDoc.data().pic; }
 
                 const div = document.createElement("div");
-                div.className = "chat-list-item"; // FIXED CLASS NAME
+                div.className = "chat-list-item";
                 div.onclick = () => window.openChatWindow(docSnap.id, otherId);
                 div.innerHTML = `<div class="avatar" style="background-image:url('${otherPic}'); width:40px; height:40px;"></div><div class="chat-preview"><h4>${otherName}</h4><span style="font-size:12px;color:#777;">${chat.lastMessage || "Start chatting..."}</span></div>`;
                 list.appendChild(div);
@@ -595,7 +595,7 @@
         });
     };
 
-    // --- 12. INTERACTIONS (Like, Comment, etc.) ---
+    // --- 12. INTERACTIONS ---
     window.createNotification = async (t,y,pid) => { 
         if(!t||t===currentUser.uid)return; 
         let txt="interacted."; 
@@ -642,7 +642,7 @@
     window.sharePost = () => { navigator.clipboard.writeText(window.location.href); alert("Link copied!"); };
     window.toggleComments = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display==="none")?"block":"none"; };
 
-    // --- 13. POSTING LOGIC (With Video & Crop) ---
+    // --- 13. POSTING LOGIC ---
     function initCrop(file, target) { const reader = new FileReader(); reader.onload = (e) => { const img = document.getElementById('image-to-crop'); img.src = e.target.result; document.getElementById('cropper-modal').classList.remove('hidden'); cropTarget = target; if(cropper) cropper.destroy(); let ratio = NaN; if(target === 'pic') ratio = 1; if(target === 'cover') ratio = 16/9; cropper = new Cropper(img, { aspectRatio: ratio, viewMode: 1, autoCropArea: 1, background: false }); }; reader.readAsDataURL(file); }
     window.performCrop = () => { if(!cropper) return; const canvas = cropper.getCroppedCanvas({ maxWidth: 800, maxHeight: 800 }); const url = canvas.toDataURL('image/jpeg', 0.8); if(cropTarget === 'post') { finalPostImage = url; selectedVideoFile = null; document.getElementById('mediaPreview').innerHTML = `<img src="${url}" style="height:50px; border-radius:5px;">`; } else if (cropTarget === 'pic') { finalProfilePic = url; document.getElementById('my-pic').style.backgroundImage = `url('${url}')`; } else if (cropTarget === 'cover') { finalCoverPic = url; document.getElementById('my-cover-pic').style.backgroundImage = `url('${url}')`; } cancelCrop(); };
     window.cancelCrop = () => { document.getElementById('cropper-modal').classList.add('hidden'); if(cropper) { cropper.destroy(); cropper = null; } document.getElementById('fileInput').value = ""; document.getElementById('profilePicInput').value = ""; document.getElementById('coverPicInput').value = ""; };
@@ -702,6 +702,111 @@
     // Voice
     let mediaRecorder; let audioChunks = []; let activeRecordingId = null;
     window.toggleVoiceRecording = async (postId) => { const btn=document.getElementById(`mic-btn-${postId}`); const st=document.getElementById(`mic-status-${postId}`); if(activeRecordingId===postId && mediaRecorder?.state==="recording"){ mediaRecorder.stop(); btn.style.color=""; st.innerText="Sending..."; activeRecordingId=null; return; } if(activeRecordingId){alert("Already recording!");return;} try{ const stream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder=new MediaRecorder(stream); audioChunks=[]; activeRecordingId=postId; btn.style.color="red"; st.innerText="Recording..."; mediaRecorder.ondataavailable=e=>audioChunks.push(e.data); mediaRecorder.onstop=async()=>{ const blob=new Blob(audioChunks,{type:'audio/webm'}); const url=URL.createObjectURL(blob); await updateDoc(doc(db,"posts",postId),{voiceNotes:arrayUnion({url:url,name:currentUserName})}); st.innerText="Voice"; }; mediaRecorder.start(); }catch(e){alert("Mic Error");} };
+    
+    // Profile Viewer (Fixed)
+    let profileUnsub = null;
+    window.openUserProfile = async (uid) => { 
+        if(!uid) return; 
+        currentUserViewing = uid; 
+        window.switchTab('user-view'); 
+        window.switchProfileTab('posts');
+
+        if (profileUnsub) profileUnsub();
+
+        const isMe = (uid === currentUser.uid);
+        const msgBtn = document.getElementById("message-user-btn");
+        const frndBtn = document.getElementById("friend-user-btn");
+
+        if (isMe) {
+            msgBtn.style.display = "none";
+            frndBtn.style.display = "none";
+        } else {
+            msgBtn.style.display = "inline-block"; 
+            frndBtn.style.display = "inline-block";
+            msgBtn.onclick = () => startChat(uid); 
+            frndBtn.onclick = () => toggleFriend(uid);
+        }
+
+        document.getElementById("view-name").innerText="Loading..."; 
+        document.getElementById("view-pic").style.backgroundImage="none";
+        
+        if(friendListener) friendListener(); 
+        if (!isMe) {
+            friendListener = onSnapshot(doc(db,"users",currentUser.uid),(doc)=>{
+                if(doc.exists()){
+                    const me=doc.data(); 
+                    const btn=document.getElementById("friend-user-btn"); 
+                    if(me.friends?.includes(uid)){btn.innerText="Friends";btn.className="friend-btn friends"}
+                    else if(me.requestsSent?.includes(uid)){btn.innerText="Request Sent";btn.className="friend-btn requested"}
+                    else if(me.requestsReceived?.includes(uid)){btn.innerText="Accept Request";btn.className="friend-btn accept"}
+                    else{btn.innerText="Add Friend";btn.className="friend-btn add"}
+                }
+            });
+        }
+
+        const d=await getDoc(doc(db,"users",uid)); 
+        if(d.exists()){
+            const u=d.data(); 
+            document.getElementById("view-name").innerText=u.name; 
+            document.getElementById("view-nick").innerText=u.nickname; 
+            document.getElementById("view-bio").innerText=u.bio; 
+            document.getElementById("view-country").innerText="🏳️ "+(u.country||"Earth"); 
+            if(u.pic)document.getElementById("view-pic").style.backgroundImage=`url('${u.pic}')`; 
+            if(u.coverPic)document.getElementById("view-cover").style.backgroundImage=`url('${u.coverPic}')`; 
+            const c = u.themeColor || "#bf00ff";
+            document.getElementById('view-cover').style.borderBottomColor = c; 
+            document.getElementById('view-nick').style.color = c; 
+            document.getElementById('message-user-btn').style.background = c;
+        }
+
+        const p = document.getElementById("user-posts-feed"); 
+        p.innerHTML = "<div style='padding:20px; text-align:center;'>Loading posts...</div>"; 
+        
+        const q = query(postsRef); 
+        profileUnsub = onSnapshot(q, (snapshot) => {
+            p.innerHTML = ""; 
+            let count = 0; 
+            let allPosts = [];
+            snapshot.forEach(docSnap => {
+                const x = docSnap.data();
+                const id = docSnap.id;
+                if(x.uid === uid || x.author === uid || x.userId === uid || x.user === uid){
+                    allPosts.push({id: id, data: x});
+                }
+            }); 
+            
+            allPosts.sort((a, b) => {
+                const timeA = a.data.createdAt ? a.data.createdAt.toMillis() : 0;
+                const timeB = b.data.createdAt ? b.data.createdAt.toMillis() : 0;
+                return timeB - timeA;
+            });
+
+            allPosts.forEach(post => {
+                count++;
+                const e = document.createElement("div");
+                e.className = "post";
+                e.id = `profile-post-${post.id}`;
+                e.innerHTML = getPostHTML(post.id, post.data, '-profile'); 
+                p.appendChild(e);
+            });
+
+            if(count === 0) p.innerHTML = "<div style='text-align:center;padding:20px;color:#888;'>No posts found for this user.</div>";
+        });
+    };
+    
+    window.switchProfileTab = (tab) => {
+        document.querySelectorAll('.p-tab-btn').forEach(b => b.classList.remove('p-tab-active'));
+        document.getElementById('pt-'+tab).classList.add('p-tab-active');
+        document.querySelectorAll('.p-content-box').forEach(b => b.classList.add('hidden'));
+        if(tab === 'posts') document.getElementById('user-posts-feed').classList.remove('hidden');
+        if(tab === 'images') { document.getElementById('user-images-feed').classList.remove('hidden'); loadUserMedia(currentUserViewing); }
+        if(tab === 'friends') { document.getElementById('user-friends-list').classList.remove('hidden'); loadUserFriends(currentUserViewing); }
+    };
+    
+    window.toggleFriend=async(tid)=>{ const my=doc(db,"users",currentUser.uid); const tr=doc(db,"users",tid); const s=document.getElementById("friend-user-btn").innerText; if(s==="Add Friend"){await updateDoc(my,{requestsSent:arrayUnion(tid)});await updateDoc(tr,{requestsReceived:arrayUnion(currentUser.uid)}); createNotification(tid, 'friend_req', null); }else if(s==="Accept Request"){await updateDoc(my,{friends:arrayUnion(tid),requestsReceived:arrayRemove(tid)});await updateDoc(tr,{friends:arrayUnion(currentUser.uid),requestsSent:arrayRemove(currentUser.uid)}); createNotification(tid, 'friend_accept', null); } };
+    async function loadUserFriends(uid){const c=document.getElementById('user-friends-list'); c.innerHTML="Loading..."; const u=await getDoc(doc(db,"users",uid)); const f=u.data().friends||[]; c.innerHTML=""; if(f.length===0)c.innerHTML="No friends."; for(const fid of f){const fd=await getDoc(doc(db,"users",fid)); if(fd.exists()){const ff=fd.data(); const d=document.createElement("div"); d.className="friend-item"; d.innerHTML=`<div class="avatar" style="background-image:url('${ff.pic||''}')"></div><div style="flex:1;margin-left:10px;color:#fff;"><b>${ff.name}</b></div><button class="btn" style="color:var(--app-color);" onclick="openUserProfile('${fid}')">View</button>`; c.appendChild(d);}}}
+    async function loadUserMedia(uid) { const container = document.getElementById('user-images-feed'); container.innerHTML = "<div style='grid-column:1/-1;text-align:center;padding:20px;color:#555;'>Loading...</div>"; const s = await getDocs(query(postsRef, orderBy("createdAt", "desc"))); container.innerHTML = ""; let count = 0; s.forEach(d => { const x = d.data(); if(x.uid === uid && (x.imageUrl || x.videoUrl)) { count++; if(x.imageUrl) { const i=document.createElement("img"); i.className="grid-img"; i.src=x.imageUrl; i.onclick=()=>window.open(x.imageUrl,'_blank'); container.appendChild(i); } else if(x.videoUrl) { const v=document.createElement("div"); v.className="grid-img"; v.style.display="flex"; v.style.alignItems="center"; v.style.justifyContent="center"; v.innerHTML="📹"; v.onclick=()=>window.open(x.videoUrl,'_blank'); container.appendChild(v); } }}); if(count === 0) container.innerHTML = "<div style='grid-column:1/-1;text-align:center;padding:20px;color:#555;'>No media shared.</div>"; }
+    window.loadNews = async () => { const feed = document.getElementById('news-feed'); feed.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">📡 AI Scanning Global Frequencies...</div>'; try { const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml'); const data = await res.json(); if(data.status !== 'ok') throw new Error('Signal lost'); feed.innerHTML = ''; data.items.forEach(item => { let tag = "General"; const txt = item.title + item.description; if(txt.match(/war|conflict|attack|military/i)) tag = "Conflict"; else if(txt.match(/tech|ai|cyber|data/i)) tag = "Technology"; else if(txt.match(/money|market|economy/i)) tag = "Finance"; else if(txt.match(/climate|storm|earth/i)) tag = "Environment"; else if(txt.match(/politics|election|law/i)) tag = "Politics"; const card = document.createElement('div'); card.className = 'news-card'; card.innerHTML = `<img src="${item.thumbnail || 'https://refivenine.github.io/Evtx/logo.png'}" class="news-img" onerror="this.style.display='none'"><div class="news-content"><span class="news-ai-tag">${tag}</span><h4 class="news-title"><a href="${item.link}" target="_blank" style="color:#fff;text-decoration:none;">${item.title}</a></h4><div class="news-desc">${item.description.replace(/<[^>]*>?/gm, '')}</div><div class="news-meta"><span>Source: BBC World</span><span>${item.pubDate.split(' ')[0]}</span></div></div>`; feed.appendChild(card); }); } catch(e) { feed.innerHTML = '<div style="padding:20px;text-align:center;color:#cc0000;">⚠️ Uplink Failed. Retrying...</div>'; } };
 </script>
 </body>
 </html>
