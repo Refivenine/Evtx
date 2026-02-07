@@ -385,7 +385,7 @@
     let currentUserName = "User"; let currentChatId = null;
     let cropper = null; let cropTarget = null; let finalPostImage = null; let finalProfilePic = null; let finalCoverPic = null;
     let friendListener = null; let currentUserViewing = null; let selectedVideoFile = null;
-    let selectedChatFile = null; // New variable for Chat Media
+    let selectedChatFile = null;
 
     // --- 5. THEME HELPERS ---
     window.applyTheme = (color) => { const c = color || "#bf00ff"; document.documentElement.style.setProperty('--app-color', c); };
@@ -527,7 +527,7 @@
         });
     };
 
-    // --- 12. PRO CHAT WINDOW (Media Support) ---
+    // --- 12. PRO CHAT WINDOW ---
     window.startChat=async(tid)=>{const q=query(collection(db,"chats"),where("participants","array-contains",currentUser.uid));const s=await getDocs(q);let eid=null;s.forEach(d=>{if(d.data().participants.includes(tid))eid=d.id});if(eid)openChatWindow(eid,tid);else{const d=await addDoc(collection(db,"chats"),{participants:[currentUser.uid,tid],lastMessage:"",lastUpdated:serverTimestamp(),isRead:true,lastSenderId:currentUser.uid});openChatWindow(d.id,tid)}};
     
     window.openChatWindow = async (cid, tid) => {
@@ -540,7 +540,6 @@
             if(u.data().pic) picDiv.style.backgroundImage = `url('${u.data().pic}')`;
         }
 
-        // --- NEW: PRO CHAT UI STRUCTURE ---
         const chatInputArea = document.querySelector('.chat-input-area');
         chatInputArea.innerHTML = `
             <input type="file" id="chat-file-input" hidden accept="image/*,video/*">
@@ -549,7 +548,6 @@
             <button onclick="sendMessage()" class="btn" style="color:var(--app-color); font-weight:bold;">➤</button>
         `;
 
-        // Handle File Selection Preview
         document.getElementById('chat-file-input').addEventListener('change', (e) => {
             if(e.target.files[0]) {
                 selectedChatFile = e.target.files[0];
@@ -566,31 +564,20 @@
                 const isMe = m.senderId === currentUser.uid;
                 const e = document.createElement("div");
                 
-                // Bubble Style
                 e.className = `message-bubble ${isMe ? 'msg-me' : 'msg-them'}`;
-                e.style.maxWidth = "75%";
-                e.style.padding = "10px 15px";
-                e.style.margin = "5px 0";
-                e.style.borderRadius = "20px";
-                e.style.position = "relative";
-                e.style.fontSize = "14px";
-                e.style.alignSelf = isMe ? "flex-end" : "flex-start";
-                e.style.background = isMe ? "var(--app-color)" : "#222";
-                e.style.color = "#fff";
+                e.style.maxWidth = "75%"; e.style.padding = "10px 15px"; e.style.margin = "5px 0"; e.style.borderRadius = "20px";
+                e.style.position = "relative"; e.style.fontSize = "14px"; e.style.alignSelf = isMe ? "flex-end" : "flex-start";
+                e.style.background = isMe ? "var(--app-color)" : "#222"; e.style.color = "#fff";
 
-                // Content Logic
                 let content = "";
                 if (m.imageUrl) content = `<img src="${m.imageUrl}" style="max-width:100%; border-radius:10px; margin-bottom:5px;">`;
                 else if (m.videoUrl) content = `<video src="${m.videoUrl}" controls style="max-width:100%; border-radius:10px; margin-bottom:5px;"></video>`;
-                
                 if (m.text) content += `<div>${m.text}</div>`;
                 
-                // Timestamp
                 const time = m.createdAt ? new Date(m.createdAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
                 content += `<div style="font-size:10px; opacity:0.7; text-align:right; margin-top:3px;">${time}</div>`;
 
-                e.innerHTML = content;
-                d.appendChild(e);
+                e.innerHTML = content; d.appendChild(e);
             });
             d.scrollTop = d.scrollHeight;
         });
@@ -598,37 +585,24 @@
 
     window.sendMessage = async () => {
         const input = document.getElementById("msg-input");
-        const text = selectedChatFile ? "" : input.value; // If file, text is empty
-        
+        const text = selectedChatFile ? "" : input.value;
         if ((!text && !selectedChatFile) || !currentChatId) return;
-        
         input.value = "Sending...";
-        
-        let msgData = {
-            senderId: currentUser.uid,
-            createdAt: serverTimestamp()
-        };
+        let msgData = { senderId: currentUser.uid, createdAt: serverTimestamp() };
 
         if (selectedChatFile) {
             const url = await uploadToCloudinary(selectedChatFile);
             if(selectedChatFile.type.startsWith('image/')) msgData.imageUrl = url;
             else if(selectedChatFile.type.startsWith('video/')) msgData.videoUrl = url;
-            selectedChatFile = null;
-            document.getElementById('msg-input').disabled = false;
-        } else {
-            msgData.text = text;
-        }
+            selectedChatFile = null; document.getElementById('msg-input').disabled = false;
+        } else { msgData.text = text; }
 
         await addDoc(collection(db, "chats", currentChatId, "messages"), msgData);
         await updateDoc(doc(db, "chats", currentChatId), {
             lastMessage: msgData.imageUrl ? "📷 Image" : (msgData.videoUrl ? "📹 Video" : text),
-            lastUpdated: serverTimestamp(),
-            isRead: false,
-            lastSenderId: currentUser.uid
+            lastUpdated: serverTimestamp(), isRead: false, lastSenderId: currentUser.uid
         });
-        
-        input.value = "";
-        document.getElementById('chat-file-input').value = "";
+        input.value = ""; document.getElementById('chat-file-input').value = "";
     };
 
     window.closeChat=()=>{document.getElementById("chat-room").classList.add("hidden");currentChatId=null; selectedChatFile=null;};
@@ -661,7 +635,7 @@
     window.sharePost = () => { navigator.clipboard.writeText(window.location.href); alert("Link copied!"); };
     window.toggleComments = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display==="none")?"block":"none"; };
 
-    // --- 14. POSTING LOGIC & PROFILE ---
+    // --- 14. POSTING LOGIC & PROFILE (FIXED SAVE LOGIC) ---
     function initCrop(file, target) { const reader = new FileReader(); reader.onload = (e) => { const img = document.getElementById('image-to-crop'); img.src = e.target.result; document.getElementById('cropper-modal').classList.remove('hidden'); cropTarget = target; if(cropper) cropper.destroy(); let ratio = NaN; if(target === 'pic') ratio = 1; if(target === 'cover') ratio = 16/9; cropper = new Cropper(img, { aspectRatio: ratio, viewMode: 1, autoCropArea: 1, background: false }); }; reader.readAsDataURL(file); }
     window.performCrop = () => { if(!cropper) return; const canvas = cropper.getCroppedCanvas({ maxWidth: 800, maxHeight: 800 }); const url = canvas.toDataURL('image/jpeg', 0.8); if(cropTarget === 'post') { finalPostImage = url; selectedVideoFile = null; document.getElementById('mediaPreview').innerHTML = `<img src="${url}" style="height:50px; border-radius:5px;">`; } else if (cropTarget === 'pic') { finalProfilePic = url; document.getElementById('my-pic').style.backgroundImage = `url('${url}')`; } else if (cropTarget === 'cover') { finalCoverPic = url; document.getElementById('my-cover-pic').style.backgroundImage = `url('${url}')`; } cancelCrop(); };
     window.cancelCrop = () => { document.getElementById('cropper-modal').classList.add('hidden'); if(cropper) { cropper.destroy(); cropper = null; } document.getElementById('fileInput').value = ""; document.getElementById('profilePicInput').value = ""; document.getElementById('coverPicInput').value = ""; };
@@ -682,16 +656,51 @@
         } catch (err) { alert("Error: " + err.message); btn.innerText="Post"; } 
     });
 
+    // *** FIX: ROBUST PROFILE SAVE + POST UPDATER ***
     document.getElementById("saveProfileBtn").addEventListener("click", async () => { 
-        const b = document.getElementById("saveProfileBtn"); b.innerText = "Saving...";
-        const d = { name: document.getElementById('p-name').value, nickname: document.getElementById('p-nickname').value, bio: document.getElementById('p-bio').value, country: document.getElementById('p-country').value, themeColor: document.getElementById('p-theme').value };
-        if (finalProfilePic) d.pic = await uploadToCloudinary(finalProfilePic); if (finalCoverPic) d.coverPic = await uploadToCloudinary(finalCoverPic);
-        await setDoc(doc(db, "users", currentUser.uid), d, { merge: true });
-        currentUserName = d.name; applyTheme(d.themeColor);
-        const q = query(postsRef, where("uid", "==", currentUser.uid)); const s = await getDocs(q); const ps = [];
-        s.forEach(doc => ps.push(updateDoc(doc.ref, { username: d.name, userBio: d.nickname, userPic: d.pic })));
-        await Promise.all(ps);
-        b.innerText = "✅ Saved"; setTimeout(() => b.innerText = "💾 Save Changes", 2000); 
+        const b = document.getElementById("saveProfileBtn"); 
+        b.innerText = "Saving...";
+        
+        try {
+            const d = { 
+                name: document.getElementById('p-name').value, 
+                nickname: document.getElementById('p-nickname').value, 
+                bio: document.getElementById('p-bio').value, 
+                country: document.getElementById('p-country').value, 
+                themeColor: document.getElementById('p-theme').value 
+            };
+
+            if (finalProfilePic) d.pic = await uploadToCloudinary(finalProfilePic); 
+            if (finalCoverPic) d.coverPic = await uploadToCloudinary(finalCoverPic);
+            
+            // 1. Update User Profile
+            await setDoc(doc(db, "users", currentUser.uid), d, { merge: true });
+            
+            // 2. Update Global Variables
+            currentUserName = d.name; 
+            applyTheme(d.themeColor);
+
+            // 3. Batch Update ALL Old Posts
+            const q = query(postsRef, where("uid", "==", currentUser.uid)); 
+            const querySnapshot = await getDocs(q); 
+            
+            const updatePromises = [];
+            const updates = { username: d.name, userBio: d.nickname };
+            if (d.pic) updates.userPic = d.pic; // Only update pic if changed
+
+            querySnapshot.forEach((docSnap) => {
+                updatePromises.push(updateDoc(docSnap.ref, updates));
+            });
+            
+            await Promise.all(updatePromises);
+            
+            b.innerText = "✅ Saved"; 
+            setTimeout(() => b.innerText = "💾 Save Changes", 2000);
+        } catch (e) {
+            console.error(e);
+            alert("Save failed: " + e.message);
+            b.innerText = "💾 Save Changes";
+        }
     });
     
     document.getElementById("viewMyProfileBtn").addEventListener("click", () => openUserProfile(currentUser.uid));
