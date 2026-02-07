@@ -400,13 +400,11 @@
             document.getElementById("auth-screen").classList.add("hidden");
             document.getElementById("app-screen").classList.remove("hidden");
             
-            // Start Systems
             if(window.loadFeed) window.loadFeed();
             if(window.listenForNotifications) window.listenForNotifications();
             if(window.loadChatList) window.loadChatList();
             if(window.listenForChatBadges) window.listenForChatBadges();
             
-            // Get User Profile
             const uDoc = await getDoc(doc(db, "users", user.uid));
             if(uDoc.exists()) {
                 const d = uDoc.data();
@@ -652,10 +650,19 @@
         } catch (err) { alert("Error: " + err.message); btn.innerText="Post"; } 
     });
 
-    // --- 14. PROFILE & SYSTEM (FIXED: Updates Posts with Nickname too) ---
+    // --- 14. PROFILE & SYSTEM (FIXED: Waits for updates) ---
     document.getElementById("saveProfileBtn").addEventListener("click", async () => { 
-        const b = document.getElementById("saveProfileBtn"); b.innerText = "Saving...";
-        const d = { name: document.getElementById('p-name').value, nickname: document.getElementById('p-nickname').value, bio: document.getElementById('p-bio').value, country: document.getElementById('p-country').value, themeColor: document.getElementById('p-theme').value };
+        const b = document.getElementById("saveProfileBtn"); 
+        b.innerText = "Saving...";
+        
+        const d = { 
+            name: document.getElementById('p-name').value, 
+            nickname: document.getElementById('p-nickname').value, 
+            bio: document.getElementById('p-bio').value, 
+            country: document.getElementById('p-country').value, 
+            themeColor: document.getElementById('p-theme').value 
+        };
+
         if (finalProfilePic) d.pic = await uploadToCloudinary(finalProfilePic);
         if (finalCoverPic) d.coverPic = await uploadToCloudinary(finalCoverPic);
         
@@ -664,13 +671,24 @@
         
         // 2. Update Global Variables
         currentUserName = d.name;
-        
+        applyTheme(d.themeColor);
+
         // 3. Batch Update ALL Old Posts
         const q = query(postsRef, where("uid", "==", currentUser.uid));
-        const s = await getDocs(q);
-        s.forEach(async doc => await updateDoc(doc.ref, { username: d.name, userBio: d.nickname, userPic: d.pic }));
+        const querySnapshot = await getDocs(q);
         
-        applyTheme(d.themeColor); b.innerText = "✅ Saved"; setTimeout(() => b.innerText = "💾 Save Changes", 2000); 
+        const updatePromises = [];
+        const updates = { username: d.name, userBio: d.nickname };
+        if (d.pic) updates.userPic = d.pic;
+
+        querySnapshot.forEach((docSnap) => {
+            updatePromises.push(updateDoc(docSnap.ref, updates));
+        });
+        
+        await Promise.all(updatePromises);
+        
+        b.innerText = "✅ Saved"; 
+        setTimeout(() => b.innerText = "💾 Save Changes", 2000); 
     });
     
     document.getElementById("viewMyProfileBtn").addEventListener("click", () => openUserProfile(currentUser.uid));
