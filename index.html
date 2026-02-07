@@ -353,11 +353,11 @@
         </div>
     </div>
 
-   <script type="module">
-    // --- 1. IMPORTS (Fixed: Includes 'where' and all tools) ---
+ <script type="module">
+    // --- 1. IMPORTS (Now includes Login Tools!) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, arrayUnion, getDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
 
     // --- 2. CONFIGURATION ---
@@ -386,7 +386,46 @@
     window.applyTheme = (color) => { const c = color || "#bf00ff"; document.documentElement.style.setProperty('--app-color', c); };
     window.applyUserViewTheme = (color) => { const c = color || "#bf00ff"; document.getElementById('view-cover').style.borderBottomColor = c; document.getElementById('view-nick').style.color = c; };
 
-    // --- 6. AUTH LISTENER (Starts the App) ---
+    // --- 6. LOGIN & REGISTER FUNCTIONS (Restored!) ---
+    window.login = async () => {
+        const e = document.getElementById("email").value;
+        const p = document.getElementById("password").value;
+        if(!e || !p) return alert("Please fill in all fields");
+        try {
+            await signInWithEmailAndPassword(auth, e, p);
+        } catch(err) { alert("Login Failed: " + err.message); }
+    };
+
+    window.register = async () => {
+        const e = document.getElementById("reg-email").value;
+        const p = document.getElementById("reg-password").value;
+        const n = document.getElementById("reg-name").value; // Nickname
+        if(!e || !p || !n) return alert("Please fill in all fields");
+        try {
+            const uc = await createUserWithEmailAndPassword(auth, e, p);
+            // Save User Data to Database
+            await setDoc(doc(db, "users", uc.user.uid), {
+                name: n,
+                nickname: "@" + n.toLowerCase().replace(/\s/g, ''),
+                email: e,
+                uid: uc.user.uid,
+                pic: "",
+                coverPic: "",
+                bio: "New to EVTX",
+                themeColor: "#bf00ff",
+                createdAt: serverTimestamp(),
+                friends: [],
+                requestsSent: [],
+                requestsReceived: []
+            });
+            await updateProfile(uc.user, { displayName: n });
+            alert("Welcome to EVTX!");
+        } catch(err) { alert("Registration Failed: " + err.message); }
+    };
+
+    window.logout = () => signOut(auth);
+
+    // --- 7. AUTH LISTENER (Starts the App) ---
     onAuthStateChanged(auth, async (user) => {
         const splash = document.getElementById("splash-screen");
         if (user) {
