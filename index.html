@@ -478,7 +478,7 @@
         });
     };
 
-    // --- 9. POST HTML BUILDER (NO VOICE BUTTON) ---
+    // --- 9. POST HTML BUILDER ---
     window.getPostHTML = (id, p, suffix = "") => {
         const isMe = currentUser && (p.uid === currentUser.uid);
         const delBtn = isMe ? `<button onclick="deletePost('${id}')" class="act-btn" style="color:#ff3300;">🗑️</button>` : "";
@@ -493,7 +493,7 @@
         if (p.videoUrl) media = `<video src="${p.videoUrl}" controls class="post-video-frame"></video>`;
         else if (p.imageUrl) media = `<img src="${p.imageUrl}" class="post-img">`;
 
-        // We keep display logic for old voice notes, but no button to record new ones
+        // Voice Notes Display (No button)
         let voiceHTML = "";
         if (p.voiceNotes && Array.isArray(p.voiceNotes)) {
             voiceHTML = `<div style="margin-top:10px; padding:8px; background:rgba(0,0,0,0.3); border-radius:10px;">`;
@@ -599,6 +599,7 @@
     // --- 12. INTERACTIONS ---
     window.createNotification = async (t,y,pid) => { if(!t||t===currentUser.uid)return; let txt="interacted."; if(y==='like')txt="liked your post."; if(y==='comment')txt="commented."; await addDoc(collection(db,"notifications"),{recipient:t, sender:currentUserName, senderUid:currentUser.uid, type:y, text:txt, postId:pid, read:false, time:serverTimestamp()}); };
 
+    // *** LIKE / UNLIKE LOGIC (FIXED) ***
     window.likePost = async (postId) => {
         if(!currentUser) return;
         const postRef = doc(db, "posts", postId);
@@ -606,7 +607,12 @@
         if(pDoc.exists()) {
             const d = pDoc.data();
             const likes = Array.isArray(d.likes) ? d.likes : [];
-            if(!likes.includes(currentUser.uid)) {
+            
+            if(likes.includes(currentUser.uid)) {
+                // UNLIKE (Remove User)
+                await updateDoc(postRef, { likes: arrayRemove(currentUser.uid) });
+            } else {
+                // LIKE (Add User)
                 await updateDoc(postRef, { likes: arrayUnion(currentUser.uid) });
                 createNotification(d.uid, 'like', postId);
             }
