@@ -353,43 +353,83 @@
         </div>
     </div>
 
-    <script type="module">
+   <script type="module">
+    // --- 1. IMPORTS (Fixed: Includes 'where' and all tools) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-      import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, arrayUnion, getDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-      import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-      import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
-        const ADMIN_EMAIL = "hrangategamer@gmail.com"; 
-        const CLOUD_NAME = "dcuhf22ke"; 
-        const UPLOAD_PRESET = "evtx_preset"; 
+    import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, arrayUnion, getDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyAiaKBfUC4QScczQq6wARW7KC0-gKcomg8", authDomain: "evtx-social.firebaseapp.com", projectId: "evtx-social", storageBucket: "evtx-social.firebasestorage.app", messagingSenderId: "24242683037", appId: "1:24242683037:web:48dcc74fe3d241cfb76874" };
-        const app = initializeApp(firebaseConfig); 
-        const db = getFirestore(app); 
-        const auth = getAuth(app); 
-        const postsRef = collection(db, "posts");
-        
-        let currentUser = null; let currentEditPostId = null; let currentUserName = "User"; let currentChatId = null;
-        let cropper = null; let cropTarget = null; let finalPostImage = null; let finalProfilePic = null; let finalCoverPic = null;
-        let friendListener = null; let currentUserViewing = null; let selectedVideoFile = null;
+    // --- 2. CONFIGURATION ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAiaKBFUC4QScczQq6wARW7KC0-gkComg8",
+        authDomain: "evtx-social.firebaseapp.com",
+        projectId: "evtx-social",
+        storageBucket: "evtx-social.appspot.com",
+        messagingSenderId: "338908722677",
+        appId: "1:338908722677:web:253109017684"
+    };
 
-        const applyTheme = (color) => { const c = color || "#bf00ff"; document.documentElement.style.setProperty('--app-color', c); };
-        const applyUserViewTheme = (color) => { const c = color || "#bf00ff"; document.getElementById('view-cover').style.borderBottomColor = c; document.getElementById('view-nick').style.color = c; document.getElementById('message-user-btn').style.background = c; };
+    // --- 3. INITIALIZE APP ---
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const postsRef = collection(db, "posts");
 
-        // --- STARTUP ---
-        onAuthStateChanged(auth, async (user) => {
-            const splash = document.getElementById("splash-screen");
-            if (user) {
-                currentUser = user; document.getElementById("auth-screen").classList.add("hidden"); document.getElementById("app-screen").classList.remove("hidden");
-                loadFeed(); listenForNotifications(); loadChatList(); listenForChatBadges();
-                const uDoc = await getDoc(doc(db, "users", user.uid));
-                if(uDoc.exists()) {
-                    const d = uDoc.data(); currentUserName = d.name || user.email.split('@')[0]; applyTheme(d.themeColor);
-                    document.getElementById('p-name').value = d.name || ""; document.getElementById('p-nickname').value = d.nickname || ""; document.getElementById('p-bio').value = d.bio || ""; document.getElementById('p-country').value = d.country || ""; document.getElementById('p-theme').value = d.themeColor || "#bf00ff";
-                    if(d.pic) document.getElementById('my-pic').style.backgroundImage = `url('${d.pic}')`; if(d.coverPic) document.getElementById('my-cover-pic').style.backgroundImage = `url('${d.coverPic}')`;
+    // --- 4. GLOBAL VARIABLES ---
+    window.currentUser = null; 
+    let currentEditPostId = null; let currentUserName = "User"; let currentChatId = null;
+    let cropper = null; let cropTarget = null; let finalPostImage = null; let finalProfilePic = null; let finalCoverPic = null;
+    let friendListener = null; let currentUserViewing = null; let selectedVideoFile = null;
+
+    // --- 5. THEME HELPERS ---
+    window.applyTheme = (color) => { const c = color || "#bf00ff"; document.documentElement.style.setProperty('--app-color', c); };
+    window.applyUserViewTheme = (color) => { const c = color || "#bf00ff"; document.getElementById('view-cover').style.borderBottomColor = c; document.getElementById('view-nick').style.color = c; };
+
+    // --- 6. AUTH LISTENER (Starts the App) ---
+    onAuthStateChanged(auth, async (user) => {
+        const splash = document.getElementById("splash-screen");
+        if (user) {
+            window.currentUser = user; 
+            document.getElementById("auth-screen").classList.add("hidden");
+            document.getElementById("app-screen").classList.remove("hidden");
+            
+            // Load Data safely
+            if(window.loadFeed) window.loadFeed();
+            if(window.listenForNotifications) window.listenForNotifications();
+            if(window.loadChatList) window.loadChatList();
+            if(window.listenForChatBadges) window.listenForChatBadges();
+            
+            // Get User Profile
+            const uDoc = await getDoc(doc(db, "users", user.uid));
+            if(uDoc.exists()) {
+                const d = uDoc.data();
+                currentUserName = d.name || user.email.split('@')[0];
+                applyTheme(d.themeColor);
+                // Set sidebar images if elements exist
+                const sidePic = document.getElementById('my-pic');
+                if(sidePic && d.pic) sidePic.style.backgroundImage = `url('${d.pic}')`;
+                
+                // Set Profile Page images if elements exist
+                const pPic = document.getElementById('p-name');
+                if(pPic) {
+                     document.getElementById('p-name').value = d.name || "";
+                     document.getElementById('p-nickname').value = d.nickname || ""; 
+                     document.getElementById('p-bio').value = d.bio || "";
+                     if(d.pic) document.getElementById('my-pic').style.backgroundImage = `url('${d.pic}')`;
+                     if(d.coverPic) document.getElementById('my-cover-pic').style.backgroundImage = `url('${d.coverPic}')`;
                 }
-            } else { document.getElementById("auth-screen").classList.remove("hidden"); document.getElementById("app-screen").classList.add("hidden"); }
+            }
+        } else {
+            document.getElementById("auth-screen").classList.remove("hidden");
+            document.getElementById("app-screen").classList.add("hidden");
+        }
+        
+        // Hide Splash Screen
+        if(splash) {
             setTimeout(() => { splash.style.opacity = "0"; setTimeout(() => splash.style.display = "none", 500); }, 1000);
-        });
+        }
+    });
 
         // --- CLOUD UPLOAD FUNCTION ---
         async function uploadToCloudinary(file) {
